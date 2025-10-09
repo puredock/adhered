@@ -141,7 +141,7 @@ const Catalog = () => {
               
               <Button size="sm" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90">
                 <Plus className="w-4 h-4 mr-1" />
-                Add a device type
+                Add new device
               </Button>
             </div>
           </div>
