@@ -1,6 +1,13 @@
-import { Home, Search, Flame, PhoneCall, Activity, FileText, MessageCircle, Grid3x3, Users } from "lucide-react";
+import { Home, Search, Flame, PhoneCall, Activity, FileText, MessageCircle, Grid3x3, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const navItems = [
   { title: "Home", url: "/", icon: Home },
@@ -19,15 +26,43 @@ export function AppSidebar() {
     <aside className="w-64 bg-sidebar border-r border-sidebar-border h-screen sticky top-0 flex flex-col">
       {/* Logo */}
       <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-2 text-sidebar-primary font-semibold">
-          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm">
-            AC
-          </div>
-          <div>
-            <div className="text-sm">Acme Corp</div>
-            <div className="text-xs text-sidebar-foreground/60 font-normal">Organization</div>
-          </div>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full">
+            <div className="flex items-center gap-2 text-sidebar-primary font-semibold hover:bg-sidebar-accent/50 p-2 rounded-md transition-colors">
+              <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm">
+                AC
+              </div>
+              <div className="flex-1 text-left">
+                <div className="text-sm">Acme Corp</div>
+                <div className="text-xs text-sidebar-foreground/60 font-normal">Organization</div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-sidebar-foreground/60" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 ml-4 bg-popover" align="start">
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <ArrowLeftRight className="w-4 h-4 mr-2" />
+              Switch account
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer">
+              <Activity className="w-4 h-4 mr-2" />
+              Changelog
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <BookOpen className="w-4 h-4 mr-2" />
+              Help center
+            </DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
+              <Mail className="w-4 h-4 mr-2" />
+              Contact support
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Navigation */}
