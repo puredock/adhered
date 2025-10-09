@@ -145,11 +145,16 @@ const Catalog = () => {
     <div className="flex-1 min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="px-8 py-4">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Grid3x3 className="w-6 h-6" />
-              <h1 className="text-2xl font-bold tracking-tight">Catalog</h1>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                <Grid3x3 className="w-6 h-6 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight">Catalog</h1>
+                <p className="text-sm text-muted-foreground">Device types and security assessment categories</p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="outline" size="sm">
@@ -164,7 +169,7 @@ const Catalog = () => {
         </div>
       </header>
 
-      <main className="px-8 py-6 space-y-6">
+      <main className="container mx-auto px-6 py-8 space-y-6">
         {/* Info Banner - Mint Green */}
         <div className="p-6 rounded-lg bg-gradient-accent border border-accent/20 animate-fade-in">
           <div className="flex items-start gap-4">
