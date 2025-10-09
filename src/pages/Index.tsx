@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Network, Shield, AlertTriangle, Activity, Home } from "lucide-react";
+import { Network, Shield, AlertTriangle, Activity, Home, Search } from "lucide-react";
 const Index = () => {
   const stats = [{
     label: "Active Networks",
@@ -78,11 +79,14 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Dashboard Overview</p>
               </div>
             </div>
-            <Link to="/networks">
-              <button className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
-                View All Networks
-              </button>
-            </Link>
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search networks, devices..."
+                className="pl-9"
+              />
+            </div>
           </div>
         </div>
       </header>
