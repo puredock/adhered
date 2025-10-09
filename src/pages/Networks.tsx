@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Network, ArrowLeft, Wifi, Activity, LayoutGrid, List } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Network, ArrowLeft, Wifi, Activity, LayoutGrid, List, Search } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const Networks = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = useState("");
   const [networks] = useState([
     {
       id: 1,
@@ -44,6 +46,18 @@ const Networks = () => {
     },
   ]);
 
+  const filteredNetworks = useMemo(() => {
+    if (!searchQuery.trim()) return networks;
+    
+    const query = searchQuery.toLowerCase();
+    return networks.filter(network => 
+      network.name.toLowerCase().includes(query) ||
+      network.ssid.toLowerCase().includes(query) ||
+      network.ipRange.toLowerCase().includes(query) ||
+      network.gateway.toLowerCase().includes(query)
+    );
+  }, [networks, searchQuery]);
+
   const getStatusBadge = (status: string) => {
     const variants = {
       secure: { text: "Secure", className: "bg-success/10 text-success border-success/20" },
@@ -70,30 +84,46 @@ const Networks = () => {
                 <p className="text-sm text-muted-foreground">Manage and monitor your networks</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="w-4 h-4" />
-              </Button>
+            <div className="flex items-center gap-3">
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder="Search networks..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant={viewMode === "grid" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("grid")}
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "default" : "outline"}
+                  size="icon"
+                  onClick={() => setViewMode("list")}
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        {viewMode === "grid" ? (
+        {filteredNetworks.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No networks found matching "{searchQuery}"</p>
+          </div>
+        ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {networks.map((network) => (
+            {filteredNetworks.map((network) => (
               <Link key={network.id} to={`/networks/${network.id}`}>
                 <Card className="shadow-card border-border hover:border-primary hover:shadow-lg transition-all group h-full">
                   <CardHeader>
@@ -151,7 +181,7 @@ const Networks = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {networks.map((network) => (
+                {filteredNetworks.map((network) => (
                   <TableRow key={network.id} className="hover:bg-muted/50 cursor-pointer">
                     <TableCell>
                       <Link to={`/networks/${network.id}`}>
