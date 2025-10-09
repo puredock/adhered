@@ -5,130 +5,113 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Plus, Grid3x3 } from "lucide-react";
-
 const Catalog = () => {
-  const [devices] = useState([
-    {
-      id: 1,
-      name: "MacBook Pro",
-      type: "computer",
-      description: "Apple Inc. • macOS Sonoma",
-      ip: "192.168.1.101",
-      entries: "3 tests",
-      source: "Network Scan",
-      iconColor: "text-purple-600 bg-purple-50",
-    },
-    {
-      id: 2,
-      name: "iPhone 14",
-      type: "mobile",
-      description: "Apple mobile device",
-      ip: "192.168.1.102",
-      entries: "2 tests",
-      source: "Network Scan",
-      iconColor: "text-blue-600 bg-blue-50",
-    },
-    {
-      id: 3,
-      name: "Smart Thermostat",
-      type: "iot",
-      description: "Nest Labs IoT device",
-      ip: "192.168.1.115",
-      entries: "5 tests",
-      source: "Network Scan",
-      iconColor: "text-teal-600 bg-teal-50",
-    },
-    {
-      id: 4,
-      name: "HP LaserJet",
-      type: "printer",
-      description: "Network printer device",
-      ip: "192.168.1.120",
-      entries: "1 test",
-      source: "Network Scan",
-      iconColor: "text-orange-600 bg-orange-50",
-    },
-    {
-      id: 5,
-      name: "Security Camera",
-      type: "camera",
-      description: "Hikvision surveillance",
-      ip: "192.168.1.130",
-      entries: "4 tests",
-      source: "Network Scan",
-      iconColor: "text-pink-600 bg-pink-50",
-    },
-    {
-      id: 6,
-      name: "WiFi Router",
-      type: "network",
-      description: "Cisco Systems gateway",
-      ip: "192.168.1.1",
-      entries: "6 tests",
-      source: "Network Scan",
-      iconColor: "text-indigo-600 bg-indigo-50",
-    },
-    {
-      id: 7,
-      name: "Smart TV",
-      type: "iot",
-      description: "Samsung smart television",
-      ip: "192.168.1.145",
-      entries: "2 tests",
-      source: "Network Scan",
-      iconColor: "text-cyan-600 bg-cyan-50",
-    },
-    {
-      id: 8,
-      name: "Laptop Dell",
-      type: "computer",
-      description: "Dell Inc. • Windows 11",
-      ip: "192.168.1.150",
-      entries: "3 tests",
-      source: "Network Scan",
-      iconColor: "text-emerald-600 bg-emerald-50",
-    },
-  ]);
-
-  const systemTypes = [
-    {
-      id: 1,
-      name: "Port Scanning",
-      description: "Automated port scanning across all devices",
-      entries: "18 devices",
-      source: "Auto-scan",
-      iconColor: "text-yellow-600 bg-yellow-50",
-      icon: Activity,
-    },
-    {
-      id: 2,
-      name: "Vulnerability Assessment",
-      description: "CVE database matching and risk scoring",
-      entries: "12 issues",
-      source: "Security DB",
-      iconColor: "text-red-600 bg-red-50",
-      icon: AlertTriangle,
-    },
-    {
-      id: 3,
-      name: "Compliance Check",
-      description: "Industry standard compliance validation",
-      entries: "35 passed",
-      source: "Compliance",
-      iconColor: "text-green-600 bg-green-50",
-      icon: CheckCircle2,
-    },
-    {
-      id: 4,
-      name: "Network Monitoring",
-      description: "Real-time network traffic analysis",
-      entries: "3 networks",
-      source: "Monitor",
-      iconColor: "text-blue-600 bg-blue-50",
-      icon: Activity,
-    },
-  ];
-
+  const [devices] = useState([{
+    id: 1,
+    name: "MacBook Pro",
+    type: "computer",
+    description: "Apple Inc. • macOS Sonoma",
+    ip: "192.168.1.101",
+    entries: "3 tests",
+    source: "Network Scan",
+    iconColor: "text-purple-600 bg-purple-50"
+  }, {
+    id: 2,
+    name: "iPhone 14",
+    type: "mobile",
+    description: "Apple mobile device",
+    ip: "192.168.1.102",
+    entries: "2 tests",
+    source: "Network Scan",
+    iconColor: "text-blue-600 bg-blue-50"
+  }, {
+    id: 3,
+    name: "Smart Thermostat",
+    type: "iot",
+    description: "Nest Labs IoT device",
+    ip: "192.168.1.115",
+    entries: "5 tests",
+    source: "Network Scan",
+    iconColor: "text-teal-600 bg-teal-50"
+  }, {
+    id: 4,
+    name: "HP LaserJet",
+    type: "printer",
+    description: "Network printer device",
+    ip: "192.168.1.120",
+    entries: "1 test",
+    source: "Network Scan",
+    iconColor: "text-orange-600 bg-orange-50"
+  }, {
+    id: 5,
+    name: "Security Camera",
+    type: "camera",
+    description: "Hikvision surveillance",
+    ip: "192.168.1.130",
+    entries: "4 tests",
+    source: "Network Scan",
+    iconColor: "text-pink-600 bg-pink-50"
+  }, {
+    id: 6,
+    name: "WiFi Router",
+    type: "network",
+    description: "Cisco Systems gateway",
+    ip: "192.168.1.1",
+    entries: "6 tests",
+    source: "Network Scan",
+    iconColor: "text-indigo-600 bg-indigo-50"
+  }, {
+    id: 7,
+    name: "Smart TV",
+    type: "iot",
+    description: "Samsung smart television",
+    ip: "192.168.1.145",
+    entries: "2 tests",
+    source: "Network Scan",
+    iconColor: "text-cyan-600 bg-cyan-50"
+  }, {
+    id: 8,
+    name: "Laptop Dell",
+    type: "computer",
+    description: "Dell Inc. • Windows 11",
+    ip: "192.168.1.150",
+    entries: "3 tests",
+    source: "Network Scan",
+    iconColor: "text-emerald-600 bg-emerald-50"
+  }]);
+  const systemTypes = [{
+    id: 1,
+    name: "Port Scanning",
+    description: "Automated port scanning across all devices",
+    entries: "18 devices",
+    source: "Auto-scan",
+    iconColor: "text-yellow-600 bg-yellow-50",
+    icon: Activity
+  }, {
+    id: 2,
+    name: "Vulnerability Assessment",
+    description: "CVE database matching and risk scoring",
+    entries: "12 issues",
+    source: "Security DB",
+    iconColor: "text-red-600 bg-red-50",
+    icon: AlertTriangle
+  }, {
+    id: 3,
+    name: "Compliance Check",
+    description: "Industry standard compliance validation",
+    entries: "35 passed",
+    source: "Compliance",
+    iconColor: "text-green-600 bg-green-50",
+    icon: CheckCircle2
+  }, {
+    id: 4,
+    name: "Network Monitoring",
+    description: "Real-time network traffic analysis",
+    entries: "3 networks",
+    source: "Monitor",
+    iconColor: "text-blue-600 bg-blue-50",
+    icon: Activity
+  }];
   const getDeviceIcon = (type: string) => {
     const icons = {
       computer: Monitor,
@@ -136,13 +119,11 @@ const Catalog = () => {
       iot: Thermometer,
       printer: Printer,
       camera: Camera,
-      network: Wifi,
+      network: Wifi
     };
     return icons[type as keyof typeof icons] || Monitor;
   };
-
-  return (
-    <div className="flex-1 min-h-screen bg-background">
+  return <div className="flex-1 min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
@@ -157,9 +138,7 @@ const Catalog = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm">
-                Manage in GitHub
-              </Button>
+              
               <Button size="sm" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90">
                 <Plus className="w-4 h-4 mr-1" />
                 Add a device type
@@ -217,10 +196,7 @@ const Catalog = () => {
           <div className="flex-1 max-w-md ml-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search catalog types..." 
-                className="pl-9"
-              />
+              <Input placeholder="Search catalog types..." className="pl-9" />
             </div>
           </div>
         </div>
@@ -246,14 +222,10 @@ const Catalog = () => {
                 {/* Table Rows */}
                 <div className="divide-y divide-border">
                   {devices.map((device, index) => {
-                    const Icon = getDeviceIcon(device.type);
-                    return (
-                      <Link 
-                        key={device.id} 
-                        to={`/networks/1/devices/${device.id}`}
-                        style={{ animationDelay: `${index * 50}ms` }}
-                        className="animate-fade-in"
-                      >
+                  const Icon = getDeviceIcon(device.type);
+                  return <Link key={device.id} to={`/networks/1/devices/${device.id}`} style={{
+                    animationDelay: `${index * 50}ms`
+                  }} className="animate-fade-in">
                         <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-all cursor-pointer group">
                           <div className="col-span-3 flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${device.iconColor} group-hover:scale-110 transition-transform`}>
@@ -271,9 +243,8 @@ const Catalog = () => {
                             {device.source}
                           </div>
                         </div>
-                      </Link>
-                    );
-                  })}
+                      </Link>;
+                })}
                 </div>
               </div>
             </CardContent>
@@ -281,7 +252,9 @@ const Catalog = () => {
         </div>
 
         {/* System Types Section - Blue Gradient */}
-        <div className="animate-fade-in" style={{ animationDelay: "200ms" }}>
+        <div className="animate-fade-in" style={{
+        animationDelay: "200ms"
+      }}>
           <h2 className="text-lg font-semibold mb-4">System Types</h2>
           <Card className="shadow-card border-border overflow-hidden">
             <div className="bg-gradient-blue p-6 border-b border-border">
@@ -300,12 +273,9 @@ const Catalog = () => {
 
                 {/* Table Rows */}
                 <div className="divide-y divide-border">
-                  {systemTypes.map((type, index) => (
-                    <div 
-                      key={type.id}
-                      style={{ animationDelay: `${(index + 8) * 50}ms` }}
-                      className="animate-fade-in"
-                    >
+                  {systemTypes.map((type, index) => <div key={type.id} style={{
+                  animationDelay: `${(index + 8) * 50}ms`
+                }} className="animate-fade-in">
                       <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-all cursor-pointer group">
                         <div className="col-span-3 flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${type.iconColor} group-hover:scale-110 transition-transform`}>
@@ -323,19 +293,16 @@ const Catalog = () => {
                           {type.source}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </main>
-    </div>
-  );
+    </div>;
 };
 
 // Missing imports
 import { Activity, AlertTriangle, CheckCircle2 } from "lucide-react";
-
 export default Catalog;
