@@ -120,12 +120,12 @@ export function AppSidebar() {
                   <TooltipTrigger asChild>
                     <button
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground opacity-90 hover:opacity-100 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left",
+                        "flex items-center gap-3 px-3 py-2 min-h-10 rounded-md text-sm transition-colors text-sidebar-foreground opacity-90 hover:opacity-100 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left whitespace-nowrap",
                         isCollapsed && "justify-center px-0"
                       )}
                     >
                       <item.icon className="w-4 h-4 flex-shrink-0" />
-                      {!isCollapsed && item.title}
+                      {!isCollapsed && <span className="truncate">{item.title}</span>}
                     </button>
                   </TooltipTrigger>
                   {isCollapsed && (
@@ -146,7 +146,7 @@ export function AppSidebar() {
                     to={item.url}
                     className={({ isActive }) =>
                       cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors w-full",
+                        "flex items-center gap-3 px-3 py-2 min-h-10 rounded-md text-sm transition-colors w-full whitespace-nowrap",
                         isActive
                           ? "bg-sidebar-accent text-sidebar-accent-foreground opacity-100"
                           : "text-sidebar-foreground opacity-90 hover:opacity-100 hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground",
@@ -155,7 +155,7 @@ export function AppSidebar() {
                     }
                   >
                     <item.icon className="w-4 h-4 flex-shrink-0" />
-                    {!isCollapsed && item.title}
+                    {!isCollapsed && <span className="truncate">{item.title}</span>}
                   </NavLink>
                 </TooltipTrigger>
                 {isCollapsed && (
