@@ -149,10 +149,10 @@ const Catalog = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Grid3x3 className="w-6 h-6 text-primary-foreground" />
+                <Smartphone className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Catalog</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Devices</h1>
                 <p className="text-sm text-muted-foreground">Device types and security assessment categories</p>
               </div>
             </div>
