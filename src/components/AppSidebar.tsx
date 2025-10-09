@@ -1,4 +1,4 @@
-import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown, ChevronRight, Zap } from "lucide-react";
+import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown, ChevronRight, Zap, Layers } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -17,6 +17,9 @@ import { useState } from "react";
 
 const navItems = [
   { title: "Home", url: "/", icon: Home },
+];
+
+const assetItems = [
   { title: "Networks", url: "/networks", icon: Activity },
   { title: "Devices", url: "#", icon: Smartphone },
 ];
@@ -28,6 +31,7 @@ const actionItems = [
 ];
 
 export function AppSidebar() {
+  const [isAssetsOpen, setIsAssetsOpen] = useState(true);
   const [isActionsOpen, setIsActionsOpen] = useState(true);
   
   return (
@@ -75,39 +79,71 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
-        {navItems.map((item) => {
-          const isPlaceholder = item.url === "#";
-          
-          if (isPlaceholder) {
-            return (
-              <button
-                key={item.title}
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
-              >
-                <item.icon className="w-4 h-4" />
-                {item.title}
-              </button>
-            );
-          }
-          
-          return (
-            <NavLink
-              key={item.title}
-              to={item.url}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
+        {navItems.map((item) => (
+          <NavLink
+            key={item.title}
+            to={item.url}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+              )
+            }
+          >
+            <item.icon className="w-4 h-4" />
+            {item.title}
+          </NavLink>
+        ))}
+
+        {/* Assets Collapsible */}
+        <Collapsible open={isAssetsOpen} onOpenChange={setIsAssetsOpen}>
+          <CollapsibleTrigger className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left">
+            <Layers className="w-4 h-4" />
+            <span className="flex-1">Assets</span>
+            {isAssetsOpen ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-1 mt-1">
+            {assetItems.map((item) => {
+              const isPlaceholder = item.url === "#";
+              
+              if (isPlaceholder) {
+                return (
+                  <button
+                    key={item.title}
+                    className="flex items-center gap-3 pl-10 pr-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {item.title}
+                  </button>
+                );
               }
-            >
-              <item.icon className="w-4 h-4" />
-              {item.title}
-            </NavLink>
-          );
-        })}
+              
+              return (
+                <NavLink
+                  key={item.title}
+                  to={item.url}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 pl-10 pr-3 py-2 rounded-md text-sm transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    )
+                  }
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.title}
+                </NavLink>
+              );
+            })}
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Actions Collapsible */}
         <Collapsible open={isActionsOpen} onOpenChange={setIsActionsOpen}>
