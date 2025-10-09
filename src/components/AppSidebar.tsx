@@ -1,6 +1,7 @@
 import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,37 +65,42 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
-        {navItems.map((item) => {
+        {navItems.map((item, index) => {
           const isPlaceholder = item.url === "#";
+          const showSeparator = item.title === "Devices";
           
           if (isPlaceholder) {
             return (
-              <button
-                key={item.title}
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
-              >
-                <item.icon className="w-4 h-4" />
-                {item.title}
-              </button>
+              <div key={item.title}>
+                <button
+                  className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.title}
+                </button>
+                {showSeparator && <Separator className="my-2" />}
+              </div>
             );
           }
           
           return (
-            <NavLink
-              key={item.title}
-              to={item.url}
-              className={({ isActive }) =>
-                cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                )
-              }
-            >
-              <item.icon className="w-4 h-4" />
-              {item.title}
-            </NavLink>
+            <div key={item.title}>
+              <NavLink
+                to={item.url}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    isActive
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                  )
+                }
+              >
+                <item.icon className="w-4 h-4" />
+                {item.title}
+              </NavLink>
+              {showSeparator && <Separator className="my-2" />}
+            </div>
           );
         })}
       </nav>
