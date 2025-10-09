@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Network, ArrowLeft, Wifi, Shield, Activity } from "lucide-react";
+import { Network, ArrowLeft, Wifi, Activity } from "lucide-react";
 
 const Networks = () => {
   const [networks] = useState([
@@ -16,6 +16,7 @@ const Networks = () => {
       status: "secure",
       lastScan: "2 hours ago",
       gateway: "192.168.1.1",
+      iconColor: "text-purple-600 bg-purple-50",
     },
     {
       id: 2,
@@ -26,6 +27,7 @@ const Networks = () => {
       status: "warning",
       lastScan: "5 hours ago",
       gateway: "192.168.2.1",
+      iconColor: "text-orange-600 bg-orange-50",
     },
     {
       id: 3,
@@ -36,27 +38,28 @@ const Networks = () => {
       status: "critical",
       lastScan: "1 day ago",
       gateway: "192.168.3.1",
+      iconColor: "text-pink-600 bg-pink-50",
     },
   ]);
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      secure: { variant: "default" as const, text: "Secure", className: "bg-success" },
-      warning: { variant: "default" as const, text: "Warning", className: "bg-warning text-warning-foreground" },
-      critical: { variant: "destructive" as const, text: "Critical", className: "" },
+      secure: { text: "Secure", className: "bg-success/10 text-success border-success/20" },
+      warning: { text: "Warning", className: "bg-warning/10 text-warning border-warning/20" },
+      critical: { text: "Critical", className: "bg-destructive/10 text-destructive border-destructive/20" },
     };
     const config = variants[status as keyof typeof variants];
-    return <Badge variant={config.variant} className={config.className}>{config.text}</Badge>;
+    return <Badge variant="outline" className={config.className}>{config.text}</Badge>;
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link to="/">
-                <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+                <Button variant="ghost" size="icon" className="hover:bg-secondary">
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
               </Link>
@@ -73,11 +76,11 @@ const Networks = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
           {networks.map((network) => (
             <Link key={network.id} to={`/networks/${network.id}`}>
-              <Card className="bg-gradient-card shadow-card border-border/50 hover:border-primary/50 transition-all hover:shadow-glow group h-full">
+              <Card className="shadow-card border-border hover:border-primary hover:shadow-lg transition-all group h-full">
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                      <Network className="w-6 h-6 text-primary" />
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${network.iconColor} group-hover:scale-110 transition-transform`}>
+                      <Network className="w-6 h-6" />
                     </div>
                     {getStatusBadge(network.status)}
                   </div>
@@ -104,7 +107,7 @@ const Networks = () => {
                       </span>
                       <span className="font-semibold text-primary">{network.devices}</span>
                     </div>
-                    <div className="pt-3 border-t border-border/50">
+                    <div className="pt-3 border-t border-border">
                       <p className="text-xs text-muted-foreground">Last scan: {network.lastScan}</p>
                     </div>
                   </div>

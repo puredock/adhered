@@ -58,27 +58,27 @@ const DeviceDetail = () => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      online: { variant: "default" as const, text: "Online", className: "bg-success" },
-      warning: { variant: "default" as const, text: "Warning", className: "bg-warning text-warning-foreground" },
-      critical: { variant: "destructive" as const, text: "Critical", className: "" },
+      online: { text: "Online", className: "bg-success/10 text-success border-success/20" },
+      warning: { text: "Warning", className: "bg-warning/10 text-warning border-warning/20" },
+      critical: { text: "Critical", className: "bg-destructive/10 text-destructive border-destructive/20" },
     };
     const config = variants[status as keyof typeof variants];
-    return <Badge variant={config.variant} className={config.className}>{config.text}</Badge>;
+    return <Badge variant="outline" className={config.className}>{config.text}</Badge>;
   };
 
   const getSeverityIcon = (severity: string) => {
     if (severity === "success") return <CheckCircle2 className="w-4 h-4 text-success" />;
     if (severity === "warning") return <AlertTriangle className="w-4 h-4 text-warning" />;
-    return <Activity className="w-4 h-4 text-primary" />;
+    return <Activity className="w-4 h-4 text-info" />;
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
             <Link to={`/networks/${networkId}`}>
-              <Button variant="ghost" size="icon" className="hover:bg-primary/10">
+              <Button variant="ghost" size="icon" className="hover:bg-secondary">
                 <ArrowLeft className="w-5 h-5" />
               </Button>
             </Link>
@@ -94,12 +94,12 @@ const DeviceDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Device Info */}
           <div className="lg:col-span-2 space-y-6">
-            <Card className="bg-gradient-card shadow-card border-border/50">
+            <Card className="shadow-card border-border">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <Monitor className="w-6 h-6 text-primary" />
+                    <div className="w-12 h-12 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+                      <Monitor className="w-6 h-6" />
                     </div>
                     <div>
                       <CardTitle>Device Information</CardTitle>
@@ -153,7 +153,7 @@ const DeviceDetail = () => {
             </Card>
 
             {/* Test Results */}
-            <Card className="bg-gradient-card shadow-card border-border/50">
+            <Card className="shadow-card border-border">
               <CardHeader>
                 <CardTitle>Recent Test Results</CardTitle>
                 <CardDescription>Latest security assessments and scans</CardDescription>
@@ -161,7 +161,7 @@ const DeviceDetail = () => {
               <CardContent>
                 <div className="space-y-3">
                   {testResults.map((test) => (
-                    <div key={test.id} className="flex items-center justify-between p-3 rounded-lg bg-card/50 border border-border/50">
+                    <div key={test.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
                       <div className="flex items-center gap-3">
                         {getSeverityIcon(test.severity)}
                         <div>
@@ -179,7 +179,7 @@ const DeviceDetail = () => {
 
           {/* Actions Panel */}
           <div className="space-y-6">
-            <Card className="bg-gradient-card shadow-card border-border/50">
+            <Card className="shadow-card border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-primary" />
@@ -190,7 +190,7 @@ const DeviceDetail = () => {
               <CardContent className="space-y-3">
                 <Button 
                   onClick={handlePenTest} 
-                  className="w-full bg-primary hover:opacity-90 justify-start"
+                  className="w-full bg-primary hover:bg-primary/90 justify-start"
                 >
                   <Shield className="w-4 h-4 mr-2" />
                   Penetration Test
@@ -198,7 +198,7 @@ const DeviceDetail = () => {
                 <Button 
                   onClick={handleRiskAssessment} 
                   variant="outline" 
-                  className="w-full justify-start hover:bg-primary/10 hover:border-primary"
+                  className="w-full justify-start hover:bg-secondary"
                 >
                   <AlertTriangle className="w-4 h-4 mr-2" />
                   Risk Assessment
@@ -206,7 +206,7 @@ const DeviceDetail = () => {
                 <Button 
                   onClick={handleComplianceAudit} 
                   variant="outline" 
-                  className="w-full justify-start hover:bg-primary/10 hover:border-primary"
+                  className="w-full justify-start hover:bg-secondary"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   Compliance Audit
@@ -214,7 +214,7 @@ const DeviceDetail = () => {
                 <Button 
                   onClick={handleRegulatoryAdvisory} 
                   variant="outline" 
-                  className="w-full justify-start hover:bg-primary/10 hover:border-primary"
+                  className="w-full justify-start hover:bg-secondary"
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   Regulatory Advisory
@@ -223,7 +223,7 @@ const DeviceDetail = () => {
             </Card>
 
             {/* Quick Stats */}
-            <Card className="bg-gradient-card shadow-card border-border/50">
+            <Card className="shadow-card border-border">
               <CardHeader>
                 <CardTitle>Security Overview</CardTitle>
               </CardHeader>
@@ -233,14 +233,14 @@ const DeviceDetail = () => {
                     <span className="text-sm text-muted-foreground">Vulnerabilities</span>
                     <span className="font-bold text-warning">{device.vulnerabilities}</span>
                   </div>
-                  <div className="h-2 bg-card rounded-full overflow-hidden">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div className="h-full bg-warning" style={{ width: "30%" }} />
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-muted-foreground">Compliance Status</span>
-                    <Badge className="bg-success">Passed</Badge>
+                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">Passed</Badge>
                   </div>
                 </div>
               </CardContent>
