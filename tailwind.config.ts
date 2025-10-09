@@ -70,13 +70,16 @@ export default {
         },
       },
       backgroundImage: {
+        'gradient-primary': 'var(--gradient-primary)',
         'gradient-accent': 'var(--gradient-accent)',
-        'gradient-purple': 'var(--gradient-purple)',
-        'gradient-blue': 'var(--gradient-blue)',
+        'gradient-subtle': 'var(--gradient-subtle)',
+        'gradient-dark': 'var(--gradient-dark)',
+        'gradient-card': 'var(--gradient-card)',
       },
       boxShadow: {
         'sm': 'var(--shadow-sm)',
         'card': 'var(--shadow-card)',
+        'primary': 'var(--shadow-primary)',
       },
       borderRadius: {
         lg: "var(--radius)",
