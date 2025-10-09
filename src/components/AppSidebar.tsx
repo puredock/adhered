@@ -1,4 +1,4 @@
-import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown, ChevronRight, Zap, Layers } from "lucide-react";
+import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown, ChevronRight, Zap, Layers, AlertCircle } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -25,8 +25,9 @@ const assetItems = [
 ];
 
 const actionItems = [
-  { title: "Scans", url: "#", icon: ScanLine },
   { title: "Audits", url: "#", icon: ClipboardCheck },
+  { title: "Scans", url: "#", icon: ScanLine },
+  { title: "Issues", url: "#", icon: AlertCircle },
   { title: "Insights", url: "#", icon: TrendingUp },
 ];
 
