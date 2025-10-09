@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const navItems = [
   { title: "Home", url: "/", icon: Home },
@@ -107,8 +108,9 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-2 space-y-1">
-        {navItems.map((item) => {
+      <ScrollArea className="flex-1">
+        <nav className="p-2 space-y-1">
+          {navItems.map((item) => {
           const isPlaceholder = item.url === "#";
           
           if (isPlaceholder) {
@@ -164,8 +166,9 @@ export function AppSidebar() {
               </Tooltip>
             </TooltipProvider>
           );
-        })}
-      </nav>
+          })}
+        </nav>
+      </ScrollArea>
 
       {/* Organization Section */}
       {!isCollapsed && (
