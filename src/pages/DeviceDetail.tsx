@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Monitor, Shield, Activity, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Monitor, Shield, Activity, FileText, AlertTriangle, CheckCircle2, History, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 const DeviceDetail = () => {
   const { networkId, deviceId } = useParams();
@@ -288,7 +288,10 @@ const DeviceDetail = () => {
             {/* Test Results */}
             <Card className="shadow-card border-border">
               <CardHeader>
-                <CardTitle>Recent Items</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="w-5 h-5 text-primary" />
+                  Recent Items
+                </CardTitle>
                 <CardDescription>Latest security assessments and scans</CardDescription>
               </CardHeader>
               <CardContent>
@@ -358,7 +361,10 @@ const DeviceDetail = () => {
             {/* Quick Stats */}
             <Card className="shadow-card border-border">
               <CardHeader>
-                <CardTitle>Issues</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-primary" />
+                  Issues
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
