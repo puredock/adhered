@@ -1,7 +1,6 @@
-import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown } from "lucide-react";
+import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown, ChevronRight, Zap } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,17 +8,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useState } from "react";
 
 const navItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "Networks", url: "/networks", icon: Activity },
   { title: "Devices", url: "#", icon: Smartphone },
+];
+
+const actionItems = [
   { title: "Scans", url: "#", icon: ScanLine },
   { title: "Audits", url: "#", icon: ClipboardCheck },
   { title: "Insights", url: "#", icon: TrendingUp },
 ];
 
 export function AppSidebar() {
+  const [isActionsOpen, setIsActionsOpen] = useState(true);
+  
   return (
     <aside className="w-64 bg-sidebar border-r border-sidebar-border h-screen sticky top-0 flex flex-col">
       {/* Logo */}
@@ -65,44 +75,63 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
-        {navItems.map((item, index) => {
+        {navItems.map((item) => {
           const isPlaceholder = item.url === "#";
-          const showSeparator = item.title === "Devices";
           
           if (isPlaceholder) {
             return (
-              <div key={item.title}>
-                <button
-                  className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.title}
-                </button>
-                {showSeparator && <Separator className="my-2" />}
-              </div>
+              <button
+                key={item.title}
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
+              >
+                <item.icon className="w-4 h-4" />
+                {item.title}
+              </button>
             );
           }
           
           return (
-            <div key={item.title}>
-              <NavLink
-                to={item.url}
-                className={({ isActive }) =>
-                  cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-                  )
-                }
+            <NavLink
+              key={item.title}
+              to={item.url}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                )
+              }
+            >
+              <item.icon className="w-4 h-4" />
+              {item.title}
+            </NavLink>
+          );
+        })}
+
+        {/* Actions Collapsible */}
+        <Collapsible open={isActionsOpen} onOpenChange={setIsActionsOpen}>
+          <CollapsibleTrigger className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left">
+            <Zap className="w-4 h-4" />
+            <span className="flex-1">Actions</span>
+            {isActionsOpen ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronRight className="w-4 h-4" />
+            )}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-1 mt-1">
+            {actionItems.map((item) => (
+              <button
+                key={item.title}
+                className="flex items-center gap-3 pl-10 pr-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
               >
                 <item.icon className="w-4 h-4" />
                 {item.title}
-              </NavLink>
-              {showSeparator && <Separator className="my-2" />}
-            </div>
-          );
-        })}
+              </button>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
       </nav>
 
       {/* Organization Section */}
