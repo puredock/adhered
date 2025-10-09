@@ -2,33 +2,69 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Network, Shield, AlertTriangle, Activity } from "lucide-react";
-
 const Index = () => {
-  const stats = [
-    { label: "Active Networks", value: "3", icon: Network, color: "text-blue-600" },
-    { label: "Total Devices", value: "47", icon: Activity, color: "text-teal-600" },
-    { label: "Security Issues", value: "12", icon: AlertTriangle, color: "text-orange-600" },
-    { label: "Compliant Devices", value: "35", icon: Shield, color: "text-green-600" },
-  ];
-
-  const recentScans = [
-    { id: 1, network: "Office Network", devices: 18, status: "secure", lastScan: "2 hours ago", iconColor: "text-purple-600 bg-purple-50" },
-    { id: 2, network: "Guest Network", devices: 9, status: "warning", lastScan: "5 hours ago", iconColor: "text-orange-600 bg-orange-50" },
-    { id: 3, network: "IoT Network", devices: 20, status: "critical", lastScan: "1 day ago", iconColor: "text-pink-600 bg-pink-50" },
-  ];
-
+  const stats = [{
+    label: "Active Networks",
+    value: "3",
+    icon: Network,
+    color: "text-blue-600"
+  }, {
+    label: "Total Devices",
+    value: "47",
+    icon: Activity,
+    color: "text-teal-600"
+  }, {
+    label: "Security Issues",
+    value: "12",
+    icon: AlertTriangle,
+    color: "text-orange-600"
+  }, {
+    label: "Compliant Devices",
+    value: "35",
+    icon: Shield,
+    color: "text-green-600"
+  }];
+  const recentScans = [{
+    id: 1,
+    network: "Office Network",
+    devices: 18,
+    status: "secure",
+    lastScan: "2 hours ago",
+    iconColor: "text-purple-600 bg-purple-50"
+  }, {
+    id: 2,
+    network: "Guest Network",
+    devices: 9,
+    status: "warning",
+    lastScan: "5 hours ago",
+    iconColor: "text-orange-600 bg-orange-50"
+  }, {
+    id: 3,
+    network: "IoT Network",
+    devices: 20,
+    status: "critical",
+    lastScan: "1 day ago",
+    iconColor: "text-pink-600 bg-pink-50"
+  }];
   const getStatusBadge = (status: string) => {
     const variants = {
-      secure: { text: "Secure", className: "bg-success/10 text-success border-success/20" },
-      warning: { text: "Warning", className: "bg-warning/10 text-warning border-warning/20" },
-      critical: { text: "Critical", className: "bg-destructive/10 text-destructive border-destructive/20" },
+      secure: {
+        text: "Secure",
+        className: "bg-success/10 text-success border-success/20"
+      },
+      warning: {
+        text: "Warning",
+        className: "bg-warning/10 text-warning border-warning/20"
+      },
+      critical: {
+        text: "Critical",
+        className: "bg-destructive/10 text-destructive border-destructive/20"
+      }
     };
     const config = variants[status as keyof typeof variants];
     return <Badge variant="outline" className={config.className}>{config.text}</Badge>;
   };
-
-  return (
-    <div className="min-h-screen bg-background flex-1">
+  return <div className="min-h-screen bg-background flex-1">
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
@@ -39,7 +75,7 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">adhere</h1>
-                <p className="text-sm text-muted-foreground">Network Security & Compliance Dashboard</p>
+                
               </div>
             </div>
             <Link to="/networks">
@@ -54,8 +90,7 @@ const Index = () => {
       <main className="container mx-auto px-6 py-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => (
-            <Card key={stat.label} className="shadow-card border-border">
+          {stats.map(stat => <Card key={stat.label} className="shadow-card border-border">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -67,8 +102,7 @@ const Index = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
 
         {/* Recent Scans */}
@@ -79,8 +113,7 @@ const Index = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentScans.map((scan) => (
-                <Link key={scan.id} to="/networks">
+              {recentScans.map(scan => <Link key={scan.id} to="/networks">
                   <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group">
                     <div className="flex items-center gap-4">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${scan.iconColor} group-hover:scale-110 transition-transform`}>
@@ -95,14 +128,11 @@ const Index = () => {
                       {getStatusBadge(scan.status)}
                     </div>
                   </div>
-                </Link>
-              ))}
+                </Link>)}
             </div>
           </CardContent>
         </Card>
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
