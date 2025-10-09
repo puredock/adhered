@@ -21,9 +21,9 @@ export function AppSidebar() {
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-2 text-sidebar-primary font-semibold">
           <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm">
-            IS
+            AD
           </div>
-          IoT Security
+          adhere
         </div>
       </div>
 
