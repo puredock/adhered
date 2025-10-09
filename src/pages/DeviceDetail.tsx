@@ -240,14 +240,12 @@ const DeviceDetail = () => {
             <Card className="shadow-card border-border">
               <CardHeader>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                      <Monitor className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <CardTitle>Overview</CardTitle>
-                      <CardDescription>Hardware and network details</CardDescription>
-                    </div>
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Monitor className="w-5 h-5 text-primary" />
+                      Overview
+                    </CardTitle>
+                    <CardDescription>Hardware and network details</CardDescription>
                   </div>
                   {getStatusBadge(device.status)}
                 </div>
