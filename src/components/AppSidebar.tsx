@@ -21,7 +21,7 @@ const navItems = [
 
 const assetItems = [
   { title: "Networks", url: "/networks", icon: Activity },
-  { title: "Devices", url: "#", icon: Smartphone },
+  { title: "Devices", url: "/catalog", icon: Smartphone },
 ];
 
 const actionItems = [
