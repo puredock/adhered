@@ -160,7 +160,7 @@ const Catalog = () => {
               <Button variant="outline" size="sm">
                 Manage in GitHub
               </Button>
-              <Button size="sm" className="bg-primary hover:bg-primary/90">
+              <Button size="sm" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90">
                 <Plus className="w-4 h-4 mr-1" />
                 Add a device type
               </Button>
