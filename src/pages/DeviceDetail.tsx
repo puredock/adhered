@@ -7,10 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Monitor, Shield, Activity, FileText, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 const DeviceDetail = () => {
-  const {
-    networkId,
-    deviceId
-  } = useParams();
+  const { networkId, deviceId } = useParams();
 
   // Mock device data - in a real app, this would come from an API
   const allDevices = {
@@ -27,7 +24,7 @@ const DeviceDetail = () => {
       lastSeen: "Active now",
       openPorts: [22, 80, 443, 5000],
       vulnerabilities: 2,
-      complianceStatus: "passed"
+      complianceStatus: "passed",
     },
     "2": {
       id: 2,
@@ -42,7 +39,7 @@ const DeviceDetail = () => {
       lastSeen: "2 minutes ago",
       openPorts: [443, 5000],
       vulnerabilities: 0,
-      complianceStatus: "passed"
+      complianceStatus: "passed",
     },
     "3": {
       id: 3,
@@ -57,7 +54,7 @@ const DeviceDetail = () => {
       lastSeen: "Active now",
       openPorts: [80, 443],
       vulnerabilities: 1,
-      complianceStatus: "warning"
+      complianceStatus: "warning",
     },
     "4": {
       id: 4,
@@ -72,7 +69,7 @@ const DeviceDetail = () => {
       lastSeen: "15 minutes ago",
       openPorts: [80, 443, 9100],
       vulnerabilities: 3,
-      complianceStatus: "critical"
+      complianceStatus: "critical",
     },
     "5": {
       id: 5,
@@ -87,7 +84,7 @@ const DeviceDetail = () => {
       lastSeen: "Active now",
       openPorts: [80, 554, 8000],
       vulnerabilities: 2,
-      complianceStatus: "warning"
+      complianceStatus: "warning",
     },
     "6": {
       id: 6,
@@ -102,7 +99,7 @@ const DeviceDetail = () => {
       lastSeen: "Active now",
       openPorts: [22, 80, 443, 8443],
       vulnerabilities: 1,
-      complianceStatus: "passed"
+      complianceStatus: "passed",
     },
     "7": {
       id: 7,
@@ -117,7 +114,7 @@ const DeviceDetail = () => {
       lastSeen: "1 hour ago",
       openPorts: [80, 443],
       vulnerabilities: 0,
-      complianceStatus: "passed"
+      complianceStatus: "passed",
     },
     "8": {
       id: 8,
@@ -132,73 +129,82 @@ const DeviceDetail = () => {
       lastSeen: "Active now",
       openPorts: [135, 445, 3389],
       vulnerabilities: 1,
-      complianceStatus: "passed"
-    }
+      complianceStatus: "passed",
+    },
   };
   const device = allDevices[deviceId as keyof typeof allDevices] || allDevices["1"];
-  const [testResults] = useState([{
-    id: 1,
-    name: "Port Scan",
-    status: "completed",
-    result: "4 open ports detected",
-    severity: "info"
-  }, {
-    id: 2,
-    name: "Vulnerability Scan",
-    status: "completed",
-    result: "2 medium-risk vulnerabilities",
-    severity: "warning"
-  }, {
-    id: 3,
-    name: "Compliance Check",
-    status: "completed",
-    result: "Meets security standards",
-    severity: "success"
-  }]);
+  const [testResults] = useState([
+    {
+      id: 1,
+      name: "Port Scan",
+      status: "completed",
+      result: "4 open ports detected",
+      severity: "info",
+    },
+    {
+      id: 2,
+      name: "Vulnerability Scan",
+      status: "completed",
+      result: "2 medium-risk vulnerabilities",
+      severity: "warning",
+    },
+    {
+      id: 3,
+      name: "Compliance Check",
+      status: "completed",
+      result: "Meets security standards",
+      severity: "success",
+    },
+  ]);
   const handlePenTest = () => {
     toast.success("Penetration test initiated", {
-      description: "Comprehensive security testing in progress..."
+      description: "Comprehensive security testing in progress...",
     });
   };
   const handleRiskAssessment = () => {
     toast.success("Risk assessment started", {
-      description: "Analyzing security posture and vulnerabilities..."
+      description: "Analyzing security posture and vulnerabilities...",
     });
   };
   const handleComplianceAudit = () => {
     toast.success("Compliance audit launched", {
-      description: "Checking against industry standards..."
+      description: "Checking against industry standards...",
     });
   };
   const handleRegulatoryAdvisory = () => {
     toast.info("Regulatory advisory report", {
-      description: "Generating compliance recommendations..."
+      description: "Generating compliance recommendations...",
     });
   };
   const getStatusBadge = (status: string) => {
     const variants = {
       online: {
         text: "Online",
-        className: "bg-success/10 text-success border-success/20"
+        className: "bg-success/10 text-success border-success/20",
       },
       warning: {
         text: "Warning",
-        className: "bg-warning/10 text-warning border-warning/20"
+        className: "bg-warning/10 text-warning border-warning/20",
       },
       critical: {
         text: "Critical",
-        className: "bg-destructive/10 text-destructive border-destructive/20"
-      }
+        className: "bg-destructive/10 text-destructive border-destructive/20",
+      },
     };
     const config = variants[status as keyof typeof variants];
-    return <Badge variant="outline" className={config.className}>{config.text}</Badge>;
+    return (
+      <Badge variant="outline" className={config.className}>
+        {config.text}
+      </Badge>
+    );
   };
   const getSeverityIcon = (severity: string) => {
     if (severity === "success") return <CheckCircle2 className="w-4 h-4 text-success" />;
     if (severity === "warning") return <AlertTriangle className="w-4 h-4 text-warning" />;
     return <Activity className="w-4 h-4 text-info" />;
   };
-  return <div className="min-h-screen bg-background">
+  return (
+    <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center gap-4">
@@ -209,7 +215,9 @@ const DeviceDetail = () => {
             </Link>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">{device.name}</h1>
-              <p className="text-sm text-muted-foreground">{device.ip} • {device.mac}</p>
+              <p className="text-sm text-muted-foreground">
+                {device.ip} • {device.mac}
+              </p>
             </div>
           </div>
         </div>
@@ -227,7 +235,7 @@ const DeviceDetail = () => {
                       <Monitor className="w-6 h-6" />
                     </div>
                     <div>
-                      <CardTitle>About</CardTitle>
+                      <CardTitle>Overview</CardTitle>
                       <CardDescription>Hardware and network details</CardDescription>
                     </div>
                   </div>
@@ -261,15 +269,17 @@ const DeviceDetail = () => {
                     <p className="font-mono font-medium">{device.mac}</p>
                   </div>
                 </div>
-                
+
                 <Separator className="my-4" />
-                
+
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Open Ports</p>
                   <div className="flex flex-wrap gap-2">
-                    {device.openPorts.map(port => <Badge key={port} variant="outline" className="font-mono">
+                    {device.openPorts.map((port) => (
+                      <Badge key={port} variant="outline" className="font-mono">
                         {port}
-                      </Badge>)}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               </CardContent>
@@ -278,12 +288,16 @@ const DeviceDetail = () => {
             {/* Test Results */}
             <Card className="shadow-card border-border">
               <CardHeader>
-                <CardTitle>Recent Test Results</CardTitle>
+                <CardTitle>Recent Items</CardTitle>
                 <CardDescription>Latest security assessments and scans</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {testResults.map(test => <div key={test.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+                  {testResults.map((test) => (
+                    <div
+                      key={test.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
+                    >
                       <div className="flex items-center gap-3">
                         {getSeverityIcon(test.severity)}
                         <div>
@@ -292,7 +306,8 @@ const DeviceDetail = () => {
                         </div>
                       </div>
                       <Badge variant="outline">{test.status}</Badge>
-                    </div>)}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -304,7 +319,7 @@ const DeviceDetail = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="w-5 h-5 text-primary" />
-                  Security Actions
+                  Actions
                 </CardTitle>
                 <CardDescription>Run security tests and assessments</CardDescription>
               </CardHeader>
@@ -313,15 +328,27 @@ const DeviceDetail = () => {
                   <Shield className="w-4 h-4 mr-2" />
                   Penetration Test
                 </Button>
-                <Button onClick={handleRiskAssessment} variant="outline" className="w-full justify-start hover:bg-secondary">
+                <Button
+                  onClick={handleRiskAssessment}
+                  variant="outline"
+                  className="w-full justify-start hover:bg-secondary"
+                >
                   <AlertTriangle className="w-4 h-4 mr-2" />
                   Risk Assessment
                 </Button>
-                <Button onClick={handleComplianceAudit} variant="outline" className="w-full justify-start hover:bg-secondary">
+                <Button
+                  onClick={handleComplianceAudit}
+                  variant="outline"
+                  className="w-full justify-start hover:bg-secondary"
+                >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
                   Compliance Audit
                 </Button>
-                <Button onClick={handleRegulatoryAdvisory} variant="outline" className="w-full justify-start hover:bg-secondary">
+                <Button
+                  onClick={handleRegulatoryAdvisory}
+                  variant="outline"
+                  className="w-full justify-start hover:bg-secondary"
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Regulatory Advisory
                 </Button>
@@ -331,7 +358,7 @@ const DeviceDetail = () => {
             {/* Quick Stats */}
             <Card className="shadow-card border-border">
               <CardHeader>
-                <CardTitle>Security Overview</CardTitle>
+                <CardTitle>Issues</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -340,15 +367,20 @@ const DeviceDetail = () => {
                     <span className="font-bold text-warning">{device.vulnerabilities}</span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-warning" style={{
-                    width: "30%"
-                  }} />
+                    <div
+                      className="h-full bg-warning"
+                      style={{
+                        width: "30%",
+                      }}
+                    />
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm text-muted-foreground">Compliance Status</span>
-                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">Passed</Badge>
+                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                      Passed
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
@@ -356,6 +388,7 @@ const DeviceDetail = () => {
           </div>
         </div>
       </main>
-    </div>;
+    </div>
+  );
 };
 export default DeviceDetail;
