@@ -1,4 +1,4 @@
-import { Home, Search, Flame, PhoneCall, Activity, FileText, MessageCircle, Grid3x3, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown } from "lucide-react";
+import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -11,14 +11,11 @@ import {
 
 const navItems = [
   { title: "Home", url: "/", icon: Home },
-  { title: "Search", url: "#", icon: Search },
   { title: "Networks", url: "/networks", icon: Activity },
-  { title: "Catalog", url: "/catalog", icon: Grid3x3 },
-  { title: "Incidents", url: "#", icon: Flame },
-  { title: "On-call", url: "#", icon: PhoneCall },
-  { title: "Status", url: "#", icon: FileText },
-  { title: "Post-incident", url: "#", icon: MessageCircle },
-  { title: "Insights", url: "#", icon: Activity },
+  { title: "Devices", url: "#", icon: Smartphone },
+  { title: "Scans", url: "#", icon: ScanLine },
+  { title: "Audits", url: "#", icon: ClipboardCheck },
+  { title: "Insights", url: "#", icon: TrendingUp },
 ];
 
 export function AppSidebar() {
