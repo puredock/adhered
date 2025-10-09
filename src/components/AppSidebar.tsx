@@ -21,9 +21,12 @@ export function AppSidebar() {
       <div className="p-4 border-b border-sidebar-border">
         <div className="flex items-center gap-2 text-sidebar-primary font-semibold">
           <div className="w-8 h-8 rounded bg-primary flex items-center justify-center text-primary-foreground text-sm">
-            AD
+            AC
           </div>
-          adhere
+          <div>
+            <div className="text-sm">Acme Corp</div>
+            <div className="text-xs text-sidebar-foreground/60 font-normal">Organization</div>
+          </div>
         </div>
       </div>
 
