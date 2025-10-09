@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Plus } from "lucide-react";
+import { Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Plus, Grid3x3 } from "lucide-react";
 
 const Catalog = () => {
   const [devices] = useState([
@@ -147,7 +147,8 @@ const Catalog = () => {
       <header className="border-b border-border bg-card sticky top-0 z-50">
         <div className="px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
+              <Grid3x3 className="w-6 h-6" />
               <h1 className="text-2xl font-bold tracking-tight">Catalog</h1>
             </div>
             <div className="flex items-center gap-3">
