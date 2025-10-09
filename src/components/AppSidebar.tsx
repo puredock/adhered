@@ -1,4 +1,5 @@
-import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown, ChevronRight, Zap, Layers, AlertCircle } from "lucide-react";
+import { Home, Activity, Smartphone, ScanLine, ClipboardCheck, TrendingUp, Users, Settings, ArrowLeftRight, BookOpen, Mail, ChevronDown, ChevronRight, Zap, Layers, AlertCircle, LogOut } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -171,15 +172,33 @@ export function AppSidebar() {
         </Collapsible>
       </nav>
 
-      {/* Organization Section */}
+      {/* User Profile Section */}
       <div className="p-2 border-t border-sidebar-border">
-        <div className="px-3 py-2 text-xs text-sidebar-foreground/60 font-medium">
-          Your organization
-        </div>
-        <button className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground transition-colors">
-          <Users className="w-4 h-4" />
-          Pick a team
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger className="w-full">
+            <div className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground">
+              <Avatar className="w-8 h-8">
+                <AvatarImage src="https://github.com/shadcn.png" alt="John Doe" />
+                <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+              <div className="flex-1 text-left">
+                <div className="text-sm font-medium">John Doe</div>
+                <div className="text-xs text-sidebar-foreground/60">john.doe@acme.com</div>
+              </div>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56 mb-2 ml-2 bg-popover" align="start" side="top">
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="w-4 h-4 mr-2" />
+              User Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="cursor-pointer text-destructive">
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );
