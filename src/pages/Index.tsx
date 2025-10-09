@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Network, Shield, AlertTriangle, Activity } from "lucide-react";
+import { Network, Shield, AlertTriangle, Activity, Home } from "lucide-react";
 const Index = () => {
   const stats = [{
     label: "Active Networks",
@@ -71,11 +71,11 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Shield className="w-6 h-6 text-primary-foreground" />
+                <Home className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">adhere</h1>
-                
+                <h1 className="text-2xl font-bold tracking-tight">Home</h1>
+                <p className="text-sm text-muted-foreground">Dashboard Overview</p>
               </div>
             </div>
             <Link to="/networks">
