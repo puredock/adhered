@@ -32,23 +32,39 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 space-y-1">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.title}
-            to={item.url}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
-              )
-            }
-          >
-            <item.icon className="w-4 h-4" />
-            {item.title}
-          </NavLink>
-        ))}
+        {navItems.map((item) => {
+          const isPlaceholder = item.url === "#";
+          
+          if (isPlaceholder) {
+            return (
+              <button
+                key={item.title}
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
+              >
+                <item.icon className="w-4 h-4" />
+                {item.title}
+              </button>
+            );
+          }
+          
+          return (
+            <NavLink
+              key={item.title}
+              to={item.url}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                )
+              }
+            >
+              <item.icon className="w-4 h-4" />
+              {item.title}
+            </NavLink>
+          );
+        })}
       </nav>
 
       {/* Organization Section */}
