@@ -2,9 +2,25 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardCheck, Search, FileCheck, Shield, Building2, Plane, Ship, Train, Truck, Hospital } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Button } from "@/components/ui/button";
+import { ClipboardCheck, Search, FileCheck, Shield, Building2, Plane, Ship, Train, Truck, Hospital, LayoutGrid, List, Filter } from "lucide-react";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Audit = () => {
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const regulatoryFrameworks = [
     {
       id: "hipaa",
@@ -96,6 +112,29 @@ const Audit = () => {
     }
   ];
 
+  const allTags = Array.from(new Set(regulatoryFrameworks.flatMap(f => f.tags)));
+  const allStatuses = Array.from(new Set(regulatoryFrameworks.map(f => f.status)));
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const toggleStatus = (status: string) => {
+    setSelectedStatuses(prev =>
+      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
+    );
+  };
+
+  const filteredFrameworks = regulatoryFrameworks.filter(framework => {
+    const matchesSearch = framework.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      framework.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesTags = selectedTags.length === 0 || framework.tags.some(tag => selectedTags.includes(tag));
+    const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(framework.status);
+    return matchesSearch && matchesTags && matchesStatus;
+  });
+
   const getStatusBadge = (status: string) => {
     const variants = {
       active: {
@@ -126,13 +165,59 @@ const Audit = () => {
                 <p className="text-sm text-muted-foreground">Regulatory frameworks and compliance workflows</p>
               </div>
             </div>
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search frameworks..."
-                className="pl-9"
-              />
+            <div className="flex items-center gap-3">
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search frameworks..."
+                  className="pl-9"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Filter className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {allStatuses.map(status => (
+                    <DropdownMenuCheckboxItem
+                      key={status}
+                      checked={selectedStatuses.includes(status)}
+                      onCheckedChange={() => toggleStatus(status)}
+                    >
+                      {status === "active" ? "Active" : "Pending Review"}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Filter by Tags</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {allTags.map(tag => (
+                    <DropdownMenuCheckboxItem
+                      key={tag}
+                      checked={selectedTags.includes(tag)}
+                      onCheckedChange={() => toggleTag(tag)}
+                    >
+                      {tag}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <ToggleGroup type="single" value={viewMode} onValueChange={(value) => value && setViewMode(value as "grid" | "list")}>
+                <ToggleGroupItem value="grid" aria-label="Grid view">
+                  <LayoutGrid className="w-4 h-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="list" aria-label="List view">
+                  <List className="w-4 h-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
           </div>
         </div>
@@ -184,47 +269,104 @@ const Audit = () => {
           </Card>
         </div>
 
-        {/* Regulatory Frameworks Grid */}
+        {/* Regulatory Frameworks Grid/List */}
         <Card className="shadow-card border-border">
           <CardHeader>
             <CardTitle className="text-xl">Regulatory Frameworks</CardTitle>
-            <CardDescription>Select a framework to view details and trigger audit workflows</CardDescription>
+            <CardDescription>
+              {filteredFrameworks.length} framework{filteredFrameworks.length !== 1 ? 's' : ''} found
+              {(selectedTags.length > 0 || selectedStatuses.length > 0) && (
+                <Button
+                  variant="link"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedTags([]);
+                    setSelectedStatuses([]);
+                  }}
+                  className="ml-2 h-auto p-0"
+                >
+                  Clear filters
+                </Button>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {regulatoryFrameworks.map((framework) => (
-                <Link key={framework.id} to={`/audits/${framework.id}`}>
-                  <div className="p-5 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group h-full">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${framework.iconColor} group-hover:scale-110 transition-transform`}>
-                        <framework.icon className="w-6 h-6" />
+            {viewMode === "grid" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredFrameworks.map((framework) => (
+                  <Link key={framework.id} to={`/audits/${framework.id}`}>
+                    <div className="p-5 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group h-full">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${framework.iconColor} group-hover:scale-110 transition-transform`}>
+                          <framework.icon className="w-6 h-6" />
+                        </div>
+                        {getStatusBadge(framework.status)}
                       </div>
-                      {getStatusBadge(framework.status)}
+                      
+                      <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                        {framework.name}
+                      </h3>
+                      
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                        {framework.description}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {framework.tags.map((tag) => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Last audit: {framework.lastAudit}
+                      </p>
                     </div>
-                    
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                      {framework.name}
-                    </h3>
-                    
-                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-                      {framework.description}
-                    </p>
-                    
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {framework.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {filteredFrameworks.map((framework) => (
+                  <Link key={framework.id} to={`/audits/${framework.id}`}>
+                    <div className="p-4 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${framework.iconColor} group-hover:scale-110 transition-transform flex-shrink-0`}>
+                          <framework.icon className="w-6 h-6" />
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1">
+                            <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                              {framework.name}
+                            </h3>
+                            {getStatusBadge(framework.status)}
+                          </div>
+                          
+                          <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
+                            {framework.description}
+                          </p>
+                          
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap gap-2">
+                              {framework.tags.map((tag) => (
+                                <Badge key={tag} variant="secondary" className="text-xs">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                            <p className="text-xs text-muted-foreground ml-auto whitespace-nowrap">
+                              Last audit: {framework.lastAudit}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    
-                    <p className="text-xs text-muted-foreground">
-                      Last audit: {framework.lastAudit}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
