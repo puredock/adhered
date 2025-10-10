@@ -180,6 +180,64 @@ const ScansDetail = () => {
         low: 4,
         info: 8
       }
+    },
+    "iso-27001": {
+      name: "ISO 27001",
+      fullName: "Information Security Management Systems",
+      description: "International standard for information security management systems with comprehensive security controls",
+      icon: Shield,
+      iconColor: "text-cyan-600 bg-cyan-50",
+      tags: ["ISMS", "Compliance", "International"],
+      status: "active",
+      lastScan: "4 hours ago",
+      severity: "medium",
+      completionRate: 72,
+      overview: "ISO 27001 is an international standard for establishing, implementing, maintaining, and continually improving an information security management system. The security testing focuses on validating the implementation of controls across 14 domains including access control, cryptography, physical security, and incident management.",
+      phases: [
+        { name: "Context Analysis", status: "completed", progress: 100 },
+        { name: "Risk Assessment", status: "completed", progress: 100 },
+        { name: "Control Implementation", status: "completed", progress: 100 },
+        { name: "Access Control Testing", status: "in-progress", progress: 75 },
+        { name: "Cryptographic Controls", status: "in-progress", progress: 60 },
+        { name: "Physical Security", status: "pending", progress: 0 },
+        { name: "Operations Security", status: "pending", progress: 0 }
+      ],
+      findings: {
+        critical: 0,
+        high: 2,
+        medium: 8,
+        low: 12,
+        info: 20
+      }
+    },
+    "iec-62443": {
+      name: "IEC 62443",
+      fullName: "Industrial Automation and Control Systems Security",
+      description: "Security standard for industrial automation and control systems in critical infrastructure",
+      icon: Lock,
+      iconColor: "text-orange-600 bg-orange-50",
+      tags: ["Industrial", "ICS", "Critical Infrastructure"],
+      status: "pending",
+      lastScan: "1 day ago",
+      severity: "high",
+      completionRate: 38,
+      overview: "IEC 62443 provides a flexible framework to address and mitigate current and future security vulnerabilities in industrial automation and control systems (IACS). Testing focuses on network segmentation, access control, data integrity, and secure remote access for critical infrastructure systems.",
+      phases: [
+        { name: "Asset Identification", status: "completed", progress: 100 },
+        { name: "Zone & Conduit Analysis", status: "completed", progress: 100 },
+        { name: "Network Segmentation", status: "in-progress", progress: 50 },
+        { name: "Access Control Testing", status: "pending", progress: 0 },
+        { name: "Data Integrity", status: "pending", progress: 0 },
+        { name: "Secure Communication", status: "pending", progress: 0 },
+        { name: "System Hardening", status: "pending", progress: 0 }
+      ],
+      findings: {
+        critical: 1,
+        high: 5,
+        medium: 6,
+        low: 3,
+        info: 5
+      }
     }
   };
 
