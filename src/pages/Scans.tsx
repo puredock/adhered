@@ -169,7 +169,7 @@ const Scans = () => {
                 <ScanLine className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Security Scans</h1>
+                <h1 className="text-2xl font-bold tracking-tight">Scans</h1>
                 <p className="text-sm text-muted-foreground">Penetration testing standards and security assessments</p>
               </div>
             </div>
