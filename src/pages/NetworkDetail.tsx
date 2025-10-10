@@ -123,9 +123,9 @@ const NetworkDetail = () => {
               <div>
                 <h1 className="text-2xl font-bold tracking-tight">{network.name}</h1>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{network.ssid}</span>
-                  <span>•</span>
                   {getStatusBadge(network.status)}
+                  <span>•</span>
+                  <span>{network.ssid}</span>
                 </div>
               </div>
             </div>
