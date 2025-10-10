@@ -15,6 +15,7 @@ const NetworkDetail = () => {
     ssid: "CORP-MAIN-5G",
     ipRange: "192.168.1.0/24",
     gateway: "192.168.1.1",
+    status: "online",
   });
 
   const [devices] = useState([
@@ -120,8 +121,12 @@ const NetworkDetail = () => {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight">Device Catalog</h1>
-                <p className="text-sm text-muted-foreground">{network.name} • {network.ssid}</p>
+                <h1 className="text-2xl font-bold tracking-tight">{network.name}</h1>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>{network.ssid}</span>
+                  <span>•</span>
+                  {getStatusBadge(network.status)}
+                </div>
               </div>
             </div>
             <Button className="bg-primary hover:bg-primary/90">
