@@ -110,9 +110,9 @@ const NetworkDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-4">
+    <div className="min-h-screen w-full bg-background flex flex-col">
+      <header className="border-b border-border bg-card sticky top-0 z-50 w-full">
+        <div className="w-full px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link to="/networks">
@@ -136,7 +136,7 @@ const NetworkDetail = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-8">
+      <main className="flex-1 w-full px-6 py-8">
         {/* Banner */}
         <div className="mb-6 p-6 rounded-lg bg-gradient-accent border border-accent/20">
           <div className="flex items-start gap-4">
