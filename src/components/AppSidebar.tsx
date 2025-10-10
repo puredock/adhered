@@ -26,7 +26,7 @@ const assetItems = [
 ];
 
 const actionItems = [
-  { title: "Audits", url: "#", icon: ClipboardCheck },
+  { title: "Audits", url: "/audits", icon: ClipboardCheck },
   { title: "Scans", url: "#", icon: ScanLine },
   { title: "Issues", url: "#", icon: AlertCircle },
   { title: "Insights", url: "#", icon: TrendingUp },
@@ -159,15 +159,39 @@ export function AppSidebar() {
             )}
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-1 mt-1">
-            {actionItems.map((item) => (
-              <button
-                key={item.title}
-                className="flex items-center gap-3 pl-10 pr-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
-              >
-                <item.icon className="w-4 h-4" />
-                {item.title}
-              </button>
-            ))}
+            {actionItems.map((item) => {
+              const isPlaceholder = item.url === "#";
+              
+              if (isPlaceholder) {
+                return (
+                  <button
+                    key={item.title}
+                    className="flex items-center gap-3 pl-10 pr-3 py-2 rounded-md text-sm transition-colors text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground w-full text-left"
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {item.title}
+                  </button>
+                );
+              }
+              
+              return (
+                <NavLink
+                  key={item.title}
+                  to={item.url}
+                  className={({ isActive }) =>
+                    cn(
+                      "flex items-center gap-3 pl-10 pr-3 py-2 rounded-md text-sm transition-colors",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                    )
+                  }
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.title}
+                </NavLink>
+              );
+            })}
           </CollapsibleContent>
         </Collapsible>
       </nav>

@@ -9,6 +9,8 @@ import Networks from "./pages/Networks";
 import NetworkDetail from "./pages/NetworkDetail";
 import DeviceDetail from "./pages/DeviceDetail";
 import Catalog from "./pages/Catalog";
+import Audit from "./pages/Audit";
+import AuditDetail from "./pages/AuditDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +29,8 @@ const App = () => (
             <Route path="/networks/:id" element={<NetworkDetail />} />
             <Route path="/networks/:networkId/devices/:deviceId" element={<DeviceDetail />} />
             <Route path="/catalog" element={<Catalog />} />
+            <Route path="/audits" element={<Audit />} />
+            <Route path="/audits/:id" element={<AuditDetail />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
