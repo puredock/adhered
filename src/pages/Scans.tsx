@@ -93,6 +93,30 @@ const Scans = () => {
       status: "active",
       lastScan: "8 hours ago",
       severity: "high"
+    },
+    {
+      id: "iso-27001",
+      name: "ISO 27001",
+      fullName: "Information Security Management Systems",
+      description: "International standard for information security management systems with comprehensive security controls",
+      icon: Shield,
+      iconColor: "text-cyan-600 bg-cyan-50",
+      tags: ["ISMS", "Compliance", "International"],
+      status: "active",
+      lastScan: "4 hours ago",
+      severity: "medium"
+    },
+    {
+      id: "iec-62443",
+      name: "IEC 62443",
+      fullName: "Industrial Automation and Control Systems Security",
+      description: "Security standard for industrial automation and control systems in critical infrastructure",
+      icon: Lock,
+      iconColor: "text-orange-600 bg-orange-50",
+      tags: ["Industrial", "ICS", "Critical Infrastructure"],
+      status: "pending",
+      lastScan: "1 day ago",
+      severity: "high"
     }
   ];
 
