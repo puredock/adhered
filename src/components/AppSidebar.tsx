@@ -27,7 +27,7 @@ const assetItems = [
 
 const actionItems = [
   { title: "Audits", url: "/audits", icon: ClipboardCheck },
-  { title: "Scans", url: "#", icon: ScanLine },
+  { title: "Scans", url: "/scans", icon: ScanLine },
   { title: "Issues", url: "#", icon: AlertCircle },
   { title: "Insights", url: "#", icon: TrendingUp },
 ];
