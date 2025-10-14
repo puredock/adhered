@@ -1,113 +1,127 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown } from "lucide-react";
+import { ArrowLeft, Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Loader2, HardDrive, Server } from "lucide-react";
+import { api } from "@/lib/api";
 
 const NetworkDetail = () => {
   const { id } = useParams();
+  const [searchQuery, setSearchQuery] = useState("");
   
-  const [network] = useState({
-    id: 1,
-    name: "Office Network",
-    ssid: "CORP-MAIN-5G",
-    ipRange: "192.168.1.0/24",
-    gateway: "192.168.1.1",
-    status: "online",
+  const { data: network, isLoading: networkLoading, error: networkError } = useQuery({
+    queryKey: ["network", id],
+    queryFn: () => api.networks.get(id!),
+    enabled: !!id,
   });
 
-  const [devices] = useState([
-    {
-      id: 1,
-      name: "MacBook Pro",
-      type: "computer",
-      ip: "192.168.1.101",
-      mac: "A4:83:E7:5F:2B:1C",
-      status: "online",
-      manufacturer: "Apple Inc.",
-      lastSeen: "Active now",
-      iconColor: "text-purple-600 bg-purple-50",
-    },
-    {
-      id: 2,
-      name: "iPhone 14",
-      type: "mobile",
-      ip: "192.168.1.102",
-      mac: "C8:89:F3:1D:4E:6A",
-      status: "online",
-      manufacturer: "Apple Inc.",
-      lastSeen: "Active now",
-      iconColor: "text-blue-600 bg-blue-50",
-    },
-    {
-      id: 3,
-      name: "Smart Thermostat",
-      type: "iot",
-      ip: "192.168.1.115",
-      mac: "B4:E6:2D:8A:3F:91",
-      status: "online",
-      manufacturer: "Nest Labs",
-      lastSeen: "2 min ago",
-      iconColor: "text-teal-600 bg-teal-50",
-    },
-    {
-      id: 4,
-      name: "HP LaserJet",
-      type: "printer",
-      ip: "192.168.1.120",
-      mac: "F0:1F:AF:2C:7D:5B",
-      status: "warning",
-      manufacturer: "HP Inc.",
-      lastSeen: "15 min ago",
-      iconColor: "text-orange-600 bg-orange-50",
-    },
-    {
-      id: 5,
-      name: "Security Camera",
-      type: "camera",
-      ip: "192.168.1.130",
-      mac: "D8:0D:17:5E:9A:3C",
-      status: "critical",
-      manufacturer: "Hikvision",
-      lastSeen: "1 hour ago",
-      iconColor: "text-pink-600 bg-pink-50",
-    },
-    {
-      id: 6,
-      name: "WiFi Router",
-      type: "network",
-      ip: "192.168.1.1",
-      mac: "E4:8D:8C:A2:F1:7B",
-      status: "online",
-      manufacturer: "Cisco Systems",
-      lastSeen: "Active now",
-      iconColor: "text-indigo-600 bg-indigo-50",
-    },
-  ]);
+  const { data: devicesData, isLoading: devicesLoading } = useQuery({
+    queryKey: ["devices", id],
+    queryFn: () => api.devices.listByNetwork(id!),
+    enabled: !!id,
+  });
+
+  const devices = devicesData?.devices || [];
+
+  const filteredDevices = useMemo(() => {
+    if (!searchQuery.trim()) return devices;
+    
+    const query = searchQuery.toLowerCase();
+    return devices.filter(device => 
+      device.hostname?.toLowerCase().includes(query) ||
+      device.ip_address.toLowerCase().includes(query) ||
+      device.manufacturer?.toLowerCase().includes(query)
+    );
+  }, [devices, searchQuery]);
 
   const getDeviceIcon = (type: string) => {
     const icons = {
-      computer: Monitor,
-      mobile: Smartphone,
-      iot: Thermometer,
-      printer: Printer,
-      camera: Camera,
-      network: Wifi,
+      medical_device: Monitor,
+      iot_device: Thermometer,
+      network_device: Wifi,
+      workstation: HardDrive,
+      server: Server,
+      unknown: Monitor
     };
     return icons[type as keyof typeof icons] || Monitor;
   };
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      online: { text: "Online", className: "bg-success/10 text-success border-success/20" },
-      warning: { text: "Warning", className: "bg-warning/10 text-warning border-warning/20" },
-      critical: { text: "Critical", className: "bg-destructive/10 text-destructive border-destructive/20" },
+      active: { text: "Active", className: "bg-success/10 text-success border-success/20" },
+      inactive: { text: "Inactive", className: "bg-warning/10 text-warning border-warning/20" },
+      scanning: { text: "Scanning", className: "bg-primary/10 text-primary border-primary/20" },
     };
-    const config = variants[status as keyof typeof variants];
+    const config = variants[status as keyof typeof variants] || variants.active;
     return <Badge variant="outline" className={config.className}>{config.text}</Badge>;
   };
+
+  const getDeviceStatusBadge = (lastSeen: string) => {
+    const now = new Date();
+    const lastSeenDate = new Date(lastSeen);
+    const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 5) {
+      return <Badge variant="outline" className="bg-success/10 text-success border-success/20">Online</Badge>;
+    } else if (diffInMinutes < 60) {
+      return <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">Away</Badge>;
+    } else {
+      return <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-muted">Offline</Badge>;
+    }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return "Active now";
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  };
+
+  const getIconColor = (index: number) => {
+    const colors = [
+      "text-purple-600 bg-purple-50",
+      "text-blue-600 bg-blue-50",
+      "text-teal-600 bg-teal-50",
+      "text-orange-600 bg-orange-50",
+      "text-pink-600 bg-pink-50",
+      "text-indigo-600 bg-indigo-50",
+    ];
+    return colors[index % colors.length];
+  };
+
+  if (networkLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (networkError || !network) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <p className="text-destructive text-center">
+              Error loading network. Make sure the API server is running.
+            </p>
+            <Button asChild className="w-full mt-4">
+              <Link to="/networks">Back to Networks</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-background flex flex-col">
@@ -125,7 +139,7 @@ const NetworkDetail = () => {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   {getStatusBadge(network.status)}
                   <span>•</span>
-                  <span>{network.ssid}</span>
+                  <span>{network.subnet}</span>
                 </div>
               </div>
             </div>
@@ -178,6 +192,8 @@ const NetworkDetail = () => {
               <Input 
                 placeholder="Search devices..." 
                 className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
@@ -187,49 +203,65 @@ const NetworkDetail = () => {
         <Card className="shadow-card border-border">
           <CardHeader>
             <CardTitle>Your Devices</CardTitle>
-            <CardDescription>{devices.length} devices detected on this network</CardDescription>
+            <CardDescription>
+              {filteredDevices.length} device{filteredDevices.length !== 1 ? 's' : ''} detected on this network
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-hidden">
               {/* Table Header */}
               <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
-                <div className="col-span-3">Name</div>
-                <div className="col-span-3">Description</div>
+                <div className="col-span-3">Device Name</div>
+                <div className="col-span-3">Details</div>
                 <div className="col-span-2">IP Address</div>
                 <div className="col-span-2">Status</div>
                 <div className="col-span-2">Last Seen</div>
               </div>
 
               {/* Table Rows */}
-              <div className="divide-y divide-border">
-                {devices.map((device) => {
-                  const Icon = getDeviceIcon(device.type);
-                  return (
-                    <Link key={device.id} to={`/networks/${id}/devices/${device.id}`}>
-                      <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors cursor-pointer group">
-                        <div className="col-span-3 flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${device.iconColor}`}>
-                            <Icon className="w-5 h-5" />
+              {devicesLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : filteredDevices.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    {searchQuery ? `No devices found matching "${searchQuery}"` : "No devices detected on this network"}
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {filteredDevices.map((device, index) => {
+                    const Icon = getDeviceIcon(device.device_type);
+                    return (
+                      <Link key={device.id} to={`/networks/${id}/devices/${device.id}`}>
+                        <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors cursor-pointer group">
+                          <div className="col-span-3 flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)}`}>
+                              <Icon className="w-5 h-5" />
+                            </div>
+                            <span className="font-medium group-hover:text-primary transition-colors">
+                              {device.hostname || device.ip_address}
+                            </span>
                           </div>
-                          <span className="font-medium group-hover:text-primary transition-colors">{device.name}</span>
+                          <div className="col-span-3 flex items-center text-muted-foreground text-sm">
+                            {device.manufacturer} {device.model && `• ${device.model}`}
+                          </div>
+                          <div className="col-span-2 flex items-center font-mono text-sm">
+                            {device.ip_address}
+                          </div>
+                          <div className="col-span-2 flex items-center">
+                            {getDeviceStatusBadge(device.last_seen)}
+                          </div>
+                          <div className="col-span-2 flex items-center text-sm text-muted-foreground">
+                            {formatTimeAgo(device.last_seen)}
+                          </div>
                         </div>
-                        <div className="col-span-3 flex items-center text-muted-foreground text-sm">
-                          {device.manufacturer}
-                        </div>
-                        <div className="col-span-2 flex items-center font-mono text-sm">
-                          {device.ip}
-                        </div>
-                        <div className="col-span-2 flex items-center">
-                          {getStatusBadge(device.status)}
-                        </div>
-                        <div className="col-span-2 flex items-center text-sm text-muted-foreground">
-                          {device.lastSeen}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
