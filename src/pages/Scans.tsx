@@ -1,11 +1,12 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
-import { ScanLine, Search, Shield, Lock, Bug, FileSearch, LayoutGrid, List, Filter } from "lucide-react";
-import { useState } from "react";
+import { ScanLine, Search, Shield, Lock, Bug, FileSearch, LayoutGrid, List, Filter, Loader2 } from "lucide-react";
+import { useState, useMemo } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,12 +15,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { api } from "@/lib/api";
 
 const Scans = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["scans"],
+    queryFn: () => api.scans.list(),
+  });
+
+  const scans = data?.scans || [];
 
   const pentestingStandards = [
     {
@@ -120,14 +128,7 @@ const Scans = () => {
     }
   ];
 
-  const allTags = Array.from(new Set(pentestingStandards.flatMap(s => s.tags)));
-  const allStatuses = Array.from(new Set(pentestingStandards.map(s => s.status)));
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev =>
-      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
-    );
-  };
+  const allStatuses = Array.from(new Set([...scans.map(s => s.status), ...pentestingStandards.map(s => s.status)]));
 
   const toggleStatus = (status: string) => {
     setSelectedStatuses(prev =>
@@ -135,14 +136,27 @@ const Scans = () => {
     );
   };
 
-  const filteredStandards = pentestingStandards.filter(standard => {
-    const matchesSearch = standard.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      standard.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      standard.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTags = selectedTags.length === 0 || standard.tags.some(tag => selectedTags.includes(tag));
-    const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(standard.status);
-    return matchesSearch && matchesTags && matchesStatus;
-  });
+  const filteredStandards = useMemo(() => {
+    return pentestingStandards.filter(standard => {
+      const matchesSearch = standard.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        standard.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        standard.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = selectedStatuses.length === 0 || selectedStatuses.includes(standard.status);
+      return matchesSearch && matchesStatus;
+    });
+  }, [pentestingStandards, searchQuery, selectedStatuses]);
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} days ago`;
+  };
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -227,18 +241,6 @@ const Scans = () => {
                       {status === "active" ? "Active" : "Pending"}
                     </DropdownMenuCheckboxItem>
                   ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel>Filter by Tags</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {allTags.map(tag => (
-                    <DropdownMenuCheckboxItem
-                      key={tag}
-                      checked={selectedTags.includes(tag)}
-                      onCheckedChange={() => toggleTag(tag)}
-                    >
-                      {tag}
-                    </DropdownMenuCheckboxItem>
-                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -256,6 +258,67 @@ const Scans = () => {
       </header>
 
       <main className="container mx-auto px-6 py-8">
+        {/* API Scans Section */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12 mb-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-8 mb-8">
+            <Card className="shadow-card border-border">
+              <CardContent className="pt-6">
+                <p className="text-destructive">Error loading scans from API. Make sure the server is running.</p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : scans.length > 0 ? (
+          <Card className="shadow-card border-border mb-8">
+            <CardHeader>
+              <CardTitle className="text-xl">Recent Scan Results</CardTitle>
+              <CardDescription>Latest security scans from the API</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {scans.map((scan) => (
+                  <div key={scan.id} className="p-4 rounded-lg bg-muted/30 border border-border">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <ScanLine className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-semibold">{scan.scan_type.replace(/_/g, ' ').toUpperCase()}</h4>
+                          <p className="text-xs text-muted-foreground">Device: {scan.device_id}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={
+                          scan.status === "completed" ? "bg-success/10 text-success border-success/20" :
+                          scan.status === "in_progress" ? "bg-primary/10 text-primary border-primary/20" :
+                          scan.status === "failed" ? "bg-destructive/10 text-destructive border-destructive/20" :
+                          "bg-warning/10 text-warning border-warning/20"
+                        }>
+                          {scan.status.replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        Started: {formatTimeAgo(scan.started_at)}
+                      </span>
+                      {scan.vulnerabilities.length > 0 && (
+                        <span className="text-destructive font-medium">
+                          {scan.vulnerabilities.length} vulnerabilit{scan.vulnerabilities.length !== 1 ? 'ies' : 'y'} found
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : null}
+
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="shadow-card border-border">
@@ -321,14 +384,11 @@ const Scans = () => {
             <CardTitle className="text-xl">Penetration Testing Standards</CardTitle>
             <CardDescription>
               {filteredStandards.length} standard{filteredStandards.length !== 1 ? 's' : ''} found
-              {(selectedTags.length > 0 || selectedStatuses.length > 0) && (
+              {selectedStatuses.length > 0 && (
                 <Button
                   variant="link"
                   size="sm"
-                  onClick={() => {
-                    setSelectedTags([]);
-                    setSelectedStatuses([]);
-                  }}
+                  onClick={() => setSelectedStatuses([])}
                   className="ml-2 h-auto p-0"
                 >
                   Clear filters

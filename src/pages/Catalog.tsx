@@ -1,84 +1,34 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Plus, Grid3x3 } from "lucide-react";
+import { Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Plus, Grid3x3, Loader2, Server, HardDrive } from "lucide-react";
+import { api } from "@/lib/api";
+
 const Catalog = () => {
-  const [devices] = useState([{
-    id: 1,
-    name: "MacBook Pro",
-    type: "computer",
-    description: "Apple Inc. • macOS Sonoma",
-    ip: "192.168.1.101",
-    entries: "3 tests",
-    source: "Network Scan",
-    iconColor: "text-purple-600 bg-purple-50"
-  }, {
-    id: 2,
-    name: "iPhone 14",
-    type: "mobile",
-    description: "Apple mobile device",
-    ip: "192.168.1.102",
-    entries: "2 tests",
-    source: "Network Scan",
-    iconColor: "text-blue-600 bg-blue-50"
-  }, {
-    id: 3,
-    name: "Smart Thermostat",
-    type: "iot",
-    description: "Nest Labs IoT device",
-    ip: "192.168.1.115",
-    entries: "5 tests",
-    source: "Network Scan",
-    iconColor: "text-teal-600 bg-teal-50"
-  }, {
-    id: 4,
-    name: "HP LaserJet",
-    type: "printer",
-    description: "Network printer device",
-    ip: "192.168.1.120",
-    entries: "1 test",
-    source: "Network Scan",
-    iconColor: "text-orange-600 bg-orange-50"
-  }, {
-    id: 5,
-    name: "Security Camera",
-    type: "camera",
-    description: "Hikvision surveillance",
-    ip: "192.168.1.130",
-    entries: "4 tests",
-    source: "Network Scan",
-    iconColor: "text-pink-600 bg-pink-50"
-  }, {
-    id: 6,
-    name: "WiFi Router",
-    type: "network",
-    description: "Cisco Systems gateway",
-    ip: "192.168.1.1",
-    entries: "6 tests",
-    source: "Network Scan",
-    iconColor: "text-indigo-600 bg-indigo-50"
-  }, {
-    id: 7,
-    name: "Smart TV",
-    type: "iot",
-    description: "Samsung smart television",
-    ip: "192.168.1.145",
-    entries: "2 tests",
-    source: "Network Scan",
-    iconColor: "text-cyan-600 bg-cyan-50"
-  }, {
-    id: 8,
-    name: "Laptop Dell",
-    type: "computer",
-    description: "Dell Inc. • Windows 11",
-    ip: "192.168.1.150",
-    entries: "3 tests",
-    source: "Network Scan",
-    iconColor: "text-emerald-600 bg-emerald-50"
-  }]);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["devices"],
+    queryFn: () => api.devices.list(),
+  });
+
+  const devices = data?.devices || [];
+
+  const filteredDevices = useMemo(() => {
+    if (!searchQuery.trim()) return devices;
+    
+    const query = searchQuery.toLowerCase();
+    return devices.filter(device => 
+      device.hostname?.toLowerCase().includes(query) ||
+      device.ip_address.toLowerCase().includes(query) ||
+      device.manufacturer?.toLowerCase().includes(query) ||
+      device.model?.toLowerCase().includes(query)
+    );
+  }, [devices, searchQuery]);
   const systemTypes = [{
     id: 1,
     name: "Port Scanning",
@@ -114,14 +64,28 @@ const Catalog = () => {
   }];
   const getDeviceIcon = (type: string) => {
     const icons = {
-      computer: Monitor,
-      mobile: Smartphone,
-      iot: Thermometer,
-      printer: Printer,
-      camera: Camera,
-      network: Wifi
+      medical_device: Monitor,
+      iot_device: Thermometer,
+      network_device: Wifi,
+      workstation: HardDrive,
+      server: Server,
+      unknown: Monitor
     };
     return icons[type as keyof typeof icons] || Monitor;
+  };
+
+  const getIconColor = (index: number) => {
+    const colors = [
+      "text-purple-600 bg-purple-50",
+      "text-blue-600 bg-blue-50",
+      "text-teal-600 bg-teal-50",
+      "text-orange-600 bg-orange-50",
+      "text-pink-600 bg-pink-50",
+      "text-indigo-600 bg-indigo-50",
+      "text-cyan-600 bg-cyan-50",
+      "text-emerald-600 bg-emerald-50"
+    ];
+    return colors[index % colors.length];
   };
   return <div className="flex-1 min-h-screen bg-background">
       {/* Header */}
@@ -196,7 +160,12 @@ const Catalog = () => {
           <div className="flex-1 max-w-md ml-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search catalog types..." className="pl-9" />
+              <Input 
+                placeholder="Search devices..." 
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
           </div>
         </div>
@@ -213,39 +182,58 @@ const Catalog = () => {
               <div className="overflow-hidden">
                 {/* Table Header */}
                 <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
-                  <div className="col-span-3">Name</div>
-                  <div className="col-span-4">Description</div>
-                  <div className="col-span-2">Entries</div>
-                  <div className="col-span-3">Source</div>
+                  <div className="col-span-3">Device Name</div>
+                  <div className="col-span-4">Details</div>
+                  <div className="col-span-2">Type</div>
+                  <div className="col-span-3">IP Address</div>
                 </div>
 
                 {/* Table Rows */}
-                <div className="divide-y divide-border">
-                  {devices.map((device, index) => {
-                  const Icon = getDeviceIcon(device.type);
-                  return <Link key={device.id} to={`/networks/1/devices/${device.id}`} style={{
-                    animationDelay: `${index * 50}ms`
-                  }} className="animate-fade-in">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-12">
+                    <p className="text-destructive">Error loading devices. Make sure the API server is running.</p>
+                  </div>
+                ) : filteredDevices.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No devices found</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {filteredDevices.map((device, index) => {
+                      const Icon = getDeviceIcon(device.device_type);
+                      return <Link key={device.id} to={`/networks/${device.network_id}/devices/${device.id}`} style={{
+                        animationDelay: `${index * 50}ms`
+                      }} className="animate-fade-in">
                         <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-all cursor-pointer group">
                           <div className="col-span-3 flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${device.iconColor} group-hover:scale-110 transition-transform`}>
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)} group-hover:scale-110 transition-transform`}>
                               <Icon className="w-5 h-5" />
                             </div>
-                            <span className="font-medium group-hover:text-primary transition-colors">{device.name}</span>
+                            <span className="font-medium group-hover:text-primary transition-colors">
+                              {device.hostname || device.ip_address}
+                            </span>
                           </div>
                           <div className="col-span-4 flex items-center text-muted-foreground text-sm">
-                            {device.description}
+                            {device.manufacturer} {device.model && `• ${device.model}`}
+                            {device.os && ` • ${device.os}`}
                           </div>
                           <div className="col-span-2 flex items-center text-sm">
-                            <Badge variant="outline">{device.entries}</Badge>
+                            <Badge variant="outline" className="capitalize">
+                              {device.device_type.replace(/_/g, ' ')}
+                            </Badge>
                           </div>
-                          <div className="col-span-3 flex items-center text-sm text-muted-foreground">
-                            {device.source}
+                          <div className="col-span-3 flex items-center text-sm font-mono text-muted-foreground">
+                            {device.ip_address}
                           </div>
                         </div>
                       </Link>;
-                })}
-                </div>
+                    })}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

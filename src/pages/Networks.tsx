@@ -1,50 +1,24 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Network, ArrowLeft, Wifi, Activity, LayoutGrid, List, Search } from "lucide-react";
+import { Network, ArrowLeft, Wifi, Activity, LayoutGrid, List, Search, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { api } from "@/lib/api";
 
 const Networks = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [networks] = useState([
-    {
-      id: 1,
-      name: "Office Network",
-      ssid: "CORP-MAIN-5G",
-      ipRange: "192.168.1.0/24",
-      devices: 18,
-      status: "secure",
-      lastScan: "2 hours ago",
-      gateway: "192.168.1.1",
-      iconColor: "text-purple-600 bg-purple-50",
-    },
-    {
-      id: 2,
-      name: "Guest Network",
-      ssid: "GUEST-WIFI",
-      ipRange: "192.168.2.0/24",
-      devices: 9,
-      status: "warning",
-      lastScan: "5 hours ago",
-      gateway: "192.168.2.1",
-      iconColor: "text-orange-600 bg-orange-50",
-    },
-    {
-      id: 3,
-      name: "IoT Network",
-      ssid: "IOT-SECURE",
-      ipRange: "192.168.3.0/24",
-      devices: 20,
-      status: "critical",
-      lastScan: "1 day ago",
-      gateway: "192.168.3.1",
-      iconColor: "text-pink-600 bg-pink-50",
-    },
-  ]);
+  
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["networks"],
+    queryFn: () => api.networks.list(),
+  });
+
+  const networks = data?.networks || [];
 
   const filteredNetworks = useMemo(() => {
     if (!searchQuery.trim()) return networks;
@@ -52,20 +26,42 @@ const Networks = () => {
     const query = searchQuery.toLowerCase();
     return networks.filter(network => 
       network.name.toLowerCase().includes(query) ||
-      network.ssid.toLowerCase().includes(query) ||
-      network.ipRange.toLowerCase().includes(query) ||
-      network.gateway.toLowerCase().includes(query)
+      network.subnet.toLowerCase().includes(query)
     );
   }, [networks, searchQuery]);
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      secure: { text: "Secure", className: "bg-success/10 text-success border-success/20" },
-      warning: { text: "Warning", className: "bg-warning/10 text-warning border-warning/20" },
-      critical: { text: "Critical", className: "bg-destructive/10 text-destructive border-destructive/20" },
+      active: { text: "Active", className: "bg-success/10 text-success border-success/20" },
+      inactive: { text: "Inactive", className: "bg-warning/10 text-warning border-warning/20" },
+      scanning: { text: "Scanning", className: "bg-primary/10 text-primary border-primary/20" },
     };
-    const config = variants[status as keyof typeof variants];
+    const config = variants[status as keyof typeof variants] || variants.active;
     return <Badge variant="outline" className={config.className}>{config.text}</Badge>;
+  };
+
+  const getIconColor = (index: number) => {
+    const colors = [
+      "text-purple-600 bg-purple-50",
+      "text-orange-600 bg-orange-50",
+      "text-pink-600 bg-pink-50",
+      "text-blue-600 bg-blue-50",
+      "text-green-600 bg-green-50",
+    ];
+    return colors[index % colors.length];
+  };
+
+  const formatTimeAgo = (dateString: string | null) => {
+    if (!dateString) return "Never";
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} days ago`;
   };
 
   return (
@@ -115,18 +111,26 @@ const Networks = () => {
       </header>
 
       <main className="container mx-auto px-6 py-8">
-        {filteredNetworks.length === 0 ? (
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <p className="text-destructive">Error loading networks. Make sure the API server is running.</p>
+          </div>
+        ) : filteredNetworks.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No networks found matching "{searchQuery}"</p>
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredNetworks.map((network) => (
+            {filteredNetworks.map((network, index) => (
               <Link key={network.id} to={`/networks/${network.id}`}>
                 <Card className="shadow-card border-border hover:border-primary hover:shadow-lg transition-all group h-full">
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${network.iconColor} group-hover:scale-110 transition-transform`}>
+                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${getIconColor(index)} group-hover:scale-110 transition-transform`}>
                         <Network className="w-6 h-6" />
                       </div>
                       {getStatusBadge(network.status)}
@@ -134,28 +138,24 @@ const Networks = () => {
                     <CardTitle className="group-hover:text-primary transition-colors">{network.name}</CardTitle>
                     <CardDescription className="flex items-center gap-2">
                       <Wifi className="w-4 h-4" />
-                      {network.ssid}
+                      {network.subnet}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">IP Range:</span>
-                        <span className="font-mono font-medium">{network.ipRange}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Gateway:</span>
-                        <span className="font-mono font-medium">{network.gateway}</span>
+                        <span className="text-muted-foreground">Subnet:</span>
+                        <span className="font-mono font-medium">{network.subnet}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground flex items-center gap-1">
                           <Activity className="w-4 h-4" />
                           Devices:
                         </span>
-                        <span className="font-semibold text-primary">{network.devices}</span>
+                        <span className="font-semibold text-primary">{network.device_count}</span>
                       </div>
                       <div className="pt-3 border-t border-border">
-                        <p className="text-xs text-muted-foreground">Last scan: {network.lastScan}</p>
+                        <p className="text-xs text-muted-foreground">Last scan: {formatTimeAgo(network.last_scan)}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -170,20 +170,18 @@ const Networks = () => {
                 <TableRow>
                   <TableHead className="w-[50px]"></TableHead>
                   <TableHead>Network Name</TableHead>
-                  <TableHead>SSID</TableHead>
-                  <TableHead>IP Range</TableHead>
-                  <TableHead>Gateway</TableHead>
+                  <TableHead>Subnet</TableHead>
                   <TableHead className="text-center">Devices</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Last Scan</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredNetworks.map((network) => (
+                {filteredNetworks.map((network, index) => (
                   <TableRow key={network.id} className="hover:bg-muted/50 cursor-pointer">
                     <TableCell>
                       <Link to={`/networks/${network.id}`}>
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${network.iconColor}`}>
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)}`}>
                           <Network className="w-5 h-5" />
                         </div>
                       </Link>
@@ -194,23 +192,14 @@ const Networks = () => {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <Wifi className="w-4 h-4" />
-                        <span className="font-mono text-sm">{network.ssid}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{network.ipRange}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-mono text-sm">{network.gateway}</span>
+                      <span className="font-mono text-sm">{network.subnet}</span>
                     </TableCell>
                     <TableCell className="text-center">
-                      <span className="font-semibold text-primary">{network.devices}</span>
+                      <span className="font-semibold text-primary">{network.device_count}</span>
                     </TableCell>
                     <TableCell>{getStatusBadge(network.status)}</TableCell>
                     <TableCell>
-                      <span className="text-sm text-muted-foreground">{network.lastScan}</span>
+                      <span className="text-sm text-muted-foreground">{formatTimeAgo(network.last_scan)}</span>
                     </TableCell>
                   </TableRow>
                 ))}

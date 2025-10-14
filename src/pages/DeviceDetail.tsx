@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,12 +15,29 @@ import {
   CheckCircle2,
   History,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+
 const DeviceDetail = () => {
   const { networkId, deviceId } = useParams();
 
-  // Mock device data - in a real app, this would come from an API
+  const { data: device, isLoading: deviceLoading, error: deviceError } = useQuery({
+    queryKey: ["device", deviceId],
+    queryFn: () => api.devices.get(deviceId!),
+    enabled: !!deviceId,
+  });
+
+  const { data: scansData, isLoading: scansLoading } = useQuery({
+    queryKey: ["scans", deviceId],
+    queryFn: () => api.scans.listByDevice(deviceId!),
+    enabled: !!deviceId,
+  });
+
+  const scans = scansData?.scans || [];
+
+  // Mock device data for fallback - in a real app, this would come from an API
   const allDevices = {
     "1": {
       id: 1,
@@ -142,30 +160,43 @@ const DeviceDetail = () => {
       complianceStatus: "passed",
     },
   };
-  const device = allDevices[deviceId as keyof typeof allDevices] || allDevices["1"];
-  const [testResults] = useState([
-    {
-      id: 1,
-      name: "Port Scan",
-      status: "completed",
-      result: "4 open ports detected",
-      severity: "info",
-    },
-    {
-      id: 2,
-      name: "Vulnerability Scan",
-      status: "completed",
-      result: "2 medium-risk vulnerabilities",
-      severity: "warning",
-    },
-    {
-      id: 3,
-      name: "Compliance Check",
-      status: "completed",
-      result: "Meets security standards",
-      severity: "success",
-    },
-  ]);
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return "Active now";
+    if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `${diffInHours} hours ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays} days ago`;
+  };
+
+  if (deviceLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (deviceError || !device) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <p className="text-destructive text-center">
+              Error loading device. Make sure the API server is running.
+            </p>
+            <Button asChild className="w-full mt-4">
+              <Link to="/catalog">Back to Devices</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   const handlePenTest = () => {
     toast.success("Penetration test initiated", {
       description: "Comprehensive security testing in progress...",
@@ -186,27 +217,30 @@ const DeviceDetail = () => {
       description: "Generating compliance recommendations...",
     });
   };
-  const getStatusBadge = (status: string) => {
-    const variants = {
-      online: {
-        text: "Online",
-        className: "bg-success/10 text-success border-success/20",
-      },
-      warning: {
-        text: "Warning",
-        className: "bg-warning/10 text-warning border-warning/20",
-      },
-      critical: {
-        text: "Critical",
-        className: "bg-destructive/10 text-destructive border-destructive/20",
-      },
-    };
-    const config = variants[status as keyof typeof variants];
-    return (
-      <Badge variant="outline" className={config.className}>
-        {config.text}
-      </Badge>
-    );
+  const getStatusBadge = () => {
+    const now = new Date();
+    const lastSeen = new Date(device.last_seen);
+    const diffInMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 5) {
+      return (
+        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+          Online
+        </Badge>
+      );
+    } else if (diffInMinutes < 60) {
+      return (
+        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
+          Away
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-muted">
+          Offline
+        </Badge>
+      );
+    }
   };
   const getSeverityIcon = (severity: string) => {
     if (severity === "success") return <CheckCircle2 className="w-4 h-4 text-success" />;
@@ -224,9 +258,11 @@ const DeviceDetail = () => {
               </Button>
             </Link>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">{device.name}</h1>
+              <h1 className="text-2xl font-bold tracking-tight">
+                {device.hostname || device.ip_address}
+              </h1>
               <p className="text-sm text-muted-foreground">
-                {device.ip} • {device.mac}
+                {device.ip_address} • {device.mac_address || 'N/A'}
               </p>
             </div>
           </div>
@@ -247,34 +283,42 @@ const DeviceDetail = () => {
                     </CardTitle>
                     <CardDescription>Hardware and network details</CardDescription>
                   </div>
-                  {getStatusBadge(device.status)}
+                  {getStatusBadge()}
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Manufacturer</p>
-                    <p className="font-medium">{device.manufacturer}</p>
+                    <p className="font-medium">{device.manufacturer || 'Unknown'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Model</p>
-                    <p className="font-medium">{device.model}</p>
+                    <p className="font-medium">{device.model || 'Unknown'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Device Type</p>
+                    <p className="font-medium capitalize">{device.device_type.replace(/_/g, ' ')}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Operating System</p>
-                    <p className="font-medium">{device.os}</p>
+                    <p className="font-medium">{device.os || 'Unknown'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Last Seen</p>
-                    <p className="font-medium">{device.lastSeen}</p>
+                    <p className="font-medium">{formatTimeAgo(device.last_seen)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Discovered</p>
+                    <p className="font-medium">{formatTimeAgo(device.discovered_at)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">IP Address</p>
-                    <p className="font-mono font-medium">{device.ip}</p>
+                    <p className="font-mono font-medium">{device.ip_address}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">MAC Address</p>
-                    <p className="font-mono font-medium">{device.mac}</p>
+                    <p className="font-mono font-medium">{device.mac_address || 'N/A'}</p>
                   </div>
                 </div>
 
@@ -282,44 +326,68 @@ const DeviceDetail = () => {
 
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Open Ports</p>
-                  <div className="flex flex-wrap gap-2">
-                    {device.openPorts.map((port) => (
-                      <Badge key={port} variant="outline" className="font-mono">
-                        {port}
-                      </Badge>
-                    ))}
-                  </div>
+                  {device.open_ports.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {device.open_ports.map((port) => (
+                        <Badge key={port} variant="outline" className="font-mono">
+                          {port}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No open ports detected</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Test Results */}
+            {/* Scan Results */}
             <Card className="shadow-card border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <History className="w-5 h-5 text-primary" />
-                  Assessments
+                  Scan History
                 </CardTitle>
-                <CardDescription>Latest security assessments and scans</CardDescription>
+                <CardDescription>Security scans performed on this device</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {testResults.map((test) => (
-                    <div
-                      key={test.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
-                    >
-                      <div className="flex items-center gap-3">
-                        {getSeverityIcon(test.severity)}
-                        <div>
-                          <p className="font-medium">{test.name}</p>
-                          <p className="text-sm text-muted-foreground">{test.result}</p>
+                {scansLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                  </div>
+                ) : scans.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-8">No scans performed yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {scans.map((scan) => (
+                      <div
+                        key={scan.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
+                      >
+                        <div className="flex items-center gap-3">
+                          {scan.status === "completed" ? (
+                            <CheckCircle2 className="w-4 h-4 text-success" />
+                          ) : scan.status === "failed" ? (
+                            <AlertTriangle className="w-4 h-4 text-destructive" />
+                          ) : (
+                            <Activity className="w-4 h-4 text-primary" />
+                          )}
+                          <div>
+                            <p className="font-medium capitalize">{scan.scan_type.replace(/_/g, ' ')}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {scan.vulnerabilities.length > 0
+                                ? `${scan.vulnerabilities.length} vulnerabilities found`
+                                : 'No issues detected'}
+                            </p>
+                          </div>
                         </div>
+                        <Badge variant="outline" className="capitalize">
+                          {scan.status.replace(/_/g, ' ')}
+                        </Badge>
                       </div>
-                      <Badge variant="outline">{test.status}</Badge>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -377,23 +445,31 @@ const DeviceDetail = () => {
               <CardContent className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-muted-foreground">Vulnerabilities</span>
-                    <span className="font-bold text-warning">{device.vulnerabilities}</span>
+                    <span className="text-sm text-muted-foreground">Total Scans</span>
+                    <span className="font-bold text-primary">{device.scan_count}</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-muted-foreground">Vulnerabilities Found</span>
+                    <span className="font-bold text-warning">
+                      {scans.reduce((sum, scan) => sum + scan.vulnerabilities.length, 0)}
+                    </span>
                   </div>
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-warning"
                       style={{
-                        width: "30%",
+                        width: `${Math.min((scans.reduce((sum, scan) => sum + scan.vulnerabilities.length, 0) / 10) * 100, 100)}%`,
                       }}
                     />
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-sm text-muted-foreground">Compliance Status</span>
-                    <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                      Passed
+                    <span className="text-sm text-muted-foreground">Device Type</span>
+                    <Badge variant="outline" className="capitalize">
+                      {device.device_type.replace(/_/g, ' ')}
                     </Badge>
                   </div>
                 </div>
