@@ -1,27 +1,31 @@
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ActivityViewer } from "@/components/ActivityViewer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  ArrowLeft,
-  Monitor,
-  Shield,
-  Activity,
-  FileText,
-  AlertTriangle,
-  CheckCircle2,
-  History,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
-import { toast } from "sonner";
 import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Activity,
+  AlertCircle,
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Monitor,
+  Shield
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { toast } from "sonner";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 const DeviceDetail = () => {
   const { networkId, deviceId } = useParams();
+  const [activeScanId, setActiveScanId] = useState<string | null>(null);
+  const [activityScans, setActivityScans] = useState<any[]>([]);
 
   const { data: device, isLoading: deviceLoading, error: deviceError } = useQuery({
     queryKey: ["device", deviceId],
@@ -36,6 +40,20 @@ const DeviceDetail = () => {
   });
 
   const scans = scansData?.scans || [];
+
+  // Update activity scans when a new scan is initiated
+  useEffect(() => {
+    if (activeScanId) {
+      const newScan = {
+        id: activeScanId,
+        type: "scan",
+        name: "Penetration Test",
+        status: "running",
+        startedAt: new Date().toISOString(),
+      };
+      setActivityScans((prev) => [newScan, ...prev]);
+    }
+  }, [activeScanId]);
 
   // Mock device data for fallback - in a real app, this would come from an API
   const allDevices = {
@@ -164,7 +182,7 @@ const DeviceDetail = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return "Active now";
     if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
@@ -197,10 +215,28 @@ const DeviceDetail = () => {
       </div>
     );
   }
-  const handlePenTest = () => {
-    toast.success("Penetration test initiated", {
-      description: "Comprehensive security testing in progress...",
-    });
+
+  const handlePenTest = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/devices/${deviceId}/penetration-test`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to start penetration test");
+      }
+
+      const data = await response.json();
+      setActiveScanId(data.scan_id);
+
+      toast.success("Penetration test initiated", {
+        description: "Comprehensive security testing in progress...",
+      });
+    } catch (error) {
+      toast.error("Failed to start penetration test", {
+        description: error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    }
   };
   const handleRiskAssessment = () => {
     toast.success("Risk assessment started", {
@@ -221,7 +257,7 @@ const DeviceDetail = () => {
     const now = new Date();
     const lastSeen = new Date(device.last_seen);
     const diffInMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 5) {
       return (
         <Badge variant="outline" className="bg-success/10 text-success border-success/20">
@@ -341,55 +377,23 @@ const DeviceDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Scan Results */}
-            <Card className="shadow-card border-border">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="w-5 h-5 text-primary" />
-                  Scan History
-                </CardTitle>
-                <CardDescription>Security scans performed on this device</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {scansLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  </div>
-                ) : scans.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No scans performed yet</p>
-                ) : (
-                  <div className="space-y-3">
-                    {scans.map((scan) => (
-                      <div
-                        key={scan.id}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border"
-                      >
-                        <div className="flex items-center gap-3">
-                          {scan.status === "completed" ? (
-                            <CheckCircle2 className="w-4 h-4 text-success" />
-                          ) : scan.status === "failed" ? (
-                            <AlertTriangle className="w-4 h-4 text-destructive" />
-                          ) : (
-                            <Activity className="w-4 h-4 text-primary" />
-                          )}
-                          <div>
-                            <p className="font-medium capitalize">{scan.scan_type.replace(/_/g, ' ')}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {scan.vulnerabilities.length > 0
-                                ? `${scan.vulnerabilities.length} vulnerabilities found`
-                                : 'No issues detected'}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge variant="outline" className="capitalize">
-                          {scan.status.replace(/_/g, ' ')}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Activity Viewer */}
+            <ActivityViewer
+              deviceId={deviceId!}
+              scans={[
+                ...activityScans,
+                ...scans.map((scan) => ({
+                  id: scan.id,
+                  type: "scan" as const,
+                  name: scan.scan_type.replace(/_/g, " "),
+                  status: scan.status as "running" | "completed" | "failed",
+                  startedAt: scan.started_at,
+                  completedAt: scan.completed_at,
+                  vulnerabilitiesFound: scan.vulnerabilities.length,
+                })),
+              ]}
+              audits={[]}
+            />
           </div>
 
           {/* Actions Panel */}
