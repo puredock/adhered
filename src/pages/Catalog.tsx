@@ -1,16 +1,16 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Plus, Grid3x3, Loader2, Server, HardDrive } from "lucide-react";
 import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { Camera, ChevronDown, HardDrive, Loader2, Monitor, Plus, Search, Server, Smartphone, Thermometer, Wifi } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["devices"],
     queryFn: () => api.devices.list(),
@@ -20,9 +20,9 @@ const Catalog = () => {
 
   const filteredDevices = useMemo(() => {
     if (!searchQuery.trim()) return devices;
-    
+
     const query = searchQuery.toLowerCase();
-    return devices.filter(device => 
+    return devices.filter(device =>
       device.hostname?.toLowerCase().includes(query) ||
       device.ip_address.toLowerCase().includes(query) ||
       device.manufacturer?.toLowerCase().includes(query) ||
@@ -102,7 +102,7 @@ const Catalog = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              
+
               <Button size="sm" className="bg-accent-foreground text-accent hover:bg-accent-foreground/90">
                 <Plus className="w-4 h-4 mr-1" />
                 Add new device
@@ -160,8 +160,8 @@ const Catalog = () => {
           <div className="flex-1 max-w-md ml-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search devices..." 
+              <Input
+                placeholder="Search devices..."
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -195,7 +195,7 @@ const Catalog = () => {
                   </div>
                 ) : error ? (
                   <div className="text-center py-12">
-                    <p className="text-destructive">Error loading devices. Make sure the API server is running.</p>
+                    <p className="text-destructive">Failed to load devices. Please try again later.</p>
                   </div>
                 ) : filteredDevices.length === 0 ? (
                   <div className="text-center py-12">
