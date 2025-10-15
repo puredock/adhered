@@ -1,232 +1,291 @@
-import { AlertCircle, CheckCircle2, Info, Loader2, XCircle } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import { AttackVectorStep } from '@/components/AttackVectorStep'
-import { Badge } from '@/components/ui/badge'
+import { AttackVectorStep } from "@/components/AttackVectorStep";
+import { Badge } from "@/components/ui/badge";
+import {
+	AlertCircle,
+	CheckCircle2,
+	Info,
+	Loader2,
+	XCircle,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 interface LogEntry {
-    timestamp: string
-    level: 'info' | 'error' | 'success'
-    message: string
-    source?: string
-    type?: string
-    step_index?: number
-    step_name?: string
-    total_steps?: number
-    error?: string
+	timestamp: string;
+	level: "info" | "error" | "success";
+	message: string;
+	source?: string;
+	type?: string;
+	step_index?: number;
+	step_name?: string;
+	total_steps?: number;
+	error?: string;
 }
 
 interface Step {
-    index: number
-    name: string
-    status: 'pending' | 'running' | 'success' | 'error'
-    logs: LogEntry[]
-    severity: 'high' | 'medium' | 'critical' | 'low'
+	index: number;
+	name: string;
+	status: "pending" | "running" | "success" | "error";
+	logs: LogEntry[];
+	severity: "high" | "medium" | "critical" | "low";
 }
 
 interface PenetrationTestLogProps {
-    scanId: string
-    onComplete?: (status: string) => void
-    onCancel?: () => void
+	scanId: string;
+	persistedState?: { steps: Step[]; logs: LogEntry[] };
+	onStateChange?: (state: { steps: Step[]; logs: LogEntry[] }) => void;
+	onComplete?: (status: string) => void;
+	onCancel?: () => void;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-export function PenetrationTestLog({ scanId, onComplete, onCancel }: PenetrationTestLogProps) {
-    const [logs, setLogs] = useState<LogEntry[]>([])
-    const [steps, setSteps] = useState<Step[]>([])
-    const [status, setStatus] = useState<'running' | 'completed' | 'failed' | 'cancelled'>('running')
-    const [isConnected, setIsConnected] = useState(false)
-    const scrollRef = useRef<HTMLDivElement>(null)
-    const eventSourceRef = useRef<EventSource | null>(null)
-    const currentStepIndexRef = useRef<number | null>(null)
+export function PenetrationTestLog({
+	scanId,
+	persistedState,
+	onStateChange,
+	onComplete,
+	onCancel,
+}: PenetrationTestLogProps) {
+	const [logs, setLogs] = useState<LogEntry[]>(persistedState?.logs || []);
+	const [steps, setSteps] = useState<Step[]>(persistedState?.steps || []);
+	const [status, setStatus] = useState<
+		"running" | "completed" | "failed" | "cancelled"
+	>("running");
+	const [isConnected, setIsConnected] = useState(false);
+	const scrollRef = useRef<HTMLDivElement>(null);
+	const eventSourceRef = useRef<EventSource | null>(null);
+	const currentStepIndexRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        const eventSource = new EventSource(`${API_BASE_URL}/api/v1/scans/${scanId}/stream`)
-        eventSourceRef.current = eventSource
+	console.log(
+		"PenetrationTestLog render - scanId:",
+		scanId,
+		"steps:",
+		steps.length,
+		"status:",
+		status,
+	);
 
-        eventSource.onopen = () => {
-            setIsConnected(true)
-        }
+	useEffect(() => {
+		console.log("PenetrationTestLog useEffect - mounting for scanId:", scanId);
+		const eventSource = new EventSource(
+			`${API_BASE_URL}/api/v1/scans/${scanId}/stream`,
+		);
+		eventSourceRef.current = eventSource;
 
-        eventSource.onmessage = event => {
-            const data = JSON.parse(event.data)
+		eventSource.onopen = () => {
+			console.log("SSE connected for scan:", scanId);
+			setIsConnected(true);
+		};
 
-            if (data.type === 'complete') {
-                setStatus(data.status === 'completed' ? 'completed' : 'failed')
-                eventSource.close()
-                onComplete?.(data.status)
-            } else if (data.type === 'step_init') {
-                // Initialize steps
-                const totalSteps = data.total_steps
-                const initialSteps: Step[] = []
-                for (let i = 1; i <= totalSteps; i++) {
-                    initialSteps.push({
-                        index: i,
-                        name: `Step ${i}`,
-                        status: 'pending',
-                        logs: [],
-                        severity: 'medium',
-                    })
-                }
-                setSteps(initialSteps)
-            } else if (data.type === 'step_start') {
-                currentStepIndexRef.current = data.step_index
-                setSteps(prev =>
-                    prev.map(step =>
-                        step.index === data.step_index
-                            ? { ...step, name: data.step_name, status: 'running' }
-                            : step,
-                    ),
-                )
-            } else if (data.type === 'step_success') {
-                setSteps(prev =>
-                    prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'success' } : step,
-                    ),
-                )
-            } else if (data.type === 'step_error') {
-                setSteps(prev =>
-                    prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'error' } : step,
-                    ),
-                )
-            } else {
-                // Regular log entry - skip step markers themselves
-                if (data.message && !data.message.startsWith('[STEP_')) {
-                    const logEntry: LogEntry = {
-                        timestamp: data.timestamp,
-                        level: data.message.includes('[SUCCESS]')
-                            ? 'success'
-                            : data.message.includes('[ERROR]')
-                              ? 'error'
-                              : 'info',
-                        message: data.message,
-                        source: data.source,
-                        type: data.type,
-                        step_index: data.step_index,
-                        step_name: data.step_name,
-                    }
+		eventSource.onmessage = (event) => {
+			const data = JSON.parse(event.data);
 
-                    setLogs(prev => [...prev, logEntry])
+			if (data.type === "complete") {
+				setStatus(data.status === "completed" ? "completed" : "failed");
+				eventSource.close();
+				onComplete?.(data.status);
+			} else if (data.type === "step_init") {
+				// Initialize steps
+				const totalSteps = data.total_steps;
+				console.log("Received step_init, total steps:", totalSteps);
+				const initialSteps: Step[] = [];
+				for (let i = 1; i <= totalSteps; i++) {
+					initialSteps.push({
+						index: i,
+						name: `Step ${i}`,
+						status: "pending",
+						logs: [],
+						severity: "medium",
+					});
+				}
+				console.log("Setting steps state to:", initialSteps);
+				setSteps(initialSteps);
+				onStateChange?.({ steps: initialSteps, logs });
+			} else if (data.type === "step_start") {
+				currentStepIndexRef.current = data.step_index;
+				setSteps((prev) => {
+					const updated = prev.map((step) =>
+						step.index === data.step_index
+							? { ...step, name: data.step_name, status: "running" }
+							: step,
+					);
+					onStateChange?.({ steps: updated, logs });
+					return updated;
+				});
+			} else if (data.type === "step_success") {
+				setSteps((prev) => {
+					const updated = prev.map((step) =>
+						step.index === data.step_index
+							? { ...step, status: "success" }
+							: step,
+					);
+					onStateChange?.({ steps: updated, logs });
+					return updated;
+				});
+			} else if (data.type === "step_error") {
+				setSteps((prev) => {
+					const updated = prev.map((step) =>
+						step.index === data.step_index
+							? { ...step, status: "error" }
+							: step,
+					);
+					onStateChange?.({ steps: updated, logs });
+					return updated;
+				});
+			} else {
+				// Regular log entry - skip step markers themselves
+				if (data.message && !data.message.startsWith("[STEP_")) {
+					const logEntry: LogEntry = {
+						timestamp: data.timestamp,
+						level: data.message.includes("[SUCCESS]")
+							? "success"
+							: data.message.includes("[ERROR]")
+								? "error"
+								: "info",
+						message: data.message,
+						source: data.source,
+						type: data.type,
+						step_index: data.step_index,
+						step_name: data.step_name,
+					};
 
-                    // Add log to the corresponding step using ref
-                    const stepIndex = currentStepIndexRef.current
-                    if (stepIndex !== null) {
-                        setSteps(prev =>
-                            prev.map(step =>
-                                step.index === stepIndex
-                                    ? { ...step, logs: [...step.logs, logEntry] }
-                                    : step,
-                            ),
-                        )
-                    }
-                }
-            }
-        }
+					setLogs((prev) => {
+						const updated = [...prev, logEntry];
+						setSteps(currentSteps => {
+							onStateChange?.({ steps: currentSteps, logs: updated });
+							return currentSteps;
+						});
+						return updated;
+					});
 
-        eventSource.onerror = () => {
-            setIsConnected(false)
-            if (status === 'running') {
-                setStatus('failed')
-            }
-            eventSource.close()
-        }
+					// Add log to the corresponding step using ref
+					const stepIndex = currentStepIndexRef.current;
+					if (stepIndex !== null) {
+						setSteps((prev) => {
+							const updated = prev.map((step) =>
+								step.index === stepIndex
+									? { ...step, logs: [...step.logs, logEntry] }
+									: step,
+							);
+							setLogs(currentLogs => {
+								onStateChange?.({ steps: updated, logs: currentLogs });
+								return currentLogs;
+							});
+							return updated;
+						});
+					}
+				}
+			}
+		};
 
-        return () => {
-            eventSource.close()
-        }
-    }, [scanId, onComplete])
+		eventSource.onerror = () => {
+			setIsConnected(false);
+			if (status === "running") {
+				setStatus("failed");
+			}
+			eventSource.close();
+		};
 
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
-        }
-    }, [logs])
+		return () => {
+			eventSource.close();
+		};
+	}, [scanId, onComplete]);
 
-    const handleCancel = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/v1/scans/${scanId}`, {
-                method: 'DELETE',
-            })
+	useEffect(() => {
+		if (scrollRef.current) {
+			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+		}
+	}, [logs]);
 
-            if (response.ok) {
-                setStatus('cancelled')
-                eventSourceRef.current?.close()
-                onCancel?.()
-            }
-        } catch (error) {
-            console.error('Failed to cancel scan:', error)
-        }
-    }
+	const handleCancel = async () => {
+		try {
+			const response = await fetch(`${API_BASE_URL}/api/v1/scans/${scanId}`, {
+				method: "DELETE",
+			});
 
-    const getStatusIcon = () => {
-        switch (status) {
-            case 'running':
-                return <Loader2 className="h-4 w-4 animate-spin" />
-            case 'completed':
-                return <CheckCircle2 className="h-4 w-4" />
-            case 'failed':
-                return <XCircle className="h-4 w-4" />
-            case 'cancelled':
-                return <AlertCircle className="h-4 w-4" />
-        }
-    }
+			if (response.ok) {
+				setStatus("cancelled");
+				eventSourceRef.current?.close();
+				onCancel?.();
+			}
+		} catch (error) {
+			console.error("Failed to cancel scan:", error);
+		}
+	};
 
-    const getStatusBadge = () => {
-        const variants = {
-            running: 'default',
-            completed: 'default',
-            failed: 'destructive',
-            cancelled: 'secondary',
-        }
+	const getStatusIcon = () => {
+		switch (status) {
+			case "running":
+				return <Loader2 className="h-4 w-4 animate-spin" />;
+			case "completed":
+				return <CheckCircle2 className="h-4 w-4" />;
+			case "failed":
+				return <XCircle className="h-4 w-4" />;
+			case "cancelled":
+				return <AlertCircle className="h-4 w-4" />;
+		}
+	};
 
-        return (
-            <Badge variant={variants[status] as any} className="flex items-center gap-1">
-                {getStatusIcon()}
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-            </Badge>
-        )
-    }
+	const getStatusBadge = () => {
+		const variants = {
+			running: "default",
+			completed: "default",
+			failed: "destructive",
+			cancelled: "secondary",
+		};
 
-    const getLevelIcon = (level: LogEntry['level']) => {
-        switch (level) {
-            case 'success':
-                return <CheckCircle2 className="h-3 w-3 text-green-500" />
-            case 'error':
-                return <XCircle className="h-3 w-3 text-red-500" />
-            case 'info':
-                return <Info className="h-3 w-3 text-blue-500" />
-        }
-    }
+		return (
+			<Badge
+				variant={variants[status] as any}
+				className="flex items-center gap-1"
+			>
+				{getStatusIcon()}
+				{status.charAt(0).toUpperCase() + status.slice(1)}
+			</Badge>
+		);
+	};
 
-    return (
-        <div className="w-full space-y-3">
-            {steps.length === 0 && status === 'running' ? (
-                <div className="flex items-center justify-center py-8 text-muted-foreground">
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    Initializing penetration test...
-                </div>
-            ) : (
-                steps.map(step => (
-                    <AttackVectorStep
-                        key={step.index}
-                        stepIndex={step.index}
-                        stepName={step.name}
-                        status={step.status}
-                        logs={step.logs}
-                        severity={step.severity}
-                        scanId={scanId}
-                        onCancel={onCancel}
-                    />
-                ))
-            )}
+	const getLevelIcon = (level: LogEntry["level"]) => {
+		switch (level) {
+			case "success":
+				return <CheckCircle2 className="h-3 w-3 text-green-500" />;
+			case "error":
+				return <XCircle className="h-3 w-3 text-red-500" />;
+			case "info":
+				return <Info className="h-3 w-3 text-blue-500" />;
+		}
+	};
 
-            {!isConnected && status === 'running' && logs.length > 0 && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-center gap-2 text-yellow-800">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm">Connection lost. Attempting to reconnect...</span>
-                </div>
-            )}
-        </div>
-    )
+	return (
+		<div className="w-full space-y-3">
+			{steps.length === 0 && status === "running" ? (
+				<div className="flex items-center justify-center py-8 text-muted-foreground">
+					<Loader2 className="h-5 w-5 animate-spin mr-2" />
+					Initializing penetration test...
+				</div>
+			) : (
+				steps.map((step) => (
+					<AttackVectorStep
+						key={step.index}
+						stepIndex={step.index}
+						stepName={step.name}
+						status={step.status}
+						logs={step.logs}
+						severity={step.severity}
+						scanId={scanId}
+						onCancel={onCancel}
+					/>
+				))
+			)}
+
+			{!isConnected && status === "running" && logs.length > 0 && (
+				<div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-center gap-2 text-yellow-800">
+					<AlertCircle className="h-4 w-4" />
+					<span className="text-sm">
+						Connection lost. Attempting to reconnect...
+					</span>
+				</div>
+			)}
+		</div>
+	);
 }
