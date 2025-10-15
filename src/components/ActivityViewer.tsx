@@ -139,6 +139,13 @@ export function ActivityViewer({
 	const renderActivityEntry = (activity: ActivityEntry) => {
 		const isSelected = selectedActivityId === activity.id;
 
+		// Check if logs are available (running or completed within last 60 mins)
+		const isLogsAvailable =
+			activity.status === "running" ||
+			(activity.completedAt &&
+				new Date().getTime() - new Date(activity.completedAt).getTime() <
+					60 * 60 * 1000);
+
 		return (
 			<div key={activity.id} className="space-y-2">
 				<button
@@ -181,7 +188,7 @@ export function ActivityViewer({
 
 				{isSelected && (
 					<div className="mt-3">
-						{activity.status === "running" ? (
+						{isLogsAvailable ? (
 							<PenetrationTestLog
 								scanId={activity.id}
 								persistedState={scanStates[activity.id]}
@@ -204,8 +211,9 @@ export function ActivityViewer({
 						) : (
 							<div className="p-6 rounded-lg border border-muted bg-muted/30">
 								<p className="text-sm text-muted-foreground text-center">
-									Logs are only available for ongoing activities. Completed logs
-									will be available in the full scan report.
+									Logs are only available for recent activities (within the last
+									60 minutes). Older logs will be available in the full scan
+									report.
 								</p>
 							</div>
 						)}

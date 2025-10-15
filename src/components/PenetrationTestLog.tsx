@@ -81,7 +81,21 @@ export function PenetrationTestLog({
 			const data = JSON.parse(event.data);
 
 			if (data.type === "complete") {
-				setStatus(data.status === "completed" ? "completed" : "failed");
+				const finalStatus =
+					data.status === "completed" ? "completed" : "failed";
+				setStatus(finalStatus);
+
+				// Mark any remaining "running" or "pending" steps as error (incomplete)
+				setSteps((prev) => {
+					const updated = prev.map((step) =>
+						step.status === "running" || step.status === "pending"
+							? { ...step, status: "error" }
+							: step,
+					);
+					onStateChange?.({ steps: updated, logs });
+					return updated;
+				});
+
 				eventSource.close();
 				onComplete?.(data.status);
 			} else if (data.type === "step_init") {
@@ -151,7 +165,7 @@ export function PenetrationTestLog({
 
 					setLogs((prev) => {
 						const updated = [...prev, logEntry];
-						setSteps(currentSteps => {
+						setSteps((currentSteps) => {
 							onStateChange?.({ steps: currentSteps, logs: updated });
 							return currentSteps;
 						});
@@ -167,7 +181,7 @@ export function PenetrationTestLog({
 									? { ...step, logs: [...step.logs, logEntry] }
 									: step,
 							);
-							setLogs(currentLogs => {
+							setLogs((currentLogs) => {
 								onStateChange?.({ steps: updated, logs: currentLogs });
 								return currentLogs;
 							});
