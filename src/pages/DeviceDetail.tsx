@@ -185,7 +185,7 @@ const DeviceDetail = () => {
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
     if (diffInMinutes < 1) return "Active now";
-    if (diffInMinutes < 60) return `${diffInMinutes} m ago`;
+    if (diffInMinutes < 60) return `${diffInMinutes} mins ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} hrs ago`;
     const diffInDays = Math.floor(diffInHours / 24);
