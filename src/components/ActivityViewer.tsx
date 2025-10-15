@@ -41,12 +41,14 @@ interface ActivityViewerProps {
 	scans?: ActivityEntry[];
 	audits?: ActivityEntry[];
 	onActivityClick?: (activityId: string) => void;
+	onScanComplete?: (scanId: string, status: string) => void;
 }
 
 export function ActivityViewer({
 	deviceId,
 	scans = [],
 	audits = [],
+	onScanComplete,
 }: ActivityViewerProps) {
 	const [activityType, setActivityType] = useState<ActivityType>("scans");
 	const [selectedActivityId, setSelectedActivityId] = useState<string | null>(
@@ -190,10 +192,10 @@ export function ActivityViewer({
 									}));
 								}}
 								onComplete={(status) => {
-									// The parent component should handle refreshing the activity list
 									console.log(
 										`Activity ${activity.id} completed with status: ${status}`,
 									);
+									onScanComplete?.(activity.id, status);
 								}}
 								onCancel={() => {
 									setSelectedActivityId(null);

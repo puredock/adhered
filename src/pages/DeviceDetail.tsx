@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     Activity,
     AlertCircle,
@@ -25,6 +25,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 const DeviceDetail = () => {
     const { networkId, deviceId } = useParams()
+    const queryClient = useQueryClient()
     const [activeScanId, setActiveScanId] = useState<string | null>(null)
     const [activityScans, setActivityScans] = useState<any[]>([])
 
@@ -401,6 +402,16 @@ const DeviceDetail = () => {
                                 })),
                             ]}
                             audits={[]}
+                            onScanComplete={(scanId, status) => {
+                                // Update the status in activity scans
+                                setActivityScans(prev => prev.map(s => 
+                                    s.id === scanId 
+                                        ? { ...s, status: status, completedAt: new Date().toISOString() }
+                                        : s
+                                ))
+                                // Invalidate and refetch the scans data
+                                queryClient.invalidateQueries({ queryKey: ['scans', deviceId] })
+                            }}
                         />
                     </div>
 
