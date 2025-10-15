@@ -1,4 +1,4 @@
-import ErrorState from "@/components/ErrorState";
+import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
