@@ -1,17 +1,18 @@
-import { useState, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import ErrorState from "@/components/ErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Monitor, Smartphone, Wifi, Printer, Camera, Thermometer, Search, ChevronDown, Loader2, HardDrive, Server } from "lucide-react";
 import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, Camera, ChevronDown, HardDrive, Loader2, Monitor, Search, Server, Thermometer, Wifi } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 const NetworkDetail = () => {
   const { id } = useParams();
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const { data: network, isLoading: networkLoading, error: networkError } = useQuery({
     queryKey: ["network", id],
     queryFn: () => api.networks.get(id!),
@@ -28,9 +29,9 @@ const NetworkDetail = () => {
 
   const filteredDevices = useMemo(() => {
     if (!searchQuery.trim()) return devices;
-    
+
     const query = searchQuery.toLowerCase();
-    return devices.filter(device => 
+    return devices.filter(device =>
       device.hostname?.toLowerCase().includes(query) ||
       device.ip_address.toLowerCase().includes(query) ||
       device.manufacturer?.toLowerCase().includes(query)
@@ -63,7 +64,7 @@ const NetworkDetail = () => {
     const now = new Date();
     const lastSeenDate = new Date(lastSeen);
     const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 5) {
       return <Badge variant="outline" className="bg-success/10 text-success border-success/20">Online</Badge>;
     } else if (diffInMinutes < 60) {
@@ -77,7 +78,7 @@ const NetworkDetail = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return "Active now";
     if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
@@ -108,18 +109,13 @@ const NetworkDetail = () => {
 
   if (networkError || !network) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <p className="text-destructive text-center">
-              Error loading network. Make sure the API server is running.
-            </p>
-            <Button asChild className="w-full mt-4">
-              <Link to="/networks">Back to Networks</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <ErrorState
+        variant="fullpage"
+        title="Failed to load Network"
+        message="Please check your connection and try again."
+        backUrl="/networks"
+        backLabel="Back to Networks"
+      />
     );
   }
 
@@ -189,8 +185,8 @@ const NetworkDetail = () => {
           <div className="flex-1 max-w-md ml-auto">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search devices..." 
+              <Input
+                placeholder="Search devices..."
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

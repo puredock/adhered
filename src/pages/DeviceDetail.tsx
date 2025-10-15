@@ -1,4 +1,5 @@
 import { ActivityViewer } from "@/components/ActivityViewer";
+import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -200,112 +201,7 @@ const DeviceDetail = () => {
   }
 
   if (deviceError || !device) {
-    return (
-      <div className="min-h-screen w-full bg-background flex items-center justify-center p-6">
-        <div className="relative max-w-md w-full">
-          {/* Decorative background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-3xl transform -rotate-1"></div>
-          <div className="absolute inset-0 bg-gradient-to-br from-teal-100/50 to-emerald-100/50 rounded-3xl transform rotate-1"></div>
-
-          {/* Main content */}
-          <Card className="relative shadow-xl border-teal-200/50 rounded-2xl overflow-hidden">
-            <CardContent className="p-8">
-              <div className="flex flex-col items-center text-center space-y-6">
-                {/* Icon with decorative circles */}
-                <div className="relative">
-                  <div className="absolute inset-0 bg-teal-100 rounded-full blur-2xl opacity-50"></div>
-                  <div className="relative bg-gradient-to-br from-teal-500 to-emerald-500 p-6 rounded-2xl shadow-lg">
-                    <svg
-                      className="w-12 h-12 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                  </div>
-                </div>
-
-                {/* Error message */}
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-bold text-foreground">
-                    Unable to Connect
-                  </h2>
-                  <p className="text-muted-foreground">
-                    We couldn't reach the API server. Please make sure all services are running and try again.
-                  </p>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-3 w-full">
-                  <Button
-                    onClick={() => window.location.reload()}
-                    className="flex-1 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600"
-                  >
-                    <svg
-                      className="w-4 h-4 mr-2"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    Retry
-                  </Button>
-                  <Button asChild variant="outline" className="flex-1">
-                    <Link to="/networks">
-                      <svg
-                        className="w-4 h-4 mr-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                        />
-                      </svg>
-                      Go Back
-                    </Link>
-                  </Button>
-                </div>
-
-                {/* Help text */}
-                <div className="pt-4 border-t border-border w-full">
-                  <details className="text-sm text-muted-foreground">
-                    <summary className="cursor-pointer hover:text-foreground transition-colors">
-                      Troubleshooting tips
-                    </summary>
-                    <ul className="mt-3 space-y-2 text-left list-disc list-inside">
-                      <li>Check if the API server is running</li>
-                      <li>Verify your network connection</li>
-                      <li>Ensure CORS is properly configured</li>
-                      <li>Check the browser console for any error details</li>
-                    </ul>
-                  </details>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Decorative elements */}
-          <div className="absolute -top-4 -right-4 w-24 h-24 bg-teal-200/30 rounded-full blur-2xl"></div>
-          <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-emerald-200/30 rounded-full blur-2xl"></div>
-        </div>
-      </div>
-    );
+    return <ErrorState variant="fullpage" backUrl="/networks" backLabel="Go Back" />;
   }
 
   const handlePenTest = async () => {

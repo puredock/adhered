@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Camera, ChevronDown, HardDrive, Loader2, Monitor, Plus, Search, Server, Smartphone, Thermometer, Wifi } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { ErrorState } from "@/components/ErrorState";
 
 const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -194,9 +195,13 @@ const Catalog = () => {
                     <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
                 ) : error ? (
-                  <div className="text-center py-12">
-                    <p className="text-destructive">Failed to load devices. Please try again later.</p>
-                  </div>
+                  <ErrorState 
+                    variant="inline" 
+                    title="Failed to load devices" 
+                    message="Please check your connection and try again"
+                    showRetry={false}
+                    showBackButton={false}
+                  />
                 ) : filteredDevices.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-muted-foreground">No devices found</p>

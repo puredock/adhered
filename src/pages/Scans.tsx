@@ -1,21 +1,22 @@
-import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/ui/badge";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Button } from "@/components/ui/button";
-import { ScanLine, Search, Shield, Lock, Bug, FileSearch, LayoutGrid, List, Filter, Loader2 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuCheckboxItem,
+  DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { Bug, FileSearch, Filter, LayoutGrid, List, Loader2, Lock, ScanLine, Search, Shield } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 const Scans = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -150,7 +151,7 @@ const Scans = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} hours ago`;
@@ -222,7 +223,7 @@ const Scans = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="icon">
@@ -264,12 +265,14 @@ const Scans = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : error ? (
-          <div className="text-center py-8 mb-8">
-            <Card className="shadow-card border-border">
-              <CardContent className="pt-6">
-                <p className="text-destructive">Error loading scans from API. Make sure the server is running.</p>
-              </CardContent>
-            </Card>
+          <div className="py-8 mb-8">
+            <ErrorState
+              variant="inline"
+              title="Failed to load Scans"
+              message="Please check your connection and try again."
+              showRetry={false}
+              showBackButton={false}
+            />
           </div>
         ) : scans.length > 0 ? (
           <Card className="shadow-card border-border mb-8">
@@ -334,7 +337,7 @@ const Scans = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="shadow-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -348,7 +351,7 @@ const Scans = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="shadow-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -362,7 +365,7 @@ const Scans = () => {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card className="shadow-card border-border">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -411,18 +414,18 @@ const Scans = () => {
                           {getSeverityBadge(standard.severity)}
                         </div>
                       </div>
-                      
+
                       <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
                         {standard.name}
                       </h3>
                       <p className="text-xs text-muted-foreground mb-2 font-medium">
                         {standard.fullName}
                       </p>
-                      
+
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                         {standard.description}
                       </p>
-                      
+
                       <div className="flex flex-wrap gap-2 mb-3">
                         {standard.tags.map((tag) => (
                           <Badge key={tag} variant="secondary" className="text-xs">
@@ -430,7 +433,7 @@ const Scans = () => {
                           </Badge>
                         ))}
                       </div>
-                      
+
                       <p className="text-xs text-muted-foreground">
                         Last scan: {standard.lastScan}
                       </p>
@@ -447,7 +450,7 @@ const Scans = () => {
                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${standard.iconColor} group-hover:scale-110 transition-transform flex-shrink-0`}>
                           <standard.icon className="w-6 h-6" />
                         </div>
-                        
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1">
                             <div>
@@ -463,11 +466,11 @@ const Scans = () => {
                               {getSeverityBadge(standard.severity)}
                             </div>
                           </div>
-                          
+
                           <p className="text-sm text-muted-foreground mb-2 line-clamp-1">
                             {standard.description}
                           </p>
-                          
+
                           <div className="flex items-center gap-3">
                             <div className="flex flex-wrap gap-2">
                               {standard.tags.map((tag) => (

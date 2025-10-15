@@ -1,18 +1,19 @@
-import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Network, ArrowLeft, Wifi, Activity, LayoutGrid, List, Search, Loader2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { api } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { Activity, LayoutGrid, List, Loader2, Network, Search, Wifi } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 const Networks = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["networks"],
     queryFn: () => api.networks.list(),
@@ -22,9 +23,9 @@ const Networks = () => {
 
   const filteredNetworks = useMemo(() => {
     if (!searchQuery.trim()) return networks;
-    
+
     const query = searchQuery.toLowerCase();
-    return networks.filter(network => 
+    return networks.filter(network =>
       network.name.toLowerCase().includes(query) ||
       network.subnet.toLowerCase().includes(query)
     );
@@ -56,7 +57,7 @@ const Networks = () => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} hours ago`;
@@ -116,9 +117,13 @@ const Networks = () => {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : error ? (
-          <div className="text-center py-12">
-            <p className="text-destructive">Error loading networks. Make sure the API server is running.</p>
-          </div>
+          <ErrorState
+            variant="fullpage"
+            title="Failed to load Networks"
+            message="Please check your connection and try again."
+            backUrl="/"
+            backLabel="Go Home"
+          />
         ) : filteredNetworks.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">No networks found matching "{searchQuery}"</p>
