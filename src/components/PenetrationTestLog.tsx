@@ -80,7 +80,7 @@ export function PenetrationTestLog({
                 setSteps(prev => {
                     const updated = prev.map(step =>
                         step.status === 'running' || step.status === 'pending'
-                            ? { ...step, status: 'error' }
+                            ? { ...step, status: 'error' as const }
                             : step,
                     )
                     onStateChange?.({ steps: updated, logs })
@@ -111,7 +111,7 @@ export function PenetrationTestLog({
                 setSteps(prev => {
                     const updated = prev.map(step =>
                         step.index === data.step_index
-                            ? { ...step, name: data.step_name, status: 'running' }
+                            ? { ...step, name: data.step_name, status: 'running' as const }
                             : step,
                     )
                     onStateChange?.({ steps: updated, logs })
@@ -120,7 +120,7 @@ export function PenetrationTestLog({
             } else if (data.type === 'step_success') {
                 setSteps(prev => {
                     const updated = prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'success' } : step,
+                        step.index === data.step_index ? { ...step, status: 'success' as const } : step,
                     )
                     onStateChange?.({ steps: updated, logs })
                     return updated
@@ -128,7 +128,7 @@ export function PenetrationTestLog({
             } else if (data.type === 'step_error') {
                 setSteps(prev => {
                     const updated = prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'error' } : step,
+                        step.index === data.step_index ? { ...step, status: 'error' as const } : step,
                     )
                     onStateChange?.({ steps: updated, logs })
                     return updated

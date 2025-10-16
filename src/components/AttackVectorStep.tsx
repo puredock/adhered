@@ -6,6 +6,7 @@ import {
     Info,
     Loader2,
     RotateCw,
+    ShieldCheck,
     XCircle,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -153,9 +154,16 @@ export function AttackVectorStep({
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Badge variant="outline" className={cn('font-medium', getSeverityColor())}>
-                            {severity}
-                        </Badge>
+                        {status === 'success' ? (
+                            <Badge variant="outline" className="font-medium bg-green-50 text-green-700 border-green-200">
+                                <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                                Validated
+                            </Badge>
+                        ) : (
+                            <Badge variant="outline" className={cn('font-medium', getSeverityColor())}>
+                                {severity}
+                            </Badge>
+                        )}
 
                         {/* Action buttons */}
                         {status === 'running' && scanId && (
