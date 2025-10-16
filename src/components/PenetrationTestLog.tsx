@@ -29,6 +29,7 @@ interface PenetrationTestLogProps {
     onStateChange?: (state: { steps: Step[]; logs: LogEntry[] }) => void
     onComplete?: (status: string) => void
     onCancel?: () => void
+    initialStatus?: 'running' | 'completed' | 'failed' | 'cancelled'
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -39,10 +40,11 @@ export function PenetrationTestLog({
     onStateChange,
     onComplete,
     onCancel,
+    initialStatus = 'running',
 }: PenetrationTestLogProps) {
     const [logs, setLogs] = useState<LogEntry[]>(persistedState?.logs || [])
     const [steps, setSteps] = useState<Step[]>(persistedState?.steps || [])
-    const [status, setStatus] = useState<'running' | 'completed' | 'failed' | 'cancelled'>('running')
+    const [status, setStatus] = useState<'running' | 'completed' | 'failed' | 'cancelled'>(initialStatus)
     const [isConnected, setIsConnected] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
     const eventSourceRef = useRef<EventSource | null>(null)
@@ -52,6 +54,13 @@ export function PenetrationTestLog({
 
     useEffect(() => {
         console.log('PenetrationTestLog useEffect - mounting for scanId:', scanId)
+        console.log('initialStatus:', initialStatus)
+
+        if (initialStatus !== 'running') {
+            console.log('Skipping EventSource connection - scan already completed/failed')
+            return
+        }
+
         const eventSource = new EventSource(`${API_BASE_URL}/api/v1/scans/${scanId}/stream`)
         eventSourceRef.current = eventSource
 
@@ -181,7 +190,7 @@ export function PenetrationTestLog({
         return () => {
             eventSource.close()
         }
-    }, [scanId, onComplete])
+    }, [scanId, onComplete, initialStatus])
 
     useEffect(() => {
         if (scrollRef.current) {

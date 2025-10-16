@@ -175,6 +175,7 @@ export function ActivityViewer({
                         {isLogsAvailable ? (
                             <PenetrationTestLog
                                 scanId={activity.id}
+                                initialStatus={activity.status}
                                 persistedState={scanStates[activity.id]}
                                 onStateChange={newState => {
                                     setScanStates(prev => ({
