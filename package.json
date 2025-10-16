@@ -8,7 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "format": "biome format --write src",
+    "format:check": "biome format src",
+    "check": "biome check --write src"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
