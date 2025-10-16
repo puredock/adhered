@@ -404,13 +404,21 @@ const DeviceDetail = () => {
                             audits={[]}
                             onScanComplete={(scanId, status) => {
                                 // Update the status in activity scans
-                                setActivityScans(prev => prev.map(s => 
-                                    s.id === scanId 
-                                        ? { ...s, status: status, completedAt: new Date().toISOString() }
-                                        : s
-                                ))
+                                setActivityScans(prev =>
+                                    prev.map(s =>
+                                        s.id === scanId
+                                            ? {
+                                                  ...s,
+                                                  status: status,
+                                                  completedAt: new Date().toISOString(),
+                                              }
+                                            : s,
+                                    ),
+                                )
                                 // Invalidate and refetch the scans data
-                                queryClient.invalidateQueries({ queryKey: ['scans', deviceId] })
+                                queryClient.invalidateQueries({
+                                    queryKey: ['scans', deviceId],
+                                })
                             }}
                         />
                     </div>

@@ -1,8 +1,3 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { useToast } from '@/hooks/use-toast'
 import {
     AlertCircle,
     ArrowLeft,
@@ -20,6 +15,11 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Progress } from '@/components/ui/progress'
+import { useToast } from '@/hooks/use-toast'
 
 const AuditDetail = () => {
     const { id } = useParams()
