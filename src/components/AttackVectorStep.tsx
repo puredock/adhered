@@ -3,6 +3,7 @@ import {
     CheckCircle2,
     ChevronDown,
     ChevronRight,
+    FileStack,
     Info,
     Loader2,
     RotateCw,
@@ -10,6 +11,7 @@ import {
     XCircle,
 } from 'lucide-react'
 import { useState } from 'react'
+import { ArtifactsModal, type Artifact } from '@/components/ArtifactsModal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -30,6 +32,7 @@ interface AttackVectorStepProps {
     severity?: 'high' | 'medium' | 'critical' | 'low'
     scanId?: string
     onCancel?: () => void
+    artifacts?: Artifact[]
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -42,9 +45,11 @@ export function AttackVectorStep({
     severity = 'medium',
     scanId,
     onCancel,
+    artifacts = [],
 }: AttackVectorStepProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [isRetrying, setIsRetrying] = useState(false)
+    const [artifactsOpen, setArtifactsOpen] = useState(false)
 
     const getStatusIcon = () => {
         switch (status) {
@@ -165,6 +170,22 @@ export function AttackVectorStep({
                             </Badge>
                         )}
 
+                        {/* Artifacts button */}
+                        {artifacts.length > 0 && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    setArtifactsOpen(true)
+                                }}
+                                className="h-8 px-2"
+                            >
+                                <FileStack className="h-3.5 w-3.5 mr-1" />
+                                Artifacts ({artifacts.length})
+                            </Button>
+                        )}
+
                         {/* Action buttons */}
                         {status === 'running' && scanId && (
                             <Button
@@ -221,6 +242,13 @@ export function AttackVectorStep({
                     </div>
                 )}
             </div>
+
+            <ArtifactsModal
+                open={artifactsOpen}
+                onOpenChange={setArtifactsOpen}
+                artifacts={artifacts}
+                stepName={formatStepName(stepName)}
+            />
         </Card>
     )
 }

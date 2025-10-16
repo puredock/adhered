@@ -1,6 +1,7 @@
 import { AlertCircle, CheckCircle2, Info, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { AttackVectorStep } from '@/components/AttackVectorStep'
+import type { Artifact } from '@/components/ArtifactsModal'
 import { Badge } from '@/components/ui/badge'
 
 interface LogEntry {
@@ -21,6 +22,49 @@ interface Step {
     status: 'pending' | 'running' | 'success' | 'error'
     logs: LogEntry[]
     severity: 'high' | 'medium' | 'critical' | 'low'
+    artifacts: Artifact[]
+}
+
+// Mock artifacts generator for demo purposes
+const generateMockArtifacts = (stepIndex: number): Artifact[] => {
+    const artifacts: Artifact[] = []
+    
+    // Add different artifacts based on step
+    if (stepIndex % 3 === 0) {
+        artifacts.push({
+            id: `artifact-${stepIndex}-1`,
+            name: 'vulnerability-report.txt',
+            type: 'report',
+            size: '24 KB',
+            timestamp: new Date().toISOString(),
+            content: `VULNERABILITY REPORT - Step ${stepIndex}\n\nSummary:\nThis report contains findings from the security assessment.\n\nFindings:\n1. SQL Injection vulnerability detected\n2. Cross-Site Scripting (XSS) potential\n3. Insecure authentication mechanism\n\nRecommendations:\n- Implement parameterized queries\n- Sanitize user inputs\n- Use secure session management`,
+        })
+    }
+    
+    if (stepIndex % 2 === 0) {
+        artifacts.push({
+            id: `artifact-${stepIndex}-2`,
+            name: 'exploit.py',
+            type: 'script',
+            size: '3.2 KB',
+            timestamp: new Date().toISOString(),
+            language: 'python',
+            content: `#!/usr/bin/env python3\n# Exploit script for vulnerability found in step ${stepIndex}\n\nimport requests\nimport sys\n\ndef exploit(target_url):\n    payload = "'; DROP TABLE users; --"\n    response = requests.post(\n        f"{target_url}/login",\n        data={"username": payload, "password": "test"}\n    )\n    return response.status_code == 200\n\nif __name__ == "__main__":\n    if len(sys.argv) < 2:\n        print("Usage: exploit.py <target_url>")\n        sys.exit(1)\n    \n    target = sys.argv[1]\n    if exploit(target):\n        print("[+] Exploit successful!")\n    else:\n        print("[-] Exploit failed")`,
+        })
+    }
+    
+    if (stepIndex === 2) {
+        artifacts.push({
+            id: `artifact-${stepIndex}-3`,
+            name: 'network-scan.png',
+            type: 'image',
+            size: '156 KB',
+            timestamp: new Date().toISOString(),
+            url: '/placeholder.svg',
+        })
+    }
+    
+    return artifacts
 }
 
 interface PenetrationTestLogProps {
@@ -101,6 +145,7 @@ export function PenetrationTestLog({
                         status: 'pending',
                         logs: [],
                         severity: 'medium',
+                        artifacts: generateMockArtifacts(i),
                     })
                 }
                 console.log('Setting steps state to:', initialSteps)
@@ -272,6 +317,7 @@ export function PenetrationTestLog({
                         severity={step.severity}
                         scanId={scanId}
                         onCancel={onCancel}
+                        artifacts={step.artifacts}
                     />
                 ))
             )}
