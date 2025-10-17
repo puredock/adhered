@@ -1,4 +1,15 @@
-import { FileText, Image, BarChart3, Terminal, Download, X, CheckCircle2, XCircle, Info, ScrollText } from 'lucide-react'
+import {
+    BarChart3,
+    CheckCircle2,
+    Download,
+    FileText,
+    Image,
+    Info,
+    ScrollText,
+    Terminal,
+    X,
+    XCircle,
+} from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,7 +49,13 @@ interface ArtifactsModalProps {
     logs?: LogEntry[]
 }
 
-export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs = [] }: ArtifactsModalProps) {
+export function ArtifactsModal({
+    open,
+    onOpenChange,
+    artifacts,
+    stepName,
+    logs = [],
+}: ArtifactsModalProps) {
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(
         artifacts.length > 0 ? artifacts[0] : null,
     )
@@ -143,8 +160,8 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl max-h-[90vh] p-0">
-                <DialogHeader className="px-6 pt-6 pb-4 border-b">
+            <DialogContent className="max-w-6xl max-h-[90vh] p-0 flex flex-col">
+                <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
                     <DialogTitle>Artifacts - {stepName}</DialogTitle>
                     <DialogDescription>
                         View reports, images, graphs, and exploit scripts generated during this step
@@ -157,13 +174,13 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                         <p>No artifacts available for this step</p>
                     </div>
                 ) : (
-                    <div className="flex h-[600px]">
+                    <div className="flex flex-1 min-h-0">
                         {/* Sidebar */}
                         <div className="w-80 border-r bg-muted/30">
-                            <Tabs 
-                                defaultValue="all" 
+                            <Tabs
+                                defaultValue="all"
                                 value={activeTab}
-                                onValueChange={(value) => {
+                                onValueChange={value => {
                                     setActiveTab(value)
                                     if (value === 'logs') {
                                         setSelectedArtifact(null)
@@ -182,8 +199,13 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                                             </TabsTrigger>
                                         )}
                                         {Object.keys(groupedArtifacts).map(type => (
-                                            <TabsTrigger key={type} value={type} className="whitespace-nowrap">
-                                                {type}s ({groupedArtifacts[type as Artifact['type']].length})
+                                            <TabsTrigger
+                                                key={type}
+                                                value={type}
+                                                className="whitespace-nowrap"
+                                            >
+                                                {type}s (
+                                                {groupedArtifacts[type as Artifact['type']].length})
                                             </TabsTrigger>
                                         ))}
                                     </TabsList>
@@ -230,7 +252,9 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                                                     )}
                                                 >
                                                     <div className="flex items-start gap-2">
-                                                        <div className="mt-0.5">{getTypeIcon(artifact.type)}</div>
+                                                        <div className="mt-0.5">
+                                                            {getTypeIcon(artifact.type)}
+                                                        </div>
                                                         <div className="flex-1 min-w-0">
                                                             <p className="text-sm font-medium truncate">
                                                                 {artifact.name}
@@ -279,7 +303,9 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                                                         )}
                                                     >
                                                         <div className="flex items-start gap-2">
-                                                            <div className="mt-0.5">{getTypeIcon(artifact.type)}</div>
+                                                            <div className="mt-0.5">
+                                                                {getTypeIcon(artifact.type)}
+                                                            </div>
                                                             <div className="flex-1 min-w-0">
                                                                 <p className="text-sm font-medium truncate">
                                                                     {artifact.name}
@@ -299,10 +325,10 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                         </div>
 
                         {/* Content Viewer */}
-                        <div className="flex-1 flex flex-col">
+                        <div className="flex-1 flex flex-col min-w-0">
                             {selectedArtifact ? (
                                 <>
-                                    <div className="px-6 py-4 border-b flex items-center justify-between">
+                                    <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
                                         <div>
                                             <h3 className="font-semibold">{selectedArtifact.name}</h3>
                                             <p className="text-sm text-muted-foreground">
@@ -320,27 +346,36 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                                 </>
                             ) : logs.length > 0 ? (
                                 <>
-                                    <div className="px-6 py-4 border-b">
+                                    <div className="px-6 py-4 border-b flex-shrink-0">
                                         <h3 className="font-semibold">Execution Logs</h3>
                                         <p className="text-sm text-muted-foreground">
                                             Complete step execution timeline
                                         </p>
                                     </div>
-                                    <ScrollArea className="flex-1 p-6">
-                                        <div className="bg-slate-950 rounded-md p-4">
+                                    <div className="flex-1 overflow-auto p-6">
+                                        <div className="bg-slate-950 rounded-md p-4 overflow-x-auto">
                                             <div className="font-mono text-xs space-y-1">
                                                 {logs.map((log, index) => (
-                                                    <div key={index} className="flex items-start gap-2 text-slate-200">
-                                                        <span className="text-slate-500 min-w-[100px] text-[10px]">
-                                                            {new Date(log.timestamp).toLocaleTimeString()}
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-start gap-2 text-slate-200 whitespace-nowrap"
+                                                    >
+                                                        <span className="text-slate-500 min-w-[100px] text-[10px] flex-shrink-0">
+                                                            {new Date(
+                                                                log.timestamp,
+                                                            ).toLocaleTimeString()}
                                                         </span>
-                                                        {getLevelIcon(log.level)}
-                                                        <span className="flex-1 break-words">{log.message}</span>
+                                                        <span className="flex-shrink-0">
+                                                            {getLevelIcon(log.level)}
+                                                        </span>
+                                                        <span className="text-slate-200">
+                                                            {log.message}
+                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
-                                    </ScrollArea>
+                                    </div>
                                 </>
                             ) : null}
                         </div>
