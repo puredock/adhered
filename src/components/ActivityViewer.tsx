@@ -171,7 +171,7 @@ export function ActivityViewer({
                 </button>
 
                 {isSelected && (
-                    <div className="mt-3">
+                    <div className="mt-3 ml-8 pl-4 border-l-2 border-muted space-y-2">
                         {isLogsAvailable ? (
                             <PenetrationTestLog
                                 scanId={activity.id}
