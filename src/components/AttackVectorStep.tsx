@@ -3,6 +3,7 @@ import {
     CheckCircle2,
     ChevronDown,
     ChevronRight,
+    Copy,
     FileStack,
     Info,
     Loader2,
@@ -11,7 +12,7 @@ import {
     XCircle,
 } from 'lucide-react'
 import { useState } from 'react'
-import { ArtifactsModal, type Artifact } from '@/components/ArtifactsModal'
+import { type Artifact, ArtifactsModal } from '@/components/ArtifactsModal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -50,6 +51,7 @@ export function AttackVectorStep({
     const [isExpanded, setIsExpanded] = useState(false)
     const [isRetrying, setIsRetrying] = useState(false)
     const [artifactsOpen, setArtifactsOpen] = useState(false)
+    const [copied, setCopied] = useState(false)
 
     const getStatusIcon = () => {
         switch (status) {
@@ -141,6 +143,24 @@ export function AttackVectorStep({
         }
     }
 
+    const handleCopyLogs = async (e: React.MouseEvent) => {
+        e.stopPropagation()
+        const logsText = logs
+            .map(
+                log =>
+                    `${new Date(log.timestamp).toLocaleTimeString()} [${log.level.toUpperCase()}] ${log.message}`,
+            )
+            .join('\n')
+
+        try {
+            await navigator.clipboard.writeText(logsText)
+            setCopied(true)
+            setTimeout(() => setCopied(false), 2000)
+        } catch (error) {
+            console.error('Failed to copy logs:', error)
+        }
+    }
+
     return (
         <Card
             className={cn(
@@ -160,7 +180,10 @@ export function AttackVectorStep({
                     </div>
                     <div className="flex items-center gap-2">
                         {status === 'success' ? (
-                            <Badge variant="outline" className="font-medium bg-green-50 text-green-700 border-green-200">
+                            <Badge
+                                variant="outline"
+                                className="font-medium bg-green-50 text-green-700 border-green-200"
+                            >
                                 <ShieldCheck className="h-3.5 w-3.5 mr-1" />
                                 Validated
                             </Badge>
@@ -168,22 +191,6 @@ export function AttackVectorStep({
                             <Badge variant="outline" className={cn('font-medium', getSeverityColor())}>
                                 {severity}
                             </Badge>
-                        )}
-
-                        {/* Artifacts button */}
-                        {artifacts.length > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setArtifactsOpen(true)
-                                }}
-                                className="h-8 px-2"
-                            >
-                                <FileStack className="h-3.5 w-3.5 mr-1" />
-                                Artifacts ({artifacts.length})
-                            </Button>
                         )}
 
                         {/* Action buttons */}
@@ -238,6 +245,31 @@ export function AttackVectorStep({
                                     </div>
                                 ))}
                             </div>
+                        </div>
+                        <div className="flex justify-end gap-2 mt-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCopyLogs}
+                                className="h-8 px-3"
+                            >
+                                <Copy className="h-3.5 w-3.5 mr-1.5" />
+                                {copied ? 'Copied!' : 'Copy'}
+                            </Button>
+                            {artifacts.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={e => {
+                                        e.stopPropagation()
+                                        setArtifactsOpen(true)
+                                    }}
+                                    className="h-8 px-3"
+                                >
+                                    <FileStack className="h-3.5 w-3.5 mr-1.5" />
+                                    More ({artifacts.length})
+                                </Button>
+                            )}
                         </div>
                     </div>
                 )}
