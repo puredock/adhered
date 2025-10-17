@@ -280,6 +280,7 @@ export function AttackVectorStep({
                 onOpenChange={setArtifactsOpen}
                 artifacts={artifacts}
                 stepName={formatStepName(stepName)}
+                logs={logs}
             />
         </Card>
     )

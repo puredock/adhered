@@ -1,4 +1,4 @@
-import { FileText, Image, BarChart3, Terminal, Download, X } from 'lucide-react'
+import { FileText, Image, BarChart3, Terminal, Download, X, CheckCircle2, XCircle, Info, ScrollText } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -24,17 +24,25 @@ export interface Artifact {
     language?: 'bash' | 'python' | 'javascript' | 'other'
 }
 
+interface LogEntry {
+    timestamp: string
+    level: 'info' | 'error' | 'success'
+    message: string
+}
+
 interface ArtifactsModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     artifacts: Artifact[]
     stepName: string
+    logs?: LogEntry[]
 }
 
-export function ArtifactsModal({ open, onOpenChange, artifacts, stepName }: ArtifactsModalProps) {
+export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs = [] }: ArtifactsModalProps) {
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(
         artifacts.length > 0 ? artifacts[0] : null,
     )
+    const [activeTab, setActiveTab] = useState<string>('all')
 
     const getTypeIcon = (type: Artifact['type']) => {
         switch (type) {
@@ -122,6 +130,17 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName }: Arti
         {} as Record<Artifact['type'], Artifact[]>,
     )
 
+    const getLevelIcon = (level: LogEntry['level']) => {
+        switch (level) {
+            case 'success':
+                return <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
+            case 'error':
+                return <XCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
+            case 'info':
+                return <Info className="h-3 w-3 text-blue-500 flex-shrink-0" />
+        }
+    }
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-5xl max-h-[90vh] p-0">
@@ -141,19 +160,63 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName }: Arti
                     <div className="flex h-[600px]">
                         {/* Sidebar */}
                         <div className="w-80 border-r bg-muted/30">
-                            <Tabs defaultValue="all" className="h-full flex flex-col">
-                                <TabsList className="w-full justify-start rounded-none border-b px-4 pt-2">
-                                    <TabsTrigger value="all">All ({artifacts.length})</TabsTrigger>
-                                    {Object.keys(groupedArtifacts).map(type => (
-                                        <TabsTrigger key={type} value={type}>
-                                            {type}s ({groupedArtifacts[type as Artifact['type']].length})
-                                        </TabsTrigger>
-                                    ))}
-                                </TabsList>
+                            <Tabs 
+                                defaultValue="all" 
+                                value={activeTab}
+                                onValueChange={(value) => {
+                                    setActiveTab(value)
+                                    if (value === 'logs') {
+                                        setSelectedArtifact(null)
+                                    }
+                                }}
+                                className="h-full flex flex-col"
+                            >
+                                <div className="overflow-x-auto border-b">
+                                    <TabsList className="w-full justify-start rounded-none px-4 pt-2 h-auto">
+                                        <TabsTrigger value="all" className="whitespace-nowrap">All ({artifacts.length})</TabsTrigger>
+                                        {logs.length > 0 && (
+                                            <TabsTrigger value="logs" className="whitespace-nowrap">
+                                                Logs ({logs.length})
+                                            </TabsTrigger>
+                                        )}
+                                        {Object.keys(groupedArtifacts).map(type => (
+                                            <TabsTrigger key={type} value={type} className="whitespace-nowrap">
+                                                {type}s ({groupedArtifacts[type as Artifact['type']].length})
+                                            </TabsTrigger>
+                                        ))}
+                                    </TabsList>
+                                </div>
 
                                 <ScrollArea className="flex-1">
                                     <TabsContent value="all" className="m-0 p-2">
                                         <div className="space-y-1">
+                                            {logs.length > 0 && (
+                                                <button
+                                                    onClick={() => {
+                                                        setActiveTab('logs')
+                                                        setSelectedArtifact(null)
+                                                    }}
+                                                    className={cn(
+                                                        'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                        activeTab === 'logs' &&
+                                                            'bg-background shadow-sm ring-1 ring-primary/20',
+                                                    )}
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="mt-0.5">
+                                                            <ScrollText className="h-4 w-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium truncate">
+                                                                Execution Logs
+                                                            </p>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {logs.length} entries
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            )}
                                             {artifacts.map(artifact => (
                                                 <button
                                                     key={artifact.id}
@@ -191,6 +254,15 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName }: Arti
                                         </div>
                                     </TabsContent>
 
+                                    {logs.length > 0 && (
+                                        <TabsContent value="logs" className="m-0 p-2">
+                                            <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
+                                                <ScrollText className="h-4 w-4" />
+                                                <span>Step execution logs</span>
+                                            </div>
+                                        </TabsContent>
+                                    )}
+
                                     {Object.entries(groupedArtifacts).map(([type, items]) => (
                                         <TabsContent key={type} value={type} className="m-0 p-2">
                                             <div className="space-y-1">
@@ -226,7 +298,7 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName }: Arti
 
                         {/* Content Viewer */}
                         <div className="flex-1 flex flex-col">
-                            {selectedArtifact && (
+                            {selectedArtifact ? (
                                 <>
                                     <div className="px-6 py-4 border-b flex items-center justify-between">
                                         <div>
@@ -244,7 +316,31 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName }: Arti
                                         {renderArtifactContent(selectedArtifact)}
                                     </ScrollArea>
                                 </>
-                            )}
+                            ) : logs.length > 0 ? (
+                                <>
+                                    <div className="px-6 py-4 border-b">
+                                        <h3 className="font-semibold">Execution Logs</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Complete step execution timeline
+                                        </p>
+                                    </div>
+                                    <ScrollArea className="flex-1 p-6">
+                                        <div className="bg-slate-950 rounded-md p-4">
+                                            <div className="font-mono text-xs space-y-1">
+                                                {logs.map((log, index) => (
+                                                    <div key={index} className="flex items-start gap-2 text-slate-200">
+                                                        <span className="text-slate-500 min-w-[100px] text-[10px]">
+                                                            {new Date(log.timestamp).toLocaleTimeString()}
+                                                        </span>
+                                                        {getLevelIcon(log.level)}
+                                                        <span className="flex-1 break-words">{log.message}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </ScrollArea>
+                                </>
+                            ) : null}
                         </div>
                     </div>
                 )}
