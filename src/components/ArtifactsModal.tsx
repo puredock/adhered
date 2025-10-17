@@ -151,7 +151,7 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                     </DialogDescription>
                 </DialogHeader>
 
-                {artifacts.length === 0 ? (
+                {artifacts.length === 0 && logs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
                         <FileText className="h-12 w-12 mb-4" />
                         <p>No artifacts available for this step</p>
@@ -173,7 +173,9 @@ export function ArtifactsModal({ open, onOpenChange, artifacts, stepName, logs =
                             >
                                 <div className="overflow-x-auto border-b">
                                     <TabsList className="w-full justify-start rounded-none px-4 pt-2 h-auto">
-                                        <TabsTrigger value="all" className="whitespace-nowrap">All ({artifacts.length})</TabsTrigger>
+                                        <TabsTrigger value="all" className="whitespace-nowrap">
+                                            All ({artifacts.length + (logs.length > 0 ? 1 : 0)})
+                                        </TabsTrigger>
                                         {logs.length > 0 && (
                                             <TabsTrigger value="logs" className="whitespace-nowrap">
                                                 Logs ({logs.length})

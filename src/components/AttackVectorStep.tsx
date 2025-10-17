@@ -256,20 +256,18 @@ export function AttackVectorStep({
                                 <Copy className="h-3.5 w-3.5 mr-1.5" />
                                 {copied ? 'Copied!' : 'Copy'}
                             </Button>
-                            {artifacts.length > 0 && (
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={e => {
-                                        e.stopPropagation()
-                                        setArtifactsOpen(true)
-                                    }}
-                                    className="h-8 px-3"
-                                >
-                                    <FileStack className="h-3.5 w-3.5 mr-1.5" />
-                                    More ({artifacts.length})
-                                </Button>
-                            )}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={e => {
+                                    e.stopPropagation()
+                                    setArtifactsOpen(true)
+                                }}
+                                className="h-8 px-3"
+                            >
+                                <FileStack className="h-3.5 w-3.5 mr-1.5" />
+                                {artifacts.length > 0 ? `More (${artifacts.length})` : 'More'}
+                            </Button>
                         </div>
                     </div>
                 )}
