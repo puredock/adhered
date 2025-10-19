@@ -4,10 +4,12 @@ import {
     AlertCircle,
     AlertTriangle,
     ArrowLeft,
+    BrushCleaning,
     CheckCircle2,
     FileText,
     Loader2,
     Monitor,
+    RefreshCw,
     Shield,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -19,6 +21,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -39,13 +42,28 @@ const DeviceDetail = () => {
         enabled: !!deviceId,
     })
 
-    const { data: scansData, isLoading: scansLoading } = useQuery({
+    const {
+        data: scansData,
+        isLoading: scansLoading,
+        refetch: refetchScans,
+        isFetching: scansFetching,
+    } = useQuery({
         queryKey: ['scans', deviceId],
         queryFn: () => api.scans.listByDevice(deviceId!),
         enabled: !!deviceId,
     })
 
     const scans = scansData?.scans || []
+
+    const handleRefreshScans = async () => {
+        await refetchScans()
+        toast.success('Scans Refreshed', {
+            description: `Found ${scans.length} scan(s) with ${scans.reduce(
+                (sum, scan) => sum + scan.vulnerabilities.length,
+                0,
+            )} vulnerabilities`,
+        })
+    }
 
     // Update activity scans when a new scan is initiated
     useEffect(() => {
@@ -391,15 +409,20 @@ const DeviceDetail = () => {
                             deviceId={deviceId!}
                             scans={[
                                 ...activityScans,
-                                ...scans.map(scan => ({
-                                    id: scan.id,
-                                    type: 'scan' as const,
-                                    name: scan.scan_type.replace(/_/g, ' '),
-                                    status: scan.status as 'running' | 'completed' | 'failed',
-                                    startedAt: scan.started_at,
-                                    completedAt: scan.completed_at,
-                                    vulnerabilitiesFound: scan.vulnerabilities.length,
-                                })),
+                                ...scans
+                                    .filter(scan => !activityScans.some(as => as.id === scan.id))
+                                    .map(scan => ({
+                                        id: scan.id,
+                                        type: 'scan' as const,
+                                        name: scan.scan_type.replace(/_/g, ' '),
+                                        status: (scan.status === 'in_progress' ||
+                                        scan.status === 'pending'
+                                            ? 'running'
+                                            : scan.status) as 'running' | 'completed' | 'failed',
+                                        startedAt: scan.started_at,
+                                        completedAt: scan.completed_at,
+                                        vulnerabilitiesFound: scan.vulnerabilities.length,
+                                    })),
                             ]}
                             audits={[]}
                             onScanComplete={(scanId, status) => {
@@ -409,7 +432,8 @@ const DeviceDetail = () => {
                                         s.id === scanId
                                             ? {
                                                   ...s,
-                                                  status: status,
+                                                  status:
+                                                      status === 'completed' ? 'completed' : 'failed',
                                                   completedAt: new Date().toISOString(),
                                               }
                                             : s,
@@ -468,13 +492,51 @@ const DeviceDetail = () => {
                             </CardContent>
                         </Card>
 
-                        {/* Quick Stats */}
+                        {/* Issues Panel */}
                         <Card className="shadow-card border-border">
-                            <CardHeader>
+                            <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle className="flex items-center gap-2">
                                     <AlertCircle className="w-5 h-5 text-primary" />
                                     Issues
                                 </CardTitle>
+                                <TooltipProvider>
+                                    <div className="flex items-center gap-1">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        toast.success('Issues Cleared', {
+                                                            description: 'All issues have been cleared from this device.',
+                                                        })
+                                                    }}
+                                                    disabled={!scans.some(scan => scan.vulnerabilities.length > 0)}
+                                                >
+                                                    <BrushCleaning className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Clear all issues</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={handleRefreshScans}
+                                                    disabled={scansFetching}
+                                                >
+                                                    <RefreshCw className={`h-4 w-4 ${scansFetching ? 'animate-spin' : ''}`} />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Refresh scans</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                </TooltipProvider>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div>
@@ -503,7 +565,15 @@ const DeviceDetail = () => {
                                         <div
                                             className="h-full bg-warning"
                                             style={{
-                                                width: `${Math.min((scans.reduce((sum, scan) => sum + scan.vulnerabilities.length, 0) / 10) * 100, 100)}%`,
+                                                width: `${Math.min(
+                                                    (scans.reduce(
+                                                        (sum, scan) => sum + scan.vulnerabilities.length,
+                                                        0,
+                                                    ) /
+                                                        10) *
+                                                        100,
+                                                    100,
+                                                )}%`,
                                             }}
                                         />
                                     </div>
@@ -518,6 +588,77 @@ const DeviceDetail = () => {
                                         </Badge>
                                     </div>
                                 </div>
+
+                                {/* Vulnerability List */}
+                                {scans.length > 0 &&
+                                    scans.some(scan => scan.vulnerabilities.length > 0) && (
+                                        <div className="mt-4 space-y-2">
+                                            <div className="text-sm font-medium text-muted-foreground mb-2">
+                                                Recent Vulnerabilities
+                                            </div>
+                                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                                {scans
+                                                    .flatMap(scan =>
+                                                        scan.vulnerabilities.map((vuln, idx) => (
+                                                            <div
+                                                                key={`${scan.id}-${idx}`}
+                                                                className="p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                                                            >
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-2 mb-1">
+                                                                            <Badge
+                                                                                variant={
+                                                                                    vuln.severity ===
+                                                                                    'critical'
+                                                                                        ? 'destructive'
+                                                                                        : vuln.severity ===
+                                                                                            'high'
+                                                                                          ? 'destructive'
+                                                                                          : vuln.severity ===
+                                                                                              'medium'
+                                                                                            ? 'default'
+                                                                                            : 'secondary'
+                                                                                }
+                                                                                className="text-xs"
+                                                                            >
+                                                                                {vuln.severity}
+                                                                            </Badge>
+                                                                            {vuln.cvss_score && (
+                                                                                <span className="text-xs text-muted-foreground">
+                                                                                    CVSS{' '}
+                                                                                    {vuln.cvss_score}
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="text-sm font-medium">
+                                                                            {vuln.title}
+                                                                        </p>
+                                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                                            {vuln.description}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )),
+                                                    )
+                                                    .slice(0, 5)}
+                                            </div>
+                                            {scans.reduce(
+                                                (sum, scan) => sum + scan.vulnerabilities.length,
+                                                0,
+                                            ) > 5 && (
+                                                <p className="text-xs text-muted-foreground text-center mt-2">
+                                                    +
+                                                    {scans.reduce(
+                                                        (sum, scan) => sum + scan.vulnerabilities.length,
+                                                        0,
+                                                    ) - 5}{' '}
+                                                    more vulnerabilities
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
                             </CardContent>
                         </Card>
                     </div>
