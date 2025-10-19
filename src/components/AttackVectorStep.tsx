@@ -114,16 +114,7 @@ export function AttackVectorStep({
 
     const handleCancel = async (e: React.MouseEvent) => {
         e.stopPropagation()
-        if (!scanId) return
-
-        try {
-            await fetch(`${API_BASE_URL}/api/v1/scans/${scanId}`, {
-                method: 'DELETE',
-            })
-            onCancel?.()
-        } catch (error) {
-            console.error('Failed to cancel scan:', error)
-        }
+        onCancel?.()
     }
 
     const handleRetry = async (e: React.MouseEvent) => {
