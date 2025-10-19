@@ -1,7 +1,6 @@
 import { AlertCircle, CheckCircle2, Info, Loader2, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { AttackVectorStep } from '@/components/AttackVectorStep'
-import type { Artifact } from '@/components/ArtifactsModal'
 import { Badge } from '@/components/ui/badge'
 
 interface LogEntry {
@@ -22,49 +21,7 @@ interface Step {
     status: 'pending' | 'running' | 'success' | 'error'
     logs: LogEntry[]
     severity: 'high' | 'medium' | 'critical' | 'low'
-    artifacts: Artifact[]
-}
-
-// Mock artifacts generator for demo purposes
-const generateMockArtifacts = (stepIndex: number): Artifact[] => {
-    const artifacts: Artifact[] = []
-    
-    // Add different artifacts based on step
-    if (stepIndex % 3 === 0) {
-        artifacts.push({
-            id: `artifact-${stepIndex}-1`,
-            name: 'vulnerability-report.txt',
-            type: 'report',
-            size: '24 KB',
-            timestamp: new Date().toISOString(),
-            content: `VULNERABILITY REPORT - Step ${stepIndex}\n\nSummary:\nThis report contains findings from the security assessment.\n\nFindings:\n1. SQL Injection vulnerability detected\n2. Cross-Site Scripting (XSS) potential\n3. Insecure authentication mechanism\n\nRecommendations:\n- Implement parameterized queries\n- Sanitize user inputs\n- Use secure session management`,
-        })
-    }
-    
-    if (stepIndex % 2 === 0) {
-        artifacts.push({
-            id: `artifact-${stepIndex}-2`,
-            name: 'exploit.py',
-            type: 'script',
-            size: '3.2 KB',
-            timestamp: new Date().toISOString(),
-            language: 'python',
-            content: `#!/usr/bin/env python3\n# Exploit script for vulnerability found in step ${stepIndex}\n\nimport requests\nimport sys\n\ndef exploit(target_url):\n    payload = "'; DROP TABLE users; --"\n    response = requests.post(\n        f"{target_url}/login",\n        data={"username": payload, "password": "test"}\n    )\n    return response.status_code == 200\n\nif __name__ == "__main__":\n    if len(sys.argv) < 2:\n        print("Usage: exploit.py <target_url>")\n        sys.exit(1)\n    \n    target = sys.argv[1]\n    if exploit(target):\n        print("[+] Exploit successful!")\n    else:\n        print("[-] Exploit failed")`,
-        })
-    }
-    
-    if (stepIndex === 2) {
-        artifacts.push({
-            id: `artifact-${stepIndex}-3`,
-            name: 'network-scan.png',
-            type: 'image',
-            size: '156 KB',
-            timestamp: new Date().toISOString(),
-            url: '/placeholder.svg',
-        })
-    }
-    
-    return artifacts
+    artifacts?: any[]
 }
 
 interface PenetrationTestLogProps {
@@ -97,8 +54,12 @@ export function PenetrationTestLog({
     console.log('PenetrationTestLog render - scanId:', scanId, 'steps:', steps.length, 'status:', status)
 
     useEffect(() => {
-        console.log('PenetrationTestLog useEffect - mounting for scanId:', scanId)
-        console.log('initialStatus:', initialStatus)
+        console.log(
+            'PenetrationTestLog useEffect - mounting for scanId:',
+            scanId,
+            'initialStatus:',
+            initialStatus,
+        )
 
         if (initialStatus !== 'running') {
             console.log('Skipping EventSource connection - scan already completed/failed')
@@ -124,7 +85,7 @@ export function PenetrationTestLog({
                 setSteps(prev => {
                     const updated = prev.map(step =>
                         step.status === 'running' || step.status === 'pending'
-                            ? { ...step, status: 'error' as const }
+                            ? { ...step, status: 'error' }
                             : step,
                     )
                     onStateChange?.({ steps: updated, logs })
@@ -145,7 +106,6 @@ export function PenetrationTestLog({
                         status: 'pending',
                         logs: [],
                         severity: 'medium',
-                        artifacts: generateMockArtifacts(i),
                     })
                 }
                 console.log('Setting steps state to:', initialSteps)
@@ -156,7 +116,7 @@ export function PenetrationTestLog({
                 setSteps(prev => {
                     const updated = prev.map(step =>
                         step.index === data.step_index
-                            ? { ...step, name: data.step_name, status: 'running' as const }
+                            ? { ...step, name: data.step_name, status: 'running' }
                             : step,
                     )
                     onStateChange?.({ steps: updated, logs })
@@ -165,7 +125,7 @@ export function PenetrationTestLog({
             } else if (data.type === 'step_success') {
                 setSteps(prev => {
                     const updated = prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'success' as const } : step,
+                        step.index === data.step_index ? { ...step, status: 'success' } : step,
                     )
                     onStateChange?.({ steps: updated, logs })
                     return updated
@@ -173,7 +133,7 @@ export function PenetrationTestLog({
             } else if (data.type === 'step_error') {
                 setSteps(prev => {
                     const updated = prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'error' as const } : step,
+                        step.index === data.step_index ? { ...step, status: 'error' } : step,
                     )
                     onStateChange?.({ steps: updated, logs })
                     return updated
@@ -250,8 +210,23 @@ export function PenetrationTestLog({
             })
 
             if (response.ok) {
+                const scanResult = await response.json()
                 setStatus('cancelled')
                 eventSourceRef.current?.close()
+
+                // Mark any running or pending steps as cancelled/completed
+                setSteps(prev => {
+                    const updated = prev.map(step =>
+                        step.status === 'running' || step.status === 'pending'
+                            ? { ...step, status: 'success' as const }
+                            : step,
+                    )
+                    onStateChange?.({ steps: updated, logs })
+                    return updated
+                })
+
+                // Mark as completed to trigger data refresh with vulnerabilities
+                onComplete?.('completed')
                 onCancel?.()
             }
         } catch (error) {
@@ -316,8 +291,8 @@ export function PenetrationTestLog({
                         logs={step.logs}
                         severity={step.severity}
                         scanId={scanId}
-                        onCancel={onCancel}
-                        artifacts={step.artifacts}
+                        onCancel={handleCancel}
+                        artifacts={step.artifacts || []}
                     />
                 ))
             )}
