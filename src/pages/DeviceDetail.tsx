@@ -444,6 +444,17 @@ const DeviceDetail = () => {
                                     queryKey: ['scans', deviceId],
                                 })
                             }}
+                            onClearStaleScan={(scanId) => {
+                                // Remove the stale scan from activity scans
+                                setActivityScans(prev => prev.filter(s => s.id !== scanId))
+                                // Optionally refresh the scans list
+                                queryClient.invalidateQueries({
+                                    queryKey: ['scans', deviceId],
+                                })
+                                toast.success('Stale scan cleared', {
+                                    description: 'The scan has been removed from the activity list.',
+                                })
+                            }}
                         />
                     </div>
 

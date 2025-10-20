@@ -42,6 +42,7 @@ interface ActivityViewerProps {
     audits?: ActivityEntry[]
     onActivityClick?: (activityId: string) => void
     onScanComplete?: (scanId: string, status: string) => void
+    onClearStaleScan?: (scanId: string) => void
 }
 
 export function ActivityViewer({
@@ -49,6 +50,7 @@ export function ActivityViewer({
     scans = [],
     audits = [],
     onScanComplete,
+    onClearStaleScan,
 }: ActivityViewerProps) {
     const [activityType, setActivityType] = useState<ActivityType>('scans')
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
@@ -192,6 +194,7 @@ export function ActivityViewer({
                                 onCancel={() => {
                                     setSelectedActivityId(null)
                                 }}
+                                onClearStaleScan={onClearStaleScan}
                             />
                         ) : (
                             <div className="p-6 rounded-lg border border-muted bg-muted/30">
