@@ -63,7 +63,8 @@ export interface ScanResult {
     status: 'pending' | 'in_progress' | 'completed' | 'failed'
     started_at: string
     completed_at: string | null
-    vulnerabilities: Vulnerability[]
+    issues: Vulnerability[]
+    vulnerabilities: Vulnerability[] // Alias for backward compatibility
     attack_surface: Record<string, any> | null
     report_url: string | null
     metadata: Record<string, any> | null
@@ -151,13 +152,31 @@ export const api = {
             return fetchAPI<ScanResultList>(`/scans${query ? `?${query}` : ''}`)
         },
         get: (id: string) => fetchAPI<ScanResult>(`/scans/${id}`),
-        listByDevice: (deviceId: string, params?: { skip?: number; limit?: number }) => {
+        listByDevice: async (deviceId: string, params?: { skip?: number; limit?: number }) => {
             const queryParams = new URLSearchParams()
             if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString())
             if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString())
 
             const query = queryParams.toString()
-            return fetchAPI<ScanResultList>(`/scans/device/${deviceId}${query ? `?${query}` : ''}`)
+            const scans = await fetchAPI<any[]>(`/scans/device/${deviceId}${query ? `?${query}` : ''}`)
+
+            // Transform response to match expected format
+            return {
+                scans: scans.map(scan => ({
+                    id: scan.id || scan.pk,
+                    device_id: scan.target?.id || deviceId,
+                    scan_type: scan.mode || scan.scan_type,
+                    status: scan.status,
+                    started_at: scan.started_at,
+                    completed_at: scan.completed_at,
+                    vulnerabilities: scan.issues || scan.vulnerabilities || [],
+                    issues: scan.issues || [],
+                    attack_surface: scan.attack_surface || null,
+                    report_url: scan.report_url || null,
+                    metadata: scan.metadata || null,
+                })),
+                total: scans.length,
+            }
         },
         create: (data: { device_id: string; scan_type: string; options?: Record<string, any> }) =>
             fetchAPI<ScanResult>('/scans', {
