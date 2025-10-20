@@ -82,15 +82,13 @@ export function PenetrationTestLog({
                 setStatus(finalStatus)
 
                 // Mark any remaining "running" or "pending" steps as error (incomplete)
-                setSteps(prev => {
-                    const updated = prev.map(step =>
+                setSteps(prev =>
+                    prev.map(step =>
                         step.status === 'running' || step.status === 'pending'
                             ? { ...step, status: 'error' }
                             : step,
-                    )
-                    onStateChange?.({ steps: updated, logs })
-                    return updated
-                })
+                    ),
+                )
 
                 eventSource.close()
                 onComplete?.(data.status)
@@ -110,34 +108,27 @@ export function PenetrationTestLog({
                 }
                 console.log('Setting steps state to:', initialSteps)
                 setSteps(initialSteps)
-                onStateChange?.({ steps: initialSteps, logs })
             } else if (data.type === 'step_start') {
                 currentStepIndexRef.current = data.step_index
-                setSteps(prev => {
-                    const updated = prev.map(step =>
+                setSteps(prev =>
+                    prev.map(step =>
                         step.index === data.step_index
                             ? { ...step, name: data.step_name, status: 'running' }
                             : step,
-                    )
-                    onStateChange?.({ steps: updated, logs })
-                    return updated
-                })
+                    ),
+                )
             } else if (data.type === 'step_success') {
-                setSteps(prev => {
-                    const updated = prev.map(step =>
+                setSteps(prev =>
+                    prev.map(step =>
                         step.index === data.step_index ? { ...step, status: 'success' } : step,
-                    )
-                    onStateChange?.({ steps: updated, logs })
-                    return updated
-                })
+                    ),
+                )
             } else if (data.type === 'step_error') {
-                setSteps(prev => {
-                    const updated = prev.map(step =>
+                setSteps(prev =>
+                    prev.map(step =>
                         step.index === data.step_index ? { ...step, status: 'error' } : step,
-                    )
-                    onStateChange?.({ steps: updated, logs })
-                    return updated
-                })
+                    ),
+                )
             } else {
                 // Regular log entry - skip step markers themselves
                 if (data.message && !data.message.startsWith('[STEP_')) {
@@ -155,30 +146,19 @@ export function PenetrationTestLog({
                         step_name: data.step_name,
                     }
 
-                    setLogs(prev => {
-                        const updated = [...prev, logEntry]
-                        setSteps(currentSteps => {
-                            onStateChange?.({ steps: currentSteps, logs: updated })
-                            return currentSteps
-                        })
-                        return updated
-                    })
+                    // Update logs
+                    setLogs(prev => [...prev, logEntry])
 
                     // Add log to the corresponding step using ref
                     const stepIndex = currentStepIndexRef.current
                     if (stepIndex !== null) {
-                        setSteps(prev => {
-                            const updated = prev.map(step =>
+                        setSteps(prev =>
+                            prev.map(step =>
                                 step.index === stepIndex
                                     ? { ...step, logs: [...step.logs, logEntry] }
                                     : step,
-                            )
-                            setLogs(currentLogs => {
-                                onStateChange?.({ steps: updated, logs: currentLogs })
-                                return currentLogs
-                            })
-                            return updated
-                        })
+                            ),
+                        )
                     }
                 }
             }
@@ -203,6 +183,13 @@ export function PenetrationTestLog({
         }
     }, [logs])
 
+    // Notify parent of state changes
+    // Note: onStateChange is intentionally not in deps to avoid infinite loops
+    useEffect(() => {
+        onStateChange?.({ steps, logs })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [steps, logs])
+
     const handleCancel = async () => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/v1/scans/${scanId}`, {
@@ -215,15 +202,13 @@ export function PenetrationTestLog({
                 eventSourceRef.current?.close()
 
                 // Mark any running or pending steps as cancelled/completed
-                setSteps(prev => {
-                    const updated = prev.map(step =>
+                setSteps(prev =>
+                    prev.map(step =>
                         step.status === 'running' || step.status === 'pending'
                             ? { ...step, status: 'success' as const }
                             : step,
-                    )
-                    onStateChange?.({ steps: updated, logs })
-                    return updated
-                })
+                    ),
+                )
 
                 // Mark as completed to trigger data refresh with vulnerabilities
                 onComplete?.('completed')
