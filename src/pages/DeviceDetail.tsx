@@ -229,7 +229,7 @@ const DeviceDetail = () => {
 
     const handlePenTest = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/v1/devices/${deviceId}/penetration-test`, {
+            const response = await fetch(`${API_BASE_URL}/api/v1/devices/${deviceId}/scan`, {
                 method: 'POST',
             })
 
@@ -508,10 +508,15 @@ const DeviceDetail = () => {
                                                     size="icon"
                                                     onClick={() => {
                                                         toast.success('Issues Cleared', {
-                                                            description: 'All issues have been cleared from this device.',
+                                                            description:
+                                                                'All issues have been cleared from this device.',
                                                         })
                                                     }}
-                                                    disabled={!scans.some(scan => scan.vulnerabilities.length > 0)}
+                                                    disabled={
+                                                        !scans.some(
+                                                            scan => scan.vulnerabilities.length > 0,
+                                                        )
+                                                    }
                                                 >
                                                     <BrushCleaning className="h-4 w-4" />
                                                 </Button>
@@ -528,7 +533,9 @@ const DeviceDetail = () => {
                                                     onClick={handleRefreshScans}
                                                     disabled={scansFetching}
                                                 >
-                                                    <RefreshCw className={`h-4 w-4 ${scansFetching ? 'animate-spin' : ''}`} />
+                                                    <RefreshCw
+                                                        className={`h-4 w-4 ${scansFetching ? 'animate-spin' : ''}`}
+                                                    />
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
