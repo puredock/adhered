@@ -549,17 +549,7 @@ const DeviceDetail = () => {
                                 <div>
                                     <div className="flex items-center justify-between mb-1">
                                         <span className="text-sm text-muted-foreground">
-                                            Total Scans
-                                        </span>
-                                        <span className="font-bold text-primary">
-                                            {device.scan_count}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className="text-sm text-muted-foreground">
-                                            Vulnerabilities Found
+                                            Issues Found
                                         </span>
                                         <span className="font-bold text-warning">
                                             {scans.reduce(
