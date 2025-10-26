@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { api } from '@/lib/api'
+import Landing from './Landing'
 
 const Index = () => {
     const { data: networksData, isLoading: networksLoading } = useQuery({
@@ -25,6 +26,13 @@ const Index = () => {
     const networks = networksData?.networks || []
     const devices = devicesData?.devices || []
     const scans = scansData?.scans || []
+
+    const loading = networksLoading || devicesLoading || scansLoading
+    const isEmpty = !loading && networks.length === 0 && devices.length === 0 && scans.length === 0
+
+    if (isEmpty) {
+        return <Landing />
+    }
 
     const vulnerabilityCount = scans.reduce((sum, scan) => sum + scan.vulnerabilities.length, 0)
     const compliantDevices = devices.length - vulnerabilityCount
