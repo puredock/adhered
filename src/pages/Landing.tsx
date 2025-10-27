@@ -20,34 +20,35 @@ import { Card, CardContent } from '@/components/ui/card'
 export default function Landing() {
     const features = [
         {
-            title: 'Network Discovery',
-            desc: 'Nmap-based scanning to map subnets, hosts, and services.',
+            title: 'Asset Discovery',
+            desc: 'Enumerate and identify all the connected devices on your networks.',
             icon: Network,
         },
         {
-            title: 'BLE & Bluetooth',
-            desc: 'BLE device discovery and GATT enumeration; classic BT on Linux.',
-            icon: Bluetooth,
-        },
-        {
-            title: 'RF Spectrum',
-            desc: 'SDR spectrum analysis with interference detection.',
-            icon: Radio,
-        },
-        {
-            title: 'Automated Pentesting',
-            desc: 'AI-assisted assessments with live logs and reporting.',
-            icon: Zap,
-        },
-        {
             title: 'Real-time Monitoring',
-            desc: 'Track devices, issues, and scan status in one place.',
+            desc: 'Track devices, security and audit issues, as well as advisory reports in one place.',
             icon: Activity,
         },
         {
-            title: 'Security Posture',
-            desc: 'Highlight vulnerabilities and compliant devices.',
-            icon: Shield,
+            title: 'Risk Assessment',
+            desc: 'Obtain deep insights into your cyber-risk posture and necessary remediation measures.',
+            icon: Bluetooth,
+        },
+        {
+            title: 'Automated Pentesting',
+            desc: 'AI-powered fully automated pen-testing workflows and cookbooks tailored to fit your specific use cases.',
+            icon: Zap,
+        },
+        {
+            title: 'Compliance Audits',
+            desc: 'Enfroce ongoing compliance with major regulatory frameworks to ensure your solutions never fall out of line.',
+            // icon: Shield,
+            icon: ClipboardCheck,
+        },
+        {
+            title: 'Regulatory Advisory',
+            desc: 'Detailed advisory reports based on your risk assessment and regulatory requirements for your devices and target markets',
+            icon: Radio,
         },
     ]
 
