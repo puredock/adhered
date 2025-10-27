@@ -109,7 +109,8 @@ export default function Landing() {
                                 style={{
                                     textShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                                     letterSpacing: '-0.02em',
-                                    animation: 'fade-in 1s ease-out, slide-up 0.8s ease-out',
+                                    animation:
+                                        'fade-in 1s ease-out, slide-up 0.8s ease-out, pulse-glow 3s ease-in-out infinite',
                                 }}
                             >
                                 Agentic Security
@@ -118,11 +119,11 @@ export default function Landing() {
                                 className="block bg-clip-text text-transparent transition-all duration-300 group-hover:scale-[1.02]"
                                 style={{
                                     backgroundImage:
-                                        'linear-gradient(135deg, hsl(165 70% 55%) 0%, hsl(165 60% 45%) 50%, hsl(165 70% 60%) 100%)',
-                                    backgroundSize: '200% 200%',
+                                        'linear-gradient(90deg, hsl(165 80% 50%) 0%, hsl(165 70% 60%) 25%, hsl(220 50% 40%) 50%, hsl(165 70% 60%) 75%, hsl(165 80% 50%) 100%)',
+                                    backgroundSize: '300% 100%',
                                     letterSpacing: '-0.01em',
                                     animation:
-                                        'gradient-shift 6s ease-in-out infinite, fade-in 1.2s ease-out, slide-up 1s ease-out',
+                                        'gradient-flow 8s linear infinite, fade-in 1.2s ease-out, slide-up 1s ease-out',
                                 }}
                             >
                                 for connected devices
@@ -576,6 +577,15 @@ export default function Landing() {
                     }
                 }
 
+                @keyframes gradient-flow {
+                    0% {
+                        background-position: 0% 50%;
+                    }
+                    100% {
+                        background-position: 300% 50%;
+                    }
+                }
+
                 @keyframes fade-in {
                     from {
                         opacity: 0;
@@ -593,6 +603,15 @@ export default function Landing() {
                     to {
                         transform: translateY(0);
                         opacity: 1;
+                    }
+                }
+
+                @keyframes pulse-glow {
+                    0%, 100% {
+                        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+                    }
+                    50% {
+                        filter: drop-shadow(0 8px 24px rgba(74, 222, 189, 0.3));
                     }
                 }
             `}</style>
