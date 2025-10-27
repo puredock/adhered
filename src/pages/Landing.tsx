@@ -71,11 +71,7 @@ export default function Landing() {
                         </div>
                         <div>
                             <div className="text-lg font-bold">Adhere</div>
-                            {/*
-                            <div className="text-xs text-muted-foreground">
-                                Medical Device Reconnaissance
-                            </div>
-                            */}
+                            {/* <div className="text-xs text-muted-foreground">Agentic device security</div> */}
                         </div>
                     </div>
                     {/*
