@@ -8,15 +8,20 @@ import {
     Shield,
     Zap,
 } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { FluidBackground } from '@/components/FluidBackground'
+import { GetDemoDialog } from '@/components/GetDemoDialog'
 import { InteractiveBackground } from '@/components/InteractiveBackground'
+import { RequestAccessDialog } from '@/components/RequestAccessDialog'
 import { SimpleWaveBackground } from '@/components/SimpleWaveBackground'
 import { TypewriterText } from '@/components/TypewriterText'
 import { Card, CardContent } from '@/components/ui/card'
 import { WorkflowCarousel } from '@/components/WorkflowCarousel'
 
 export default function Landing() {
+    const [showRequestAccess, setShowRequestAccess] = useState(false)
+    const [showGetDemo, setShowGetDemo] = useState(false)
     const features = [
         {
             title: 'Asset Discovery',
@@ -140,8 +145,9 @@ export default function Landing() {
                             .
                         </p>
                         <div className="flex items-center justify-center gap-5 flex-wrap">
-                            <Link
-                                to="/networks"
+                            <button
+                                type="button"
+                                onClick={() => setShowRequestAccess(true)}
                                 className="inline-flex items-center gap-3 px-10 py-5 rounded-xl text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl group relative overflow-hidden"
                                 style={{
                                     backgroundColor: 'hsl(var(--sidebar-background))',
@@ -152,14 +158,15 @@ export default function Landing() {
                                 <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 <span className="relative">Request Access</span>
                                 <ArrowRight className="w-6 h-6 relative group-hover:translate-x-1 transition-transform" />
-                            </Link>
-                            <Link
-                                to="/scans"
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowGetDemo(true)}
                                 className="inline-flex items-center gap-3 px-10 py-5 rounded-xl text-lg font-bold bg-card/80 backdrop-blur-sm text-foreground hover:bg-card transition-all border-2 border-border/50 hover:border-primary hover:scale-105 group shadow-lg"
                             >
                                 <ScanLine className="w-6 h-6 group-hover:rotate-12 transition-transform" />
                                 <span>Get a demo</span>
-                            </Link>
+                            </button>
                         </div>
                     </div>
 
@@ -554,6 +561,10 @@ export default function Landing() {
                     }
                 }
             `}</style>
+
+            {/* Dialogs */}
+            <RequestAccessDialog open={showRequestAccess} onOpenChange={setShowRequestAccess} />
+            <GetDemoDialog open={showGetDemo} onOpenChange={setShowGetDemo} />
         </div>
     )
 }
