@@ -9,7 +9,6 @@ import {
     Zap,
 } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { FluidBackground } from '@/components/FluidBackground'
 import { GetDemoDialog } from '@/components/GetDemoDialog'
 import { InteractiveBackground } from '@/components/InteractiveBackground'
@@ -333,8 +332,8 @@ export default function Landing() {
                                 description:
                                     'Discover all your devices across all of your networks in one unified view.',
                                 screenshot: '/screenshots/devices.png',
-                                link: '/catalog',
                                 linkText: 'Find your devices',
+                                onButtonClick: () => setShowRequestAccess(true),
                             },
                             {
                                 number: 2,
@@ -342,8 +341,8 @@ export default function Landing() {
                                 description:
                                     'Run AI‑assisted audit scans and penetration tests on specific devices with live logs. Identify vulnerabilities and misconfigurations and enforce provided remediation suggestions.',
                                 screenshot: '/screenshots/scan.png',
-                                link: '/scans',
                                 linkText: 'Start a scan',
+                                onButtonClick: () => setShowRequestAccess(true),
                             },
                         ]}
                     />
@@ -369,13 +368,24 @@ export default function Landing() {
                     >
                         Experience the power of agentic AI to automate your device security & compliance.
                     </p>
-                    <Link
-                        to="/networks"
-                        className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-primary text-primary-foreground hover:shadow-2xl transition-all text-base font-semibold"
-                    >
-                        Request Access
-                        <ArrowRight className="w-5 h-5" />
-                    </Link>
+                    <div className="flex items-center justify-center gap-4 flex-wrap">
+                        <button
+                            type="button"
+                            onClick={() => setShowRequestAccess(true)}
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-primary text-primary-foreground hover:shadow-2xl transition-all text-base font-semibold hover:scale-105"
+                        >
+                            Request Access
+                            <ArrowRight className="w-5 h-5" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowGetDemo(true)}
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-card text-foreground border-2 border-border/50 hover:border-primary hover:shadow-xl transition-all text-base font-semibold hover:scale-105 group"
+                        >
+                            <ScanLine className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                            Get a Demo
+                        </button>
+                    </div>
                 </section>
             </main>
 

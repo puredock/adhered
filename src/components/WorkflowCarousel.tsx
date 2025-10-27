@@ -1,14 +1,13 @@
 import { ArrowRight } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
 
 interface WorkflowStep {
     number: number
     title: string
     description: string
     screenshot: string
-    link: string
     linkText: string
+    onButtonClick: () => void
 }
 
 interface WorkflowCarouselProps {
@@ -75,8 +74,9 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                                     <p className="text-base text-foreground/80 leading-relaxed mb-6">
                                         {step.description}
                                     </p>
-                                    <Link
-                                        to={step.link}
+                                    <button
+                                        type="button"
+                                        onClick={step.onButtonClick}
                                         className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-base font-bold transition-all hover:scale-105 group/link shadow-lg w-full justify-center"
                                         style={{
                                             backgroundColor: 'hsl(var(--sidebar-background))',
@@ -85,7 +85,7 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                                     >
                                         {step.linkText}
                                         <ArrowRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
-                                    </Link>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -115,7 +115,9 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                         />
                         <span
                             className={`text-xs font-semibold transition-all duration-300 ${
-                                activeStep === idx ? 'text-primary opacity-100' : 'text-muted-foreground opacity-0 group-hover:opacity-70'
+                                activeStep === idx
+                                    ? 'text-primary opacity-100'
+                                    : 'text-muted-foreground opacity-0 group-hover:opacity-70'
                             }`}
                         >
                             {step.title}
