@@ -265,7 +265,7 @@ export default function Landing() {
                             />
                         </h2>
                         <p className="text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
-                            Uncover gaps in your security and compliance postures in single unified
+                            Uncover gaps in your security and compliance postures in a single unified
                             platform.
                         </p>
                     </div>
