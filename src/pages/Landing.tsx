@@ -125,11 +125,12 @@ export default function Landing() {
                                         'gradient-shift 6s ease-in-out infinite, fade-in 1.2s ease-out, slide-up 1s ease-out',
                                 }}
                             >
-                                for smart devices
+                                for connected devices
                             </span>
                         </h1>
                         <p className="text-xl md:text-2xl text-foreground/70 mb-10 max-w-3xl mx-auto leading-relaxed font-light">
-                            Enforce security by design across all connected devices and networks using{' '}
+                            Enforce security by design across all your connected devices and networks
+                            using{' '}
                             <span className="font-semibold text-primary bg-primary/10 px-2 py-1 rounded">
                                 AI-powered
                             </span>{' '}
@@ -263,8 +264,8 @@ export default function Landing() {
                             />
                         </h2>
                         <p className="text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
-                            Everything you need to assess and secure medical device networks in one
-                            platform
+                            Uncover gaps in your security and compliance postures in single unified
+                            platform.
                         </p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
