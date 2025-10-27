@@ -507,14 +507,70 @@ export default function Landing() {
                         */}
                     </div>
                     <div
-                        className="pt-8 border-t text-center text-sm"
+                        className="pt-8 border-t"
                         style={{
                             borderColor: 'hsl(var(--sidebar-border))',
-                            color: 'hsl(var(--sidebar-foreground) / 0.6)',
                         }}
                     >
-                        © {new Date().getFullYear()} Imperial Global Singapore. Authorized research &
-                        security testing only.
+                        <div className="flex flex-col items-start gap-6">
+                            {/* Partner Logos */}
+                            <div className="flex items-center gap-4">
+                                <a
+                                    href="https://www.imperial.ac.uk/about/global/singapore/"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                >
+                                    <img
+                                        src="/igs-logo.png"
+                                        alt="Imperial Global Singapore"
+                                        className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                                    />
+                                </a>
+                                <div
+                                    className="w-px h-8"
+                                    style={{ backgroundColor: 'hsl(var(--sidebar-border))' }}
+                                />
+                                <div className="flex items-center gap-3">
+                                    <a
+                                        href="https://www.imperial.ac.uk/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <img
+                                            src="/imperial-logo.png"
+                                            alt="Imperial College London"
+                                            className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                                        />
+                                    </a>
+                                    <span
+                                        className="text-xl font-light"
+                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.5)' }}
+                                    >
+                                        +
+                                    </span>
+                                    <a
+                                        href="https://www.ntu.edu.sg/"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        <img
+                                            src="/ntu-logo.png"
+                                            alt="NTU Singapore"
+                                            className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                                        />
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* Copyright - acts as caption */}
+                            <div
+                                className="text-sm"
+                                style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }}
+                            >
+                                © {new Date().getFullYear()} Imperial Global Singapore. Authorized
+                                research & security testing only.
+                            </div>
+                        </div>
                     </div>
                 </div>
             </footer>
