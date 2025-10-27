@@ -14,6 +14,7 @@ import { InteractiveBackground } from '@/components/InteractiveBackground'
 import { SimpleWaveBackground } from '@/components/SimpleWaveBackground'
 import { TypewriterText } from '@/components/TypewriterText'
 import { Card, CardContent } from '@/components/ui/card'
+import { WorkflowCarousel } from '@/components/WorkflowCarousel'
 
 export default function Landing() {
     const features = [
@@ -291,98 +292,34 @@ export default function Landing() {
                 <section className="mb-32">
                     <div className="text-center mb-16">
                         <h2 className="text-5xl md:text-6xl font-extrabold mb-5 tracking-tight">
-                            Get started in 3 steps
+                            Discovery to remediation
                         </h2>
                         <p className="text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
-                            From discovery to remediation in minutes
+                            in minutes
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-                        <div className="relative group">
-                            <div className="p-10 rounded-3xl bg-card/80 backdrop-blur-sm border-2 border-border/50 hover:border-primary/50 hover:shadow-2xl transition-all duration-500 relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div
-                                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-primary-foreground text-2xl font-black mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10"
-                                    style={{
-                                        background:
-                                            'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                    }}
-                                >
-                                    1
-                                </div>
-                                <h4 className="font-extrabold text-2xl mb-4 tracking-tight relative z-10">
-                                    Discover
-                                </h4>
-                                <p className="text-foreground/70 mb-6 leading-relaxed relative z-10">
-                                    Detect networks and enumerate devices via Nmap, BLE/BT, and RF
-                                    scanning. Map your entire infrastructure.
-                                </p>
-                                <Link
-                                    to="/networks"
-                                    className="inline-flex items-center gap-2 text-primary text-base font-bold hover:gap-3 transition-all relative z-10 group/link"
-                                >
-                                    View networks
-                                    <ArrowRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
-                                </Link>
-                            </div>
-                        </div>
-                        <div className="relative group">
-                            <div className="p-10 rounded-3xl bg-card/80 backdrop-blur-sm border-2 border-border/50 hover:border-primary/50 hover:shadow-2xl transition-all duration-500 relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div
-                                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-primary-foreground text-2xl font-black mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10"
-                                    style={{
-                                        background:
-                                            'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                    }}
-                                >
-                                    2
-                                </div>
-                                <h4 className="font-extrabold text-2xl mb-4 tracking-tight relative z-10">
-                                    Assess
-                                </h4>
-                                <p className="text-foreground/70 mb-6 leading-relaxed relative z-10">
-                                    Run AI‑assisted scans and penetration tests with live logs. Identify
-                                    vulnerabilities automatically.
-                                </p>
-                                <Link
-                                    to="/scans"
-                                    className="inline-flex items-center gap-2 text-primary text-base font-bold hover:gap-3 transition-all relative z-10 group/link"
-                                >
-                                    Start a scan
-                                    <ArrowRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
-                                </Link>
-                            </div>
-                        </div>
-                        <div className="relative group">
-                            <div className="p-10 rounded-3xl bg-card/80 backdrop-blur-sm border-2 border-border/50 hover:border-primary/50 hover:shadow-2xl transition-all duration-500 relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div
-                                    className="w-16 h-16 rounded-2xl flex items-center justify-center text-primary-foreground text-2xl font-black mb-6 shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative z-10"
-                                    style={{
-                                        background:
-                                            'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                    }}
-                                >
-                                    3
-                                </div>
-                                <h4 className="font-extrabold text-2xl mb-4 tracking-tight relative z-10">
-                                    Prioritize
-                                </h4>
-                                <p className="text-foreground/70 mb-6 leading-relaxed relative z-10">
-                                    Review issues, track compliance, and monitor risk over time. Generate
-                                    comprehensive reports.
-                                </p>
-                                <Link
-                                    to="/audits"
-                                    className="inline-flex items-center gap-2 text-primary text-base font-bold hover:gap-3 transition-all relative z-10 group/link"
-                                >
-                                    See audits
-                                    <ArrowRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
-                                </Link>
-                            </div>
-                        </div>
-                    </div>
+                    <WorkflowCarousel
+                        steps={[
+                            {
+                                number: 1,
+                                title: 'Prioritize',
+                                description:
+                                    'Review issues, track compliance, and monitor risk over time. Generate comprehensive reports with actionable remediation steps.',
+                                screenshot: '/screenshots/devices.png',
+                                link: '/catalog',
+                                linkText: 'View devices',
+                            },
+                            {
+                                number: 2,
+                                title: 'Assess',
+                                description:
+                                    'Run AI‑assisted scans and penetration tests with live logs. Identify vulnerabilities automatically using OWASP and MITRE ATT&CK frameworks.',
+                                screenshot: '/screenshots/scan.png',
+                                link: '/scans',
+                                linkText: 'Start a scan',
+                            },
+                        ]}
+                    />
                 </section>
 
                 {/* CTA Section */}
