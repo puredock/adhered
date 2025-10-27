@@ -1,3 +1,4 @@
+import emailjs from '@emailjs/browser'
 import { ArrowRight } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -30,38 +31,51 @@ export function RequestAccessDialog({ open, onOpenChange }: RequestAccessDialogP
         e.preventDefault()
         setIsSubmitting(true)
 
-        const formData = new FormData(e.currentTarget)
-        const data = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            organization: formData.get('organization'),
-            message: formData.get('message'),
-        }
+        try {
+            await emailjs.sendForm(
+                import.meta.env.VITE_EMAILJS_SERVICE_ID,
+                import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+                e.currentTarget,
+                import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+            )
 
-        const emailBody = `
-New Access Request for Adhere Platform
+            toast({
+                title: 'Request sent successfully!',
+                description: 'We will get back to you shortly.',
+            })
+            onOpenChange(false)
+            e.currentTarget.reset()
+        } catch (error) {
+            console.error('EmailJS error:', error)
+
+            const formData = new FormData(e.currentTarget)
+            const data = {
+                name: formData.get('name') as string,
+                email: formData.get('email') as string,
+                organization: formData.get('organization') as string,
+                message: (formData.get('message') as string) || 'N/A',
+            }
+
+            const emailBody = `New Access Request for Adhere Platform
 
 Name: ${data.name}
 Email: ${data.email}
 Organization: ${data.organization}
 
 Message:
-${data.message}
-        `.trim()
+${data.message}`.trim()
 
-        const mailtoLink = `mailto:h.rajasekaran@imperial.ac.uk?subject=Adhere Access Request - ${data.name}&body=${encodeURIComponent(emailBody)}`
+            navigator.clipboard.writeText(
+                `To: h.rajasekaran@imperial.ac.uk\nSubject: Adhere Access Request - ${data.name}\n\n${emailBody}`,
+            )
 
-        window.location.href = mailtoLink
-
-        setTimeout(() => {
-            setIsSubmitting(false)
-            onOpenChange(false)
             toast({
-                title: 'Request sent!',
-                description:
-                    'Your default email client should open. Please send the email to complete your request.',
+                title: 'Email details copied to clipboard',
+                description: 'Please paste into your email and send to h.rajasekaran@imperial.ac.uk',
             })
-        }, 500)
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
     return (
