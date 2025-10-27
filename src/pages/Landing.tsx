@@ -1,6 +1,5 @@
 import {
     Activity,
-    AlertTriangle,
     ArrowRight,
     ClipboardCheck,
     FileText,
@@ -167,7 +166,7 @@ export default function Landing() {
                         </div>
                     </div>
 
-                    {/* Stats Bar */}
+                    {/* Trust Badges */}
                     <div
                         className="rounded-3xl border-2 border-border/40 p-10 shadow-2xl backdrop-blur-md relative overflow-hidden group hover:border-primary/40 transition-all duration-500"
                         style={{
@@ -176,65 +175,53 @@ export default function Landing() {
                         }}
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative z-10">
-                            <div className="text-center group/stat">
-                                <div className="mb-4 inline-block">
-                                    <div className="mb-3 flex justify-center">
-                                        <ClipboardCheck className="w-10 h-10 text-primary" />
-                                    </div>
-                                    <div
-                                        className="text-7xl font-black mb-3 bg-clip-text text-transparent group-hover/stat:scale-110 transition-transform duration-300"
-                                        style={{
-                                            backgroundImage:
-                                                'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                        }}
-                                    >
-                                        {Number(Math.random().toFixed(2)) * 1000}
-                                    </div>
-                                    <div className="h-1 w-16 mx-auto bg-gradient-to-r from-primary/50 to-transparent rounded-full" />
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                            {/* HSA Compliant */}
+                            <div className="flex flex-col items-center text-center group/badge">
+                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-6 bg-white rounded-2xl shadow-lg">
+                                    <img
+                                        src="/hsa-logo.png"
+                                        alt="HSA Logo"
+                                        className="w-48 h-24 object-contain"
+                                    />
                                 </div>
-                                <div className="text-base font-semibold text-foreground/80 tracking-wide">
-                                    Audits
+                                <div className="font-black text-xl mb-1 tracking-tight">
+                                    HSA Compliant
+                                </div>
+                                <div className="text-sm text-foreground/60">
+                                    Singapore Health Sciences Authority
                                 </div>
                             </div>
-                            <div className="text-center group/stat relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-px before:h-3/4 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-3/4 after:bg-gradient-to-b after:from-transparent after:via-border after:to-transparent">
-                                <div className="mb-4 inline-block">
-                                    <div className="mb-3 flex justify-center">
-                                        <ScanLine className="w-10 h-10 text-primary" />
-                                    </div>
-                                    <div
-                                        className="text-7xl font-black mb-3 bg-clip-text text-transparent group-hover/stat:scale-110 transition-transform duration-300"
-                                        style={{
-                                            backgroundImage:
-                                                'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                        }}
-                                    >
-                                        {Number(Math.random().toFixed(2)) * 1000}0
-                                    </div>
-                                    <div className="h-1 w-16 mx-auto bg-gradient-to-r from-primary/50 to-transparent rounded-full" />
+
+                            {/* MITRE ATT&CK */}
+                            <div className="flex flex-col items-center text-center group/badge relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-px before:h-3/4 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-3/4 after:bg-gradient-to-b after:from-transparent after:via-border after:to-transparent">
+                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 bg-white rounded-2xl shadow-lg">
+                                    <img
+                                        src="/mitre-logo.png"
+                                        alt="MITRE ATT&CK Logo"
+                                        className="w-32 h-24 object-contain"
+                                    />
                                 </div>
-                                <div className="text-base font-semibold text-foreground/80 tracking-wide">
-                                    Scans
+                                <div className="font-black text-xl mb-1 tracking-tight">
+                                    MITRE ATT&CK
+                                </div>
+                                <div className="text-sm text-foreground/60">
+                                    Aligned Framework Coverage
                                 </div>
                             </div>
-                            <div className="text-center group/stat">
-                                <div className="mb-4 inline-block">
-                                    <div className="mb-3 flex justify-center">
-                                        <AlertTriangle className="w-10 h-10 text-primary" />
-                                    </div>
-                                    <div
-                                        className="text-7xl font-black mb-3 bg-clip-text text-transparent group-hover/stat:scale-110 transition-transform duration-300"
-                                        style={{
-                                            backgroundImage:
-                                                'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                        }}
-                                    >
-                                        {Number(Math.random().toFixed(2)) * 1000}
-                                    </div>
-                                    <div className="h-1 w-16 mx-auto bg-gradient-to-r from-primary/50 to-transparent rounded-full" />
+
+                            {/* Cybersecurity Act */}
+                            <div className="flex flex-col items-center text-center group/badge">
+                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-6 bg-white rounded-2xl shadow-lg">
+                                    <img
+                                        src="/csa-logo.avif"
+                                        alt="CSA Singapore Logo"
+                                        className="w-48 h-24 object-contain"
+                                    />
                                 </div>
-                                <div className="text-base font-semibold text-foreground/80 tracking-wide">
-                                    Issues
+                                <div className="font-black text-xl mb-1 tracking-tight">CSA Aligned</div>
+                                <div className="text-sm text-foreground/60">
+                                    Cyber Security Agency Singapore
                                 </div>
                             </div>
                         </div>
