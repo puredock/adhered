@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom'
 import { FluidBackground } from '@/components/FluidBackground'
 import { InteractiveBackground } from '@/components/InteractiveBackground'
 import { SimpleWaveBackground } from '@/components/SimpleWaveBackground'
+import { TypewriterText } from '@/components/TypewriterText'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function Landing() {
@@ -102,16 +103,30 @@ export default function Landing() {
                         <div className="inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold border-2 border-primary/40 bg-primary/10 text-primary mb-8 animate-pulse shadow-lg">
                             🔜 Launching soon
                         </div>
-                        <h1
-                            className="text-6xl md:text-7xl lg:text-8xl font-extrabold leading-[1.1] mb-8 bg-clip-text text-transparent animate-fade-in tracking-tight"
-                            style={{
-                                backgroundImage:
-                                    'linear-gradient(135deg, hsl(220 50% 12%) 0%, hsl(165 65% 55%) 50%, hsl(220 40% 20%) 100%)',
-                                backgroundSize: '200% 200%',
-                                animation: 'gradient-shift 8s ease infinite, fade-in 1s ease-out',
-                            }}
-                        >
-                            Agentic security for smart devices
+                        <h1 className="text-6xl md:text-7xl lg:text-8xl font-black leading-[1.1] mb-8 tracking-tight group">
+                            <span
+                                className="block text-foreground mb-2 transition-all duration-300 group-hover:scale-[1.02]"
+                                style={{
+                                    textShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                                    letterSpacing: '-0.02em',
+                                    animation: 'fade-in 1s ease-out, slide-up 0.8s ease-out',
+                                }}
+                            >
+                                Agentic Security
+                            </span>
+                            <span
+                                className="block bg-clip-text text-transparent transition-all duration-300 group-hover:scale-[1.02]"
+                                style={{
+                                    backgroundImage:
+                                        'linear-gradient(135deg, hsl(165 70% 55%) 0%, hsl(165 60% 45%) 50%, hsl(165 70% 60%) 100%)',
+                                    backgroundSize: '200% 200%',
+                                    letterSpacing: '-0.01em',
+                                    animation:
+                                        'gradient-shift 6s ease-in-out infinite, fade-in 1.2s ease-out, slide-up 1s ease-out',
+                                }}
+                            >
+                                for smart devices
+                            </span>
                         </h1>
                         <p className="text-xl md:text-2xl text-foreground/70 mb-10 max-w-3xl mx-auto leading-relaxed font-light">
                             Enforce security by design across all connected devices and networks using{' '}
@@ -228,8 +243,17 @@ export default function Landing() {
                 {/* Features */}
                 <section className="mb-32">
                     <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-extrabold mb-5 tracking-tight">
-                            Comprehensive Insights. Actionable Reports
+                        <h2 className="text-5xl md:text-6xl font-extrabold mb-5 tracking-tight min-h-[4.5rem]">
+                            <TypewriterText
+                                texts={[
+                                    'Comprehensive Insights. Actionable Reports',
+                                    // TODO: add more texts
+
+                                    // 'Real-time Monitoring. Complete Visibility',
+                                    // 'Automated Testing. Continuous Security',
+                                ]}
+                                className="text-foreground"
+                            />
                         </h2>
                         <p className="text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
                             Everything you need to assess and secure medical device networks in one
@@ -547,11 +571,20 @@ export default function Landing() {
                 @keyframes fade-in {
                     from {
                         opacity: 0;
-                        transform: translateY(20px);
                     }
                     to {
                         opacity: 1;
+                    }
+                }
+
+                @keyframes slide-up {
+                    from {
+                        transform: translateY(30px);
+                        opacity: 0;
+                    }
+                    to {
                         transform: translateY(0);
+                        opacity: 1;
                     }
                 }
             `}</style>
