@@ -291,29 +291,49 @@ export default function Landing() {
                 {/* How it works */}
                 <section className="mb-32">
                     <div className="text-center mb-16">
-                        <h2 className="text-5xl md:text-6xl font-extrabold mb-5 tracking-tight">
-                            Discovery to remediation
+                        <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight">
+                            <span
+                                className="bg-clip-text text-transparent"
+                                style={{
+                                    backgroundImage:
+                                        'linear-gradient(135deg, hsl(165 70% 55%) 0%, hsl(165 60% 45%) 100%)',
+                                }}
+                            >
+                                Discovery
+                            </span>{' '}
+                            to{' '}
+                            <span
+                                className="bg-clip-text text-transparent"
+                                style={{
+                                    backgroundImage:
+                                        'linear-gradient(135deg, hsl(165 70% 55%) 0%, hsl(165 60% 45%) 100%)',
+                                }}
+                            >
+                                remediation
+                            </span>
+                            <br />
+                            <TypewriterText
+                                texts={['in minutes', 'effortlessly', 'automatically']}
+                                className="text-foreground/60 text-4xl md:text-5xl"
+                            />
                         </h2>
-                        <p className="text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
-                            in minutes
-                        </p>
                     </div>
                     <WorkflowCarousel
                         steps={[
                             {
                                 number: 1,
-                                title: 'Prioritize',
+                                title: 'Identify',
                                 description:
-                                    'Review issues, track compliance, and monitor risk over time. Generate comprehensive reports with actionable remediation steps.',
+                                    'Discover all your devices across all of your networks in one unified view.',
                                 screenshot: '/screenshots/devices.png',
                                 link: '/catalog',
-                                linkText: 'View devices',
+                                linkText: 'Find your devices',
                             },
                             {
                                 number: 2,
                                 title: 'Assess',
                                 description:
-                                    'Run AI‑assisted scans and penetration tests with live logs. Identify vulnerabilities automatically using OWASP and MITRE ATT&CK frameworks.',
+                                    'Run AI‑assisted audit scans and penetration tests on specific devices with live logs. Identify vulnerabilities and misconfigurations and enforce provided remediation suggestions.',
                                 screenshot: '/screenshots/scan.png',
                                 link: '/scans',
                                 linkText: 'Start a scan',

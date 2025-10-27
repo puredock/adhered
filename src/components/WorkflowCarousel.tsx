@@ -49,47 +49,43 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                                     className="w-full h-auto"
                                 />
                                 {/* Gradient overlays for blending - minimal fade on edges only */}
-                                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-background via-background/50 to-transparent" />
-                                <div className="absolute inset-y-0 left-0 w-1/6 bg-gradient-to-r from-background/60 to-transparent" />
-                                <div className="absolute inset-y-0 right-0 w-1/6 bg-gradient-to-l from-background/60 to-transparent" />
+                                <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                                <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-background/50 to-transparent" />
+                                <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background/50 to-transparent" />
                             </div>
 
-                            {/* Text overlay - positioned absolutely over screenshot */}
-                            <div className="absolute inset-0 flex items-end">
-                                <div className="w-full p-8 md:p-12">
-                                    <div className="max-w-3xl">
-                                        <div className="flex items-center gap-4 mb-4">
-                                            <div
-                                                className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl font-black shadow-2xl flex-shrink-0"
-                                                style={{
-                                                    background:
-                                                        'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                                    color: 'white',
-                                                }}
-                                            >
-                                                {step.number}
-                                            </div>
-                                            <h3 className="text-4xl md:text-5xl font-black tracking-tight text-foreground">
-                                                {step.title}
-                                            </h3>
-                                        </div>
-                                        <div className="backdrop-blur-md bg-background/70 p-6 rounded-2xl border border-border/30 mb-6">
-                                            <p className="text-lg md:text-xl text-foreground leading-relaxed">
-                                                {step.description}
-                                            </p>
-                                        </div>
-                                        <Link
-                                            to={step.link}
-                                            className="inline-flex items-center gap-3 px-8 py-4 rounded-xl text-lg font-bold transition-all hover:scale-105 group/link shadow-xl"
+                            {/* Text overlay - bottom right corner */}
+                            <div className="absolute bottom-8 right-8 max-w-md">
+                                <div className="backdrop-blur-xl bg-background/85 p-8 rounded-3xl border-2 border-border/40 shadow-2xl">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div
+                                            className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black shadow-lg flex-shrink-0"
                                             style={{
-                                                backgroundColor: 'hsl(var(--sidebar-background))',
-                                                color: 'hsl(var(--sidebar-foreground))',
+                                                background:
+                                                    'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
+                                                color: 'white',
                                             }}
                                         >
-                                            {step.linkText}
-                                            <ArrowRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
-                                        </Link>
+                                            {step.number}
+                                        </div>
+                                        <h3 className="text-3xl font-black tracking-tight text-foreground">
+                                            {step.title}
+                                        </h3>
                                     </div>
+                                    <p className="text-base text-foreground/80 leading-relaxed mb-6">
+                                        {step.description}
+                                    </p>
+                                    <Link
+                                        to={step.link}
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-base font-bold transition-all hover:scale-105 group/link shadow-lg w-full justify-center"
+                                        style={{
+                                            backgroundColor: 'hsl(var(--sidebar-background))',
+                                            color: 'hsl(var(--sidebar-foreground))',
+                                        }}
+                                    >
+                                        {step.linkText}
+                                        <ArrowRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
+                                    </Link>
                                 </div>
                             </div>
                         </div>
