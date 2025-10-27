@@ -403,10 +403,10 @@ export default function Landing() {
                                 className="text-sm"
                                 style={{ color: 'hsl(var(--sidebar-foreground) / 0.7)' }}
                             >
-                                Comprehensive reconnaissance toolkit for medical device security and
-                                hospital network assessment.
+                                Agentic device security.
                             </p>
                         </div>
+                        {/*
                         <div>
                             <h3
                                 className="font-semibold mb-4"
@@ -487,6 +487,7 @@ export default function Landing() {
                                 </li>
                             </ul>
                         </div>
+                        */}
                     </div>
                     <div
                         className="pt-8 border-t text-center text-sm"
