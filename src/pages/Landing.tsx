@@ -354,14 +354,13 @@ export default function Landing() {
                         className="text-3xl font-bold mb-4"
                         style={{ color: 'hsl(var(--sidebar-foreground))' }}
                     >
-                        Ready to secure your connected devices?
+                        Ready to secure your devices?
                     </h2>
                     <p
                         className="mb-8 max-w-2xl mx-auto"
                         style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
                     >
-                        Start discovering networks, running security assessments, and building compliance
-                        reports today.
+                        Experience the power of agentic AI to automate your device security & compliance.
                     </p>
                     <Link
                         to="/networks"
