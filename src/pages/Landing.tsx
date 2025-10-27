@@ -243,16 +243,23 @@ export default function Landing() {
                 {/* Features */}
                 <section className="mb-32">
                     <div className="text-center mb-16">
-                        <h2 className="text-5xl md:text-6xl font-extrabold mb-5 tracking-tight min-h-[4.5rem]">
+                        <h2 className="text-5xl md:text-6xl font-black mb-5 tracking-tight min-h-[4.5rem]">
                             <TypewriterText
                                 texts={[
-                                    'Comprehensive Insights. Actionable Reports',
+                                    'Comprehensive Insights',
+                                    'Actionable Reports',
                                     // TODO: add more texts
 
                                     // 'Real-time Monitoring. Complete Visibility',
                                     // 'Automated Testing. Continuous Security',
                                 ]}
-                                className="text-foreground"
+                                className="bg-clip-text text-transparent"
+                                style={{
+                                    backgroundImage:
+                                        'linear-gradient(135deg, hsl(220 50% 15%) 0%, hsl(165 70% 50%) 50%, hsl(220 45% 20%) 100%)',
+                                    fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
+                                    letterSpacing: '-0.02em',
+                                }}
                             />
                         </h2>
                         <p className="text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
