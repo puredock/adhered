@@ -2,10 +2,9 @@ import {
     Activity,
     AlertTriangle,
     ArrowRight,
-    Bluetooth,
     ClipboardCheck,
+    FileText,
     Network,
-    Radio,
     ScanLine,
     Shield,
     Zap,
@@ -32,7 +31,7 @@ export default function Landing() {
         {
             title: 'Risk Assessment',
             desc: 'Obtain deep insights into your cyber-risk posture and necessary remediation measures.',
-            icon: Bluetooth,
+            icon: Shield,
         },
         {
             title: 'Automated Pentesting',
@@ -41,14 +40,13 @@ export default function Landing() {
         },
         {
             title: 'Compliance Audits',
-            desc: 'Enfroce ongoing compliance with major regulatory frameworks to ensure your solutions never fall out of line.',
-            // icon: Shield,
+            desc: 'Enforce ongoing compliance with major regulatory frameworks to ensure your solutions never fall out of line.',
             icon: ClipboardCheck,
         },
         {
             title: 'Regulatory Advisory',
-            desc: 'Detailed advisory reports based on your risk assessment and regulatory requirements for your devices and target markets',
-            icon: Radio,
+            desc: 'Detailed advisory reports based on your risk assessment and regulatory requirements for your devices and target markets.',
+            icon: FileText,
         },
     ]
 
