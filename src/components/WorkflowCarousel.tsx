@@ -54,11 +54,11 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                             </div>
 
                             {/* Text overlay - bottom right corner */}
-                            <div className="absolute bottom-8 right-8 max-w-md">
-                                <div className="backdrop-blur-xl bg-background/85 p-8 rounded-3xl border-2 border-border/40 shadow-2xl">
-                                    <div className="flex items-center gap-3 mb-4">
+                            <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 right-4 sm:right-6 md:right-8 max-w-xs sm:max-w-sm md:max-w-md">
+                                <div className="backdrop-blur-xl bg-background/85 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border-2 border-border/40 shadow-2xl">
+                                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                                         <div
-                                            className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-black shadow-lg flex-shrink-0"
+                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-lg sm:text-xl font-black shadow-lg flex-shrink-0"
                                             style={{
                                                 background:
                                                     'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
@@ -67,17 +67,17 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                                         >
                                             {step.number}
                                         </div>
-                                        <h3 className="text-3xl font-black tracking-tight text-foreground">
+                                        <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
                                             {step.title}
                                         </h3>
                                     </div>
-                                    <p className="text-base text-foreground/80 leading-relaxed mb-6">
+                                    <p className="text-sm sm:text-base text-foreground/80 leading-relaxed mb-4 sm:mb-6 line-clamp-3 sm:line-clamp-none">
                                         {step.description}
                                     </p>
                                     <button
                                         type="button"
                                         onClick={step.onButtonClick}
-                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-base font-bold transition-all hover:scale-105 group/link shadow-lg w-full justify-center"
+                                        className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all hover:scale-105 group/link shadow-lg w-full justify-center"
                                         style={{
                                             backgroundColor: 'hsl(var(--sidebar-background))',
                                             color: 'hsl(var(--sidebar-foreground))',
