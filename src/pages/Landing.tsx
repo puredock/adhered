@@ -95,14 +95,17 @@ export default function Landing() {
                 </div>
             </nav>
 
-            <main className="w-full px-8 py-20 mx-auto relative z-10" style={{ maxWidth: '1440px' }}>
+            <main
+                className="w-full px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 mx-auto relative z-10"
+                style={{ maxWidth: '1440px' }}
+            >
                 {/* Hero */}
-                <section className="mb-32">
-                    <div className="text-center max-w-5xl mx-auto mb-16">
-                        <div className="inline-flex items-center px-4 py-2 rounded-full text-xs font-semibold border-2 border-primary/40 bg-primary/10 text-primary mb-8 animate-pulse shadow-lg">
+                <section className="mb-20 sm:mb-24 md:mb-32">
+                    <div className="text-center max-w-5xl mx-auto mb-12 sm:mb-14 md:mb-16">
+                        <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold border-2 border-primary/40 bg-primary/10 text-primary mb-6 sm:mb-8 animate-pulse shadow-lg">
                             🔜 Launching soon
                         </div>
-                        <h1 className="text-6xl md:text-7xl lg:text-8xl font-black leading-[1.1] mb-8 tracking-tight group">
+                        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.1] mb-6 sm:mb-8 tracking-tight group">
                             <span
                                 className="block text-foreground mb-2 transition-all duration-300 group-hover:scale-[1.02]"
                                 style={{
@@ -128,7 +131,7 @@ export default function Landing() {
                                 for connected devices
                             </span>
                         </h1>
-                        <p className="text-xl md:text-2xl text-foreground/70 mb-10 max-w-3xl mx-auto leading-relaxed font-light">
+                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-foreground/70 mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed font-light px-4">
                             Enforce security by design across all your connected devices and networks
                             using{' '}
                             <span className="font-semibold text-primary bg-primary/10 px-2 py-1 rounded">
@@ -143,11 +146,11 @@ export default function Landing() {
                             </span>
                             .
                         </p>
-                        <div className="flex items-center justify-center gap-5 flex-wrap">
+                        <div className="flex items-center justify-center gap-3 sm:gap-4 md:gap-5 flex-wrap px-4">
                             <button
                                 type="button"
                                 onClick={() => setShowRequestAccess(true)}
-                                className="inline-flex items-center gap-3 px-10 py-5 rounded-xl text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl group relative overflow-hidden"
+                                className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl text-base sm:text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl group relative overflow-hidden"
                                 style={{
                                     backgroundColor: 'hsl(var(--sidebar-background))',
                                     color: 'hsl(var(--sidebar-foreground))',
@@ -161,9 +164,9 @@ export default function Landing() {
                             <button
                                 type="button"
                                 onClick={() => setShowGetDemo(true)}
-                                className="inline-flex items-center gap-3 px-10 py-5 rounded-xl text-lg font-bold bg-card/80 backdrop-blur-sm text-foreground hover:bg-card transition-all border-2 border-border/50 hover:border-primary hover:scale-105 group shadow-lg"
+                                className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl text-base sm:text-lg font-bold bg-card/80 backdrop-blur-sm text-foreground hover:bg-card transition-all border-2 border-border/50 hover:border-primary hover:scale-105 group shadow-lg"
                             >
-                                <ScanLine className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+                                <ScanLine className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform" />
                                 <span>Get a demo</span>
                             </button>
                         </div>
@@ -171,24 +174,24 @@ export default function Landing() {
 
                     {/* Trust Badges */}
                     <div
-                        className="rounded-3xl border-2 border-border/40 p-10 shadow-2xl backdrop-blur-md relative overflow-hidden group hover:border-primary/40 transition-all duration-500"
+                        className="rounded-2xl sm:rounded-3xl border-2 border-border/40 p-6 sm:p-8 md:p-10 shadow-2xl backdrop-blur-md relative overflow-hidden group hover:border-primary/40 transition-all duration-500"
                         style={{
                             background:
                                 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
                         }}
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 relative z-10">
                             {/* HSA Compliant */}
                             <div className="flex flex-col items-center text-center group/badge">
-                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-6 bg-white rounded-2xl shadow-lg">
+                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 sm:p-6 bg-white rounded-2xl shadow-lg">
                                     <img
                                         src="/hsa-logo.png"
                                         alt="HSA Logo"
-                                        className="w-48 h-24 object-contain"
+                                        className="w-32 sm:w-40 md:w-48 h-20 sm:h-24 object-contain mx-auto"
                                     />
                                 </div>
-                                <div className="font-black text-xl mb-1 tracking-tight">
+                                <div className="font-black text-lg sm:text-xl mb-1 tracking-tight">
                                     HSA Compliant
                                 </div>
                                 <div className="text-sm text-foreground/60">
@@ -198,14 +201,14 @@ export default function Landing() {
 
                             {/* MITRE ATT&CK */}
                             <div className="flex flex-col items-center text-center group/badge relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-px before:h-3/4 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-3/4 after:bg-gradient-to-b after:from-transparent after:via-border after:to-transparent">
-                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 bg-white rounded-2xl shadow-lg">
+                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 sm:p-6 bg-white rounded-2xl shadow-lg">
                                     <img
                                         src="/mitre-logo.png"
                                         alt="MITRE ATT&CK Logo"
-                                        className="w-32 h-24 object-contain"
+                                        className="w-32 sm:w-40 md:w-48 h-20 sm:h-24 object-contain mx-auto"
                                     />
                                 </div>
-                                <div className="font-black text-xl mb-1 tracking-tight">
+                                <div className="font-black text-lg sm:text-xl mb-1 tracking-tight">
                                     MITRE ATT&CK
                                 </div>
                                 <div className="text-sm text-foreground/60">
@@ -215,14 +218,16 @@ export default function Landing() {
 
                             {/* Cybersecurity Act */}
                             <div className="flex flex-col items-center text-center group/badge">
-                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-6 bg-white rounded-2xl shadow-lg">
+                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 sm:p-6 bg-white rounded-2xl shadow-lg">
                                     <img
                                         src="/csa-logo.avif"
                                         alt="CSA Singapore Logo"
-                                        className="w-48 h-24 object-contain"
+                                        className="w-32 sm:w-40 md:w-48 h-20 sm:h-24 object-contain mx-auto"
                                     />
                                 </div>
-                                <div className="font-black text-xl mb-1 tracking-tight">CSA Aligned</div>
+                                <div className="font-black text-lg sm:text-xl mb-1 tracking-tight">
+                                    CSA Aligned
+                                </div>
                                 <div className="text-sm text-foreground/60">
                                     Cyber Security Agency Singapore
                                 </div>
@@ -232,9 +237,9 @@ export default function Landing() {
                 </section>
 
                 {/* Features */}
-                <section className="mb-32">
-                    <div className="text-center mb-16">
-                        <h2 className="text-5xl md:text-6xl font-black mb-5 tracking-tight min-h-[4.5rem]">
+                <section className="mb-20 sm:mb-24 md:mb-32">
+                    <div className="text-center mb-12 sm:mb-14 md:mb-16 px-4">
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 sm:mb-5 tracking-tight min-h-[3rem] sm:min-h-[4.5rem]">
                             <TypewriterText
                                 texts={[
                                     'Comprehensive Insights',
@@ -253,12 +258,12 @@ export default function Landing() {
                                 }}
                             />
                         </h2>
-                        <p className="text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
+                        <p className="text-base sm:text-lg md:text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
                             Uncover gaps in your security and compliance postures in a single unified
                             platform.
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                         {features.map(f => (
                             <Card
                                 key={f.title}
@@ -295,9 +300,9 @@ export default function Landing() {
                 </section>
 
                 {/* How it works */}
-                <section className="mb-32">
-                    <div className="text-center mb-16">
-                        <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight">
+                <section className="mb-20 sm:mb-24 md:mb-32">
+                    <div className="text-center mb-12 sm:mb-14 md:mb-16 px-4">
+                        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
                             <span
                                 className="bg-clip-text text-transparent"
                                 style={{
@@ -514,7 +519,7 @@ export default function Landing() {
                     >
                         <div className="flex flex-col items-start gap-6">
                             {/* Partner Logos */}
-                            <div className="flex items-center gap-4">
+                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4">
                                 <a
                                     href="https://www.imperial.ac.uk/about/global/singapore/"
                                     target="_blank"
@@ -523,14 +528,14 @@ export default function Landing() {
                                     <img
                                         src="/igs-logo.png"
                                         alt="Imperial Global Singapore"
-                                        className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                                        className="h-8 sm:h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
                                     />
                                 </a>
                                 <div
-                                    className="w-px h-8"
+                                    className="w-px h-6 sm:h-8"
                                     style={{ backgroundColor: 'hsl(var(--sidebar-border))' }}
                                 />
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2 sm:gap-3">
                                     <a
                                         href="https://www.imperial.ac.uk/"
                                         target="_blank"
@@ -539,11 +544,11 @@ export default function Landing() {
                                         <img
                                             src="/imperial-logo.png"
                                             alt="Imperial College London"
-                                            className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                                            className="h-8 sm:h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
                                         />
                                     </a>
                                     <span
-                                        className="text-xl font-light"
+                                        className="text-lg sm:text-xl font-light"
                                         style={{ color: 'hsl(var(--sidebar-foreground) / 0.5)' }}
                                     >
                                         +
@@ -556,7 +561,7 @@ export default function Landing() {
                                         <img
                                             src="/ntu-logo.png"
                                             alt="NTU Singapore"
-                                            className="h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
+                                            className="h-8 sm:h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
                                         />
                                     </a>
                                 </div>
