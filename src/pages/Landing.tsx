@@ -56,10 +56,16 @@ export default function Landing() {
 
     return (
         <div className="min-h-screen bg-background w-full relative isolate overflow-hidden">
-            {/* Animated Background Layers */}
+            {/* Animated Background Layers - Desktop only for performance */}
             <SimpleWaveBackground />
             <FluidBackground />
             <InteractiveBackground />
+
+            {/* Static gradient for mobile */}
+            <div className="fixed inset-0 pointer-events-none z-0 sm:hidden">
+                <div className="absolute top-20 left-10 w-96 h-96 rounded-full bg-primary/20 blur-3xl" />
+                <div className="absolute bottom-20 right-10 w-80 h-80 rounded-full bg-primary/15 blur-3xl" />
+            </div>
 
             {/* Top Navigation */}
             <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 w-full">
@@ -107,25 +113,20 @@ export default function Landing() {
                         </div>
                         <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.1] mb-6 sm:mb-8 tracking-tight group">
                             <span
-                                className="block text-foreground mb-2 transition-all duration-300 group-hover:scale-[1.02]"
+                                className="block text-foreground mb-2 transition-all duration-300 sm:group-hover:scale-[1.02]"
                                 style={{
                                     textShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                                     letterSpacing: '-0.02em',
-                                    animation:
-                                        'fade-in 1s ease-out, slide-up 0.8s ease-out, pulse-glow 3s ease-in-out infinite',
                                 }}
                             >
                                 Agentic Security
                             </span>
                             <span
-                                className="block bg-clip-text text-transparent transition-all duration-300 group-hover:scale-[1.02]"
+                                className="block bg-clip-text text-transparent transition-all duration-300 sm:group-hover:scale-[1.02]"
                                 style={{
                                     backgroundImage:
-                                        'linear-gradient(90deg, hsl(165 80% 50%) 0%, hsl(165 70% 60%) 25%, hsl(220 50% 40%) 50%, hsl(165 70% 60%) 75%, hsl(165 80% 50%) 100%)',
-                                    backgroundSize: '300% 100%',
+                                        'linear-gradient(135deg, hsl(165 80% 50%) 0%, hsl(165 70% 60%) 100%)',
                                     letterSpacing: '-0.01em',
-                                    animation:
-                                        'gradient-flow 8s linear infinite, fade-in 1.2s ease-out, slide-up 1s ease-out',
                                 }}
                             >
                                 for connected devices
