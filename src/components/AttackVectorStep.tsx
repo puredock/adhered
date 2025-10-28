@@ -123,7 +123,7 @@ export function AttackVectorStep({
 
         setIsRetrying(true)
         try {
-            await fetch(`${API_BASE_URL}/api/v1/scans/${scanId}/retry`, {
+            await fetch(`${API_BASE_URL}/scans/${scanId}/retry`, {
                 method: 'POST',
             })
             // Refresh or redirect to new scan
