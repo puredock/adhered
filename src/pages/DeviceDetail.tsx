@@ -229,7 +229,7 @@ const DeviceDetail = () => {
 
     const handlePenTest = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/v1/devices/${deviceId}/scan`, {
+            const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/scan`, {
                 method: 'POST',
             })
 

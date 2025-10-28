@@ -70,7 +70,7 @@ export function PenetrationTestLog({
             return
         }
 
-        const eventSource = new EventSource(`${API_BASE_URL}/api/v1/scans/${scanId}/stream`)
+        const eventSource = new EventSource(`${API_BASE_URL}/scans/${scanId}/stream`)
         eventSourceRef.current = eventSource
 
         eventSource.onopen = () => {
@@ -204,7 +204,7 @@ export function PenetrationTestLog({
 
     const handleCancel = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/v1/scans/${scanId}`, {
+            const response = await fetch(`${API_BASE_URL}/scans/${scanId}`, {
                 method: 'DELETE',
             })
 
@@ -274,7 +274,7 @@ export function PenetrationTestLog({
     const handleClearStaleScan = async () => {
         try {
             // Try to delete the scan from the backend
-            await fetch(`${API_BASE_URL}/api/v1/scans/${scanId}`, {
+            await fetch(`${API_BASE_URL}/scans/${scanId}`, {
                 method: 'DELETE',
             })
         } catch (error) {
