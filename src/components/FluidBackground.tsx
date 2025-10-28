@@ -1,6 +1,6 @@
 export function FluidBackground() {
     return (
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0 opacity-30 sm:opacity-100">
             {/* Liquid gradient blobs */}
             <div className="absolute inset-0">
                 {/* Large flowing blob 1 */}

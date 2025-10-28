@@ -1,8 +1,8 @@
 export function SimpleWaveBackground() {
     return (
         <>
-            {/* Animated wave background */}
-            <div className="fixed inset-0 pointer-events-none z-0">
+            {/* Animated wave background - reduced on mobile for performance */}
+            <div className="fixed inset-0 pointer-events-none z-0 hidden sm:block">
                 {/* Large teal blob */}
                 <div
                     style={{
@@ -11,7 +11,8 @@ export function SimpleWaveBackground() {
                         left: '10%',
                         width: '600px',
                         height: '600px',
-                        background: 'radial-gradient(circle, rgba(74, 222, 189, 0.5) 0%, transparent 70%)',
+                        background:
+                            'radial-gradient(circle, rgba(74, 222, 189, 0.5) 0%, transparent 70%)',
                         filter: 'blur(80px)',
                         animation: 'blob-float 20s ease-in-out infinite',
                     }}
@@ -39,7 +40,8 @@ export function SimpleWaveBackground() {
                         left: '30%',
                         width: '550px',
                         height: '550px',
-                        background: 'radial-gradient(circle, rgba(74, 222, 189, 0.45) 0%, transparent 70%)',
+                        background:
+                            'radial-gradient(circle, rgba(74, 222, 189, 0.45) 0%, transparent 70%)',
                         filter: 'blur(100px)',
                         animation: 'blob-float 30s ease-in-out infinite',
                     }}
