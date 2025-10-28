@@ -28,7 +28,7 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
     return (
         <div className="relative">
             {/* Integrated Content */}
-            <div className="relative min-h-[600px] sm:min-h-[500px] md:min-h-[600px]">
+            <div className="relative min-h-[500px] sm:min-h-[500px] md:min-h-[600px]">
                 {steps.map((step, idx) => (
                     <div
                         key={step.number}
@@ -41,11 +41,11 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                         {/* Blended Layout */}
                         <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/30 sm:border-2 shadow-2xl bg-background">
                             {/* Screenshot as background */}
-                            <div className="relative w-full min-h-[600px] sm:min-h-0">
+                            <div className="relative w-full min-h-[500px] sm:min-h-0">
                                 <img
                                     src={step.screenshot}
                                     alt={`${step.title} Screenshot`}
-                                    className="w-full h-auto min-h-[600px] sm:min-h-0 object-cover sm:object-contain"
+                                    className="w-full h-full min-h-[500px] sm:min-h-0 object-cover object-top sm:object-contain"
                                 />
                                 {/* Gradient overlays for blending - minimal fade on edges only */}
                                 <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-background via-background/40 to-transparent" />
