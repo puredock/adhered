@@ -97,7 +97,7 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
             <div className="flex justify-center gap-4 mt-12">
                 {steps.map((step, idx) => (
                     <button
-                        key={idx}
+                        key={step.number}
                         type="button"
                         onClick={() => setActiveStep(idx)}
                         className="group flex flex-col items-center gap-2 transition-all"
