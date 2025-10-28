@@ -29,8 +29,9 @@ const Index = () => {
 
     const loading = networksLoading || devicesLoading || scansLoading
     const isEmpty = !loading && networks.length === 0 && devices.length === 0 && scans.length === 0
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
 
-    if (isEmpty) {
+    if (isEmpty || isDemoMode) {
         return <Landing />
     }
 
