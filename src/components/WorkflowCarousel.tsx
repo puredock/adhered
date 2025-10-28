@@ -28,7 +28,7 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
     return (
         <div className="relative">
             {/* Integrated Content */}
-            <div className="relative min-h-[600px]">
+            <div className="relative min-h-[600px] sm:min-h-[500px] md:min-h-[600px]">
                 {steps.map((step, idx) => (
                     <div
                         key={step.number}
@@ -39,13 +39,13 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                         }`}
                     >
                         {/* Blended Layout */}
-                        <div className="relative rounded-3xl overflow-hidden border-2 border-border/30 shadow-2xl bg-background">
+                        <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-border/30 sm:border-2 shadow-2xl bg-background">
                             {/* Screenshot as background */}
-                            <div className="relative w-full">
+                            <div className="relative w-full min-h-[600px] sm:min-h-0">
                                 <img
                                     src={step.screenshot}
                                     alt={`${step.title} Screenshot`}
-                                    className="w-full h-auto"
+                                    className="w-full h-auto min-h-[600px] sm:min-h-0 object-cover sm:object-contain"
                                 />
                                 {/* Gradient overlays for blending - minimal fade on edges only */}
                                 <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-background via-background/40 to-transparent" />
@@ -53,12 +53,12 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                                 <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background/50 to-transparent" />
                             </div>
 
-                            {/* Text overlay - bottom right corner */}
-                            <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 right-4 sm:right-6 md:right-8 max-w-xs sm:max-w-sm md:max-w-md">
-                                <div className="backdrop-blur-xl bg-background/85 p-4 sm:p-6 md:p-8 rounded-2xl sm:rounded-3xl border-2 border-border/40 shadow-2xl">
-                                    <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                            {/* Text overlay - responsive positioning */}
+                            <div className="absolute bottom-2 left-2 right-2 sm:bottom-4 sm:left-auto sm:right-4 md:bottom-8 md:right-8 sm:max-w-sm md:max-w-md">
+                                <div className="backdrop-blur-xl bg-background/90 p-3 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl md:rounded-3xl border border-border/40 sm:border-2 shadow-2xl">
+                                    <div className="flex items-center gap-2 mb-2 sm:mb-3 md:mb-4">
                                         <div
-                                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-lg sm:text-xl font-black shadow-lg flex-shrink-0"
+                                            className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg sm:rounded-xl flex items-center justify-center text-sm sm:text-lg md:text-xl font-black shadow-lg flex-shrink-0"
                                             style={{
                                                 background:
                                                     'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
@@ -67,24 +67,24 @@ export function WorkflowCarousel({ steps }: WorkflowCarouselProps) {
                                         >
                                             {step.number}
                                         </div>
-                                        <h3 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+                                        <h3 className="text-lg sm:text-2xl md:text-3xl font-black tracking-tight text-foreground">
                                             {step.title}
                                         </h3>
                                     </div>
-                                    <p className="text-sm sm:text-base text-foreground/80 leading-relaxed mb-4 sm:mb-6 line-clamp-3 sm:line-clamp-none">
+                                    <p className="text-xs sm:text-sm md:text-base text-foreground/80 leading-relaxed mb-3 sm:mb-4 md:mb-6 line-clamp-2 sm:line-clamp-3 md:line-clamp-none">
                                         {step.description}
                                     </p>
                                     <button
                                         type="button"
                                         onClick={step.onButtonClick}
-                                        className="inline-flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-bold transition-all hover:scale-105 group/link shadow-lg w-full justify-center"
+                                        className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-bold transition-all hover:scale-105 group/link shadow-lg w-full justify-center"
                                         style={{
                                             backgroundColor: 'hsl(var(--sidebar-background))',
                                             color: 'hsl(var(--sidebar-foreground))',
                                         }}
                                     >
                                         {step.linkText}
-                                        <ArrowRight className="w-5 h-5 group-hover/link:translate-x-1 transition-transform" />
+                                        <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover/link:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
                             </div>
