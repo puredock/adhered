@@ -42,11 +42,12 @@ export default function Landing() {
             desc: 'AI-powered fully automated pen-testing workflows and cookbooks tailored to fit your specific use cases.',
             icon: Zap,
         },
-        {
-            title: 'Compliance Audits',
-            desc: 'Enforce ongoing compliance with major regulatory frameworks to ensure your solutions never fall out of line.',
-            icon: ClipboardCheck,
-        },
+        // TODO: suppressed for now, highlight later
+        // {
+        //     title: 'Compliance Audits',
+        //     desc: 'Enforce ongoing compliance with major regulatory frameworks to ensure your solutions never fall out of line.',
+        //     icon: ClipboardCheck,
+        // },
         {
             title: 'Regulatory Advisory',
             desc: 'Detailed advisory reports based on your risk assessment and regulatory requirements for your devices and target markets.',
@@ -272,8 +273,8 @@ export default function Landing() {
                             />
                         </h2>
                         <p className="text-base sm:text-lg md:text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
-                            Uncover gaps in your security and compliance postures in a single unified
-                            platform.
+                            {/* TODO: s/GRC/compliance */}
+                            Uncover gaps in your security and GRC postures in a single unified platform.
                         </p>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
