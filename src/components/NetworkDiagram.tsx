@@ -34,11 +34,14 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
 
     // Convert devices to nodes
     const initialNodes: Node[] = useMemo(() => {
+        const centerX = 500
+        const centerY = 350
+
         const gatewayNode: Node = {
             id: 'gateway',
             type: 'input',
             data: { label: `Gateway\n${subnet}` },
-            position: { x: 400, y: 50 },
+            position: { x: centerX - 80, y: 80 },
             style: {
                 background: '#10b981',
                 color: 'white',
@@ -51,10 +54,11 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
         }
 
         const deviceNodes: Node[] = devices.map((device, index) => {
-            const angle = (index / devices.length) * 2 * Math.PI
-            const radius = 250
-            const x = 400 + radius * Math.cos(angle)
-            const y = 300 + radius * Math.sin(angle)
+            // Start from top and distribute evenly, offset by -90 degrees to start at top
+            const angle = (index / devices.length) * 2 * Math.PI - Math.PI / 2
+            const radius = 280
+            const x = centerX + radius * Math.cos(angle) - 90
+            const y = centerY + radius * Math.sin(angle)
 
             return {
                 id: device.id,
