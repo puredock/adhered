@@ -444,7 +444,7 @@ const DeviceDetail = () => {
                                     queryKey: ['scans', deviceId],
                                 })
                             }}
-                            onClearStaleScan={(scanId) => {
+                            onClearStaleScan={scanId => {
                                 // Remove the stale scan from activity scans
                                 setActivityScans(prev => prev.filter(s => s.id !== scanId))
                                 // Optionally refresh the scans list

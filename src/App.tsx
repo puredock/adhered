@@ -4,6 +4,7 @@ import { AppSidebar } from '@/components/AppSidebar'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
+
 import Audit from './pages/Audit'
 import AuditDetail from './pages/AuditDetail'
 import Catalog from './pages/Catalog'
@@ -30,11 +31,11 @@ const AppContent = () => {
 
                 {!isDemoMode && (
                     <>
-                <Route path="/audits" element={<Audit />} />
-                <Route path="/audits/:id" element={<AuditDetail />} />
+                        <Route path="/audits" element={<Audit />} />
+                        <Route path="/audits/:id" element={<AuditDetail />} />
                         <Route path="/catalog" element={<Catalog />} />
-                <Route path="/scans" element={<Scans />} />
-                <Route path="/scans/:id" element={<ScansDetail />} />
+                        <Route path="/scans" element={<Scans />} />
+                        <Route path="/scans/:id" element={<ScansDetail />} />
                         <Route path="/networks" element={<Networks />} />
                         <Route path="/networks/:id" element={<NetworkDetail />} />
                         <Route
