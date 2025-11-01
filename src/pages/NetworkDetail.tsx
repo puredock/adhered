@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     ArrowLeft,
     Camera,
@@ -6,6 +6,7 @@ import {
     HardDrive,
     Loader2,
     Monitor,
+    RefreshCw,
     Search,
     Server,
     Thermometer,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { toast } from 'sonner'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -22,7 +24,9 @@ import { api } from '@/lib/api'
 
 const NetworkDetail = () => {
     const { id } = useParams()
+    const queryClient = useQueryClient()
     const [searchQuery, setSearchQuery] = useState('')
+    const [isScanning, setIsScanning] = useState(false)
 
     const {
         data: network,
@@ -41,6 +45,38 @@ const NetworkDetail = () => {
     })
 
     const devices = devicesData?.devices || []
+
+    const handleScanNetwork = async () => {
+        if (!id) return
+
+        setIsScanning(true)
+        try {
+            await api.networks.scan(id)
+            toast.success('Network scan initiated', {
+                description: 'Discovering devices on this network...',
+            })
+
+            // Poll for updates
+            const pollInterval = setInterval(async () => {
+                await queryClient.invalidateQueries({ queryKey: ['devices', id] })
+                await queryClient.invalidateQueries({ queryKey: ['network', id] })
+            }, 3000)
+
+            // Stop polling after 30 seconds
+            setTimeout(() => {
+                clearInterval(pollInterval)
+                setIsScanning(false)
+                toast.success('Scan complete', {
+                    description: 'Device list has been updated',
+                })
+            }, 30000)
+        } catch (error) {
+            setIsScanning(false)
+            toast.error('Failed to start network scan', {
+                description: error instanceof Error ? error.message : 'Unknown error occurred',
+            })
+        }
+    }
 
     const filteredDevices = useMemo(() => {
         if (!searchQuery.trim()) return devices
@@ -180,7 +216,20 @@ const NetworkDetail = () => {
                                 </div>
                             </div>
                         </div>
-                        <Button className="bg-primary hover:bg-primary/90">Scan Network</Button>
+                        <Button
+                            className="bg-primary hover:bg-primary/90"
+                            onClick={handleScanNetwork}
+                            disabled={isScanning}
+                        >
+                            {isScanning ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Scanning...
+                                </>
+                            ) : (
+                                'Scan Network'
+                            )}
+                        </Button>
                     </div>
                 </div>
             </header>
@@ -238,11 +287,25 @@ const NetworkDetail = () => {
                 {/* Devices Catalog Table */}
                 <Card className="shadow-card border-border">
                     <CardHeader>
-                        <CardTitle>Your Devices</CardTitle>
-                        <CardDescription>
-                            {filteredDevices.length} device
-                            {filteredDevices.length !== 1 ? 's' : ''} detected on this network
-                        </CardDescription>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Your Devices</CardTitle>
+                                <CardDescription>
+                                    {filteredDevices.length} device
+                                    {filteredDevices.length !== 1 ? 's' : ''} detected on this network
+                                </CardDescription>
+                            </div>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleScanNetwork}
+                                disabled={isScanning}
+                                className="gap-2"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
+                                {isScanning ? 'Scanning...' : 'Refresh'}
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent className="p-0">
                         <div className="overflow-hidden">
