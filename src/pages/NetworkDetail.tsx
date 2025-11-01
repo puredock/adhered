@@ -3,7 +3,9 @@ import {
     ArrowLeft,
     Camera,
     ChevronDown,
+    GitBranch,
     HardDrive,
+    List,
     Loader2,
     Monitor,
     RefreshCw,
@@ -16,10 +18,12 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ErrorState } from '@/components/ErrorState'
+import { NetworkDiagram } from '@/components/NetworkDiagram'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
 
 const NetworkDetail = () => {
@@ -27,6 +31,7 @@ const NetworkDetail = () => {
     const queryClient = useQueryClient()
     const [searchQuery, setSearchQuery] = useState('')
     const [isScanning, setIsScanning] = useState(false)
+    const [viewMode, setViewMode] = useState<'list' | 'diagram'>('list')
 
     const {
         data: network,
@@ -261,7 +266,7 @@ const NetworkDetail = () => {
                     </div>
                 </div>
 
-                {/* Filters and Search */}
+                {/* Filters and View Controls */}
                 <div className="mb-6 flex items-center gap-4">
                     <Button variant="outline" className="gap-2">
                         <ChevronDown className="w-4 h-4" />
@@ -271,108 +276,158 @@ const NetworkDetail = () => {
                         <ChevronDown className="w-4 h-4" />
                         All statuses
                     </Button>
-                    <div className="flex-1 max-w-md ml-auto">
-                        <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Search devices..."
-                                className="pl-9"
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                            />
+
+                    <div className="flex-1" />
+
+                    <TooltipProvider>
+                        <div className="flex items-center gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={viewMode === 'list' ? 'default' : 'outline'}
+                                        size="icon"
+                                        onClick={() => setViewMode('list')}
+                                    >
+                                        <List className="w-4 h-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>List View</p>
+                                </TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant={viewMode === 'diagram' ? 'default' : 'outline'}
+                                        size="icon"
+                                        onClick={() => setViewMode('diagram')}
+                                    >
+                                        <GitBranch className="w-4 h-4" />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>Network Diagram</p>
+                                </TooltipContent>
+                            </Tooltip>
+
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        size="icon"
+                                        onClick={handleScanNetwork}
+                                        disabled={isScanning}
+                                    >
+                                        <RefreshCw
+                                            className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`}
+                                        />
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{isScanning ? 'Scanning...' : 'Refresh Devices'}</p>
+                                </TooltipContent>
+                            </Tooltip>
                         </div>
+                    </TooltipProvider>
+
+                    <div className="relative w-64">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search devices..."
+                            className="pl-9"
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                        />
                     </div>
                 </div>
 
-                {/* Devices Catalog Table */}
-                <Card className="shadow-card border-border">
-                    <CardHeader>
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <CardTitle>Your Devices</CardTitle>
-                                <CardDescription>
-                                    {filteredDevices.length} device
-                                    {filteredDevices.length !== 1 ? 's' : ''} detected on this network
-                                </CardDescription>
+                {/* Content Views */}
+                {viewMode === 'list' ? (
+                    <Card className="shadow-card border-border">
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle>Your Devices</CardTitle>
+                                    <CardDescription>
+                                        {filteredDevices.length} device
+                                        {filteredDevices.length !== 1 ? 's' : ''} detected on this
+                                        network
+                                    </CardDescription>
+                                </div>
                             </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleScanNetwork}
-                                disabled={isScanning}
-                                className="gap-2"
-                            >
-                                <RefreshCw className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`} />
-                                {isScanning ? 'Scanning...' : 'Refresh'}
-                            </Button>
-                        </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="overflow-hidden">
-                            {/* Table Header */}
-                            <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
-                                <div className="col-span-3">Device Name</div>
-                                <div className="col-span-3">Details</div>
-                                <div className="col-span-2">IP Address</div>
-                                <div className="col-span-2">Status</div>
-                                <div className="col-span-2">Last Seen</div>
-                            </div>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="overflow-hidden">
+                                {/* Table Header */}
+                                <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
+                                    <div className="col-span-3">Device Name</div>
+                                    <div className="col-span-3">Details</div>
+                                    <div className="col-span-2">IP Address</div>
+                                    <div className="col-span-2">Status</div>
+                                    <div className="col-span-2">Last Seen</div>
+                                </div>
 
-                            {/* Table Rows */}
-                            {devicesLoading ? (
-                                <div className="flex items-center justify-center py-12">
-                                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                                </div>
-                            ) : filteredDevices.length === 0 ? (
-                                <div className="text-center py-12">
-                                    <p className="text-muted-foreground">
-                                        {searchQuery
-                                            ? `No devices found matching "${searchQuery}"`
-                                            : 'No devices detected on this network'}
-                                    </p>
-                                </div>
-                            ) : (
-                                <div className="divide-y divide-border">
-                                    {filteredDevices.map((device, index) => {
-                                        const Icon = getDeviceIcon(device.device_type)
-                                        return (
-                                            <Link
-                                                key={device.id}
-                                                to={`/networks/${id}/devices/${device.id}`}
-                                            >
-                                                <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors cursor-pointer group">
-                                                    <div className="col-span-3 flex items-center gap-3">
-                                                        <div
-                                                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)}`}
-                                                        >
-                                                            <Icon className="w-5 h-5" />
+                                {/* Table Rows */}
+                                {devicesLoading ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                    </div>
+                                ) : filteredDevices.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <p className="text-muted-foreground">
+                                            {searchQuery
+                                                ? `No devices found matching "${searchQuery}"`
+                                                : 'No devices detected on this network'}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-border">
+                                        {filteredDevices.map((device, index) => {
+                                            const Icon = getDeviceIcon(device.device_type)
+                                            return (
+                                                <Link
+                                                    key={device.id}
+                                                    to={`/networks/${id}/devices/${device.id}`}
+                                                >
+                                                    <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors cursor-pointer group">
+                                                        <div className="col-span-3 flex items-center gap-3">
+                                                            <div
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(
+                                                                    index,
+                                                                )}`}
+                                                            >
+                                                                <Icon className="w-5 h-5" />
+                                                            </div>
+                                                            <span className="font-medium group-hover:text-primary transition-colors">
+                                                                {device.hostname || device.ip_address}
+                                                            </span>
                                                         </div>
-                                                        <span className="font-medium group-hover:text-primary transition-colors">
-                                                            {device.hostname || device.ip_address}
-                                                        </span>
+                                                        <div className="col-span-3 flex items-center text-muted-foreground text-sm">
+                                                            {device.manufacturer}{' '}
+                                                            {device.model && `• ${device.model}`}
+                                                        </div>
+                                                        <div className="col-span-2 flex items-center font-mono text-sm">
+                                                            {device.ip_address}
+                                                        </div>
+                                                        <div className="col-span-2 flex items-center">
+                                                            {getDeviceStatusBadge(device.last_seen)}
+                                                        </div>
+                                                        <div className="col-span-2 flex items-center text-sm text-muted-foreground">
+                                                            {formatTimeAgo(device.last_seen)}
+                                                        </div>
                                                     </div>
-                                                    <div className="col-span-3 flex items-center text-muted-foreground text-sm">
-                                                        {device.manufacturer}{' '}
-                                                        {device.model && `• ${device.model}`}
-                                                    </div>
-                                                    <div className="col-span-2 flex items-center font-mono text-sm">
-                                                        {device.ip_address}
-                                                    </div>
-                                                    <div className="col-span-2 flex items-center">
-                                                        {getDeviceStatusBadge(device.last_seen)}
-                                                    </div>
-                                                    <div className="col-span-2 flex items-center text-sm text-muted-foreground">
-                                                        {formatTimeAgo(device.last_seen)}
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
+                                                </Link>
+                                            )
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <NetworkDiagram devices={devices} networkId={id!} subnet={network.subnet} />
+                )}
             </main>
         </div>
     )
