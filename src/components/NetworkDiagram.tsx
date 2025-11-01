@@ -13,7 +13,8 @@ import {
     useEdgesState,
     useNodesState,
 } from '@xyflow/react'
-import { useCallback, useMemo } from 'react'
+import dagre from 'dagre'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '@xyflow/react/dist/style.css'
 import type { Device } from '@/lib/api'
@@ -29,19 +30,57 @@ const nodeTypes: NodeTypes = {
     deviceNode: DeviceNode,
 }
 
+// Dagre layout helper
+const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
+    const dagreGraph = new dagre.graphlib.Graph()
+    dagreGraph.setDefaultEdgeLabel(() => ({}))
+
+    // Configure layout
+    dagreGraph.setGraph({
+        rankdir: 'TB', // Top to Bottom
+        ranksep: 120, // Vertical separation between ranks
+        nodesep: 80, // Horizontal separation between nodes
+        marginx: 50,
+        marginy: 50,
+    })
+
+    nodes.forEach(node => {
+        dagreGraph.setNode(node.id, {
+            width: node.id === 'gateway' ? 160 : 180,
+            height: node.id === 'gateway' ? 48 : 100,
+        })
+    })
+
+    edges.forEach(edge => {
+        dagreGraph.setEdge(edge.source, edge.target)
+    })
+
+    dagre.layout(dagreGraph)
+
+    const layoutedNodes = nodes.map(node => {
+        const nodeWithPosition = dagreGraph.node(node.id)
+        return {
+            ...node,
+            position: {
+                x: nodeWithPosition.x - (node.id === 'gateway' ? 80 : 90),
+                y: nodeWithPosition.y - (node.id === 'gateway' ? 24 : 50),
+            },
+        }
+    })
+
+    return { nodes: layoutedNodes, edges }
+}
+
 export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramProps) {
     const navigate = useNavigate()
 
-    // Convert devices to nodes
-    const initialNodes: Node[] = useMemo(() => {
-        const centerX = 500
-        const centerY = 350
-
+    // Create initial nodes and edges
+    const { initialNodes: rawNodes, initialEdges: rawEdges } = useMemo(() => {
         const gatewayNode: Node = {
             id: 'gateway',
             type: 'input',
             data: { label: `Gateway\n${subnet}` },
-            position: { x: centerX - 80, y: 80 },
+            position: { x: 0, y: 0 }, // Will be positioned by Dagre
             style: {
                 background: '#10b981',
                 color: 'white',
@@ -53,37 +92,38 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
             },
         }
 
-        const deviceNodes: Node[] = devices.map((device, index) => {
-            // Start from top and distribute evenly, offset by -90 degrees to start at top
-            const angle = (index / devices.length) * 2 * Math.PI - Math.PI / 2
-            const radius = 280
-            const x = centerX + radius * Math.cos(angle) - 90
-            const y = centerY + radius * Math.sin(angle)
+        const deviceNodes: Node[] = devices.map(device => ({
+            id: device.id,
+            type: 'deviceNode',
+            data: { device, networkId },
+            position: { x: 0, y: 0 }, // Will be positioned by Dagre
+        }))
 
-            return {
-                id: device.id,
-                type: 'deviceNode',
-                data: { device, networkId },
-                position: { x, y },
-            }
-        })
-
-        return [gatewayNode, ...deviceNodes]
-    }, [devices, networkId, subnet])
-
-    // Create edges from gateway to each device
-    const initialEdges: Edge[] = useMemo(() => {
-        return devices.map(device => ({
+        const edges: Edge[] = devices.map(device => ({
             id: `gateway-${device.id}`,
             source: 'gateway',
             target: device.id,
             animated: true,
             style: { stroke: '#94a3b8', strokeWidth: 2 },
         }))
-    }, [devices])
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-    const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+        return { initialNodes: [gatewayNode, ...deviceNodes], initialEdges: edges }
+    }, [devices, networkId, subnet])
+
+    // Apply Dagre layout
+    const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {
+        return getLayoutedElements(rawNodes, rawEdges)
+    }, [rawNodes, rawEdges])
+
+    const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes)
+    const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges)
+
+    // Update layout when devices change
+    useEffect(() => {
+        const { nodes: newNodes, edges: newEdges } = getLayoutedElements(rawNodes, rawEdges)
+        setNodes(newNodes)
+        setEdges(newEdges)
+    }, [rawNodes, rawEdges, setNodes, setEdges])
 
     const onConnect = useCallback(
         (connection: Connection) => setEdges(eds => addEdge(connection, eds)),
