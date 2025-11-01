@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppSidebar } from '@/components/AppSidebar'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { Toaster } from '@/components/ui/toaster'
@@ -18,22 +18,32 @@ import ScansDetail from './pages/ScansDetail'
 const queryClient = new QueryClient()
 
 const AppContent = () => {
-    const location = useLocation()
-    const showSidebar = location.pathname !== '/' || location.search !== ''
+    const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
+    const showSidebar = !isDemoMode
 
     return (
         <div className="flex min-h-screen w-full">
             {showSidebar && <AppSidebar />}
+
             <Routes>
                 <Route path="/" element={<Index />} />
-                <Route path="/networks" element={<Networks />} />
-                <Route path="/networks/:id" element={<NetworkDetail />} />
-                <Route path="/networks/:networkId/devices/:deviceId" element={<DeviceDetail />} />
-                <Route path="/catalog" element={<Catalog />} />
+
+                {!isDemoMode && (
+                    <>
                 <Route path="/audits" element={<Audit />} />
                 <Route path="/audits/:id" element={<AuditDetail />} />
+                        <Route path="/catalog" element={<Catalog />} />
                 <Route path="/scans" element={<Scans />} />
                 <Route path="/scans/:id" element={<ScansDetail />} />
+                        <Route path="/networks" element={<Networks />} />
+                        <Route path="/networks/:id" element={<NetworkDetail />} />
+                        <Route
+                            path="/networks/:networkId/devices/:deviceId"
+                            element={<DeviceDetail />}
+                        />
+                    </>
+                )}
+
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
             </Routes>
