@@ -1,9 +1,10 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query'
+import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { AppSidebar } from '@/components/AppSidebar'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { Toaster } from '@/components/ui/toaster'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { api } from '@/lib/api'
 
 import Audit from './pages/Audit'
 import AuditDetail from './pages/AuditDetail'
@@ -19,8 +20,35 @@ import ScansDetail from './pages/ScansDetail'
 const queryClient = new QueryClient()
 
 const AppContent = () => {
+    const location = useLocation()
     const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
-    const showSidebar = !isDemoMode
+
+    // Check if we're on the landing page
+    const { data: networksData } = useQuery({
+        queryKey: ['networks'],
+        queryFn: () => api.networks.list(),
+        enabled: location.pathname === '/',
+    })
+
+    const { data: devicesData } = useQuery({
+        queryKey: ['devices'],
+        queryFn: () => api.devices.list(),
+        enabled: location.pathname === '/',
+    })
+
+    const { data: scansData } = useQuery({
+        queryKey: ['scans'],
+        queryFn: () => api.scans.list(),
+        enabled: location.pathname === '/',
+    })
+
+    const networks = networksData?.networks || []
+    const devices = devicesData?.devices || []
+    const scans = scansData?.scans || []
+    const isEmpty = networks.length === 0 && devices.length === 0 && scans.length === 0
+
+    // Show sidebar only if not in demo mode AND not on landing page
+    const showSidebar = !isDemoMode && !(location.pathname === '/' && (isEmpty || isDemoMode))
 
     return (
         <div className="flex min-h-screen w-full">
