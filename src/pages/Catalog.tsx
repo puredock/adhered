@@ -18,11 +18,21 @@ import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardTitle } from '@/components/ui/card'
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { api } from '@/lib/api'
 
 const Catalog = () => {
     const [searchQuery, setSearchQuery] = useState('')
+    const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+    const [selectedSources, setSelectedSources] = useState<string[]>([])
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['devices'],
@@ -41,18 +51,47 @@ const Catalog = () => {
         return networks.find(n => n.id === networkId)
     }
 
-    const filteredDevices = useMemo(() => {
-        if (!searchQuery.trim()) return devices
+    // Get unique device categories (device types)
+    const availableCategories = useMemo(() => {
+        const categories = new Set(devices.map(device => device.device_type))
+        return Array.from(categories).sort()
+    }, [devices])
 
-        const query = searchQuery.toLowerCase()
-        return devices.filter(
-            device =>
-                device.hostname?.toLowerCase().includes(query) ||
-                device.ip_address.toLowerCase().includes(query) ||
-                device.manufacturer?.toLowerCase().includes(query) ||
-                device.model?.toLowerCase().includes(query),
-        )
-    }, [devices, searchQuery])
+    // Get unique sources (networks)
+    const availableSources = useMemo(() => {
+        const networkIds = new Set(devices.map(device => device.network_id))
+        return networks
+            .filter(network => networkIds.has(network.id))
+            .sort((a, b) => a.name.localeCompare(b.name))
+    }, [devices, networks])
+
+    const filteredDevices = useMemo(() => {
+        let filtered = devices
+
+        // Apply category filter (device type)
+        if (selectedCategories.length > 0) {
+            filtered = filtered.filter(device => selectedCategories.includes(device.device_type))
+        }
+
+        // Apply source filter (network)
+        if (selectedSources.length > 0) {
+            filtered = filtered.filter(device => selectedSources.includes(device.network_id))
+        }
+
+        // Apply search query filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase()
+            filtered = filtered.filter(
+                device =>
+                    device.hostname?.toLowerCase().includes(query) ||
+                    device.ip_address.toLowerCase().includes(query) ||
+                    device.manufacturer?.toLowerCase().includes(query) ||
+                    device.model?.toLowerCase().includes(query),
+            )
+        }
+
+        return filtered
+    }, [devices, searchQuery, selectedCategories, selectedSources])
     const systemTypes = [
         {
             id: 1,
@@ -188,14 +227,70 @@ const Catalog = () => {
 
                 {/* Filters */}
                 <div className="flex items-center gap-4 animate-fade-in">
-                    <Button variant="outline" className="gap-2">
-                        <ChevronDown className="w-4 h-4" />
-                        All categories
-                    </Button>
-                    <Button variant="outline" className="gap-2">
-                        <ChevronDown className="w-4 h-4" />
-                        All sources
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <ChevronDown className="w-4 h-4" />
+                                {selectedCategories.length === 0
+                                    ? 'All categories'
+                                    : `${selectedCategories.length} categor${
+                                          selectedCategories.length > 1 ? 'ies' : 'y'
+                                      }`}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuLabel>Device Categories</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {availableCategories.map(category => (
+                                <DropdownMenuCheckboxItem
+                                    key={category}
+                                    checked={selectedCategories.includes(category)}
+                                    onCheckedChange={checked => {
+                                        setSelectedCategories(prev =>
+                                            checked
+                                                ? [...prev, category]
+                                                : prev.filter(c => c !== category),
+                                        )
+                                    }}
+                                >
+                                    {category.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <ChevronDown className="w-4 h-4" />
+                                {selectedSources.length === 0
+                                    ? 'All sources'
+                                    : `${selectedSources.length} source${
+                                          selectedSources.length > 1 ? 's' : ''
+                                      }`}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuLabel>Network Sources</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {availableSources.map(network => (
+                                <DropdownMenuCheckboxItem
+                                    key={network.id}
+                                    checked={selectedSources.includes(network.id)}
+                                    onCheckedChange={checked => {
+                                        setSelectedSources(prev =>
+                                            checked
+                                                ? [...prev, network.id]
+                                                : prev.filter(id => id !== network.id),
+                                        )
+                                    }}
+                                >
+                                    {network.name}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <div className="flex-1 max-w-md ml-auto">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
