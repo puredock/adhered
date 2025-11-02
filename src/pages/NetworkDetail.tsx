@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     ArrowLeft,
     Camera,
-    ChevronDown,
+    Filter,
     GitBranch,
     HardDrive,
     List,
@@ -23,15 +23,9 @@ import { NetworkDiagram } from '@/components/NetworkDiagram'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-    DropdownMenu,
-    DropdownMenuCheckboxItem,
-    DropdownMenuContent,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
 
@@ -333,123 +327,159 @@ const NetworkDetail = () => {
                     </div>
                 </div>
 
-                {/* Filters and View Controls */}
+                {/* View Controls and Search with Filters */}
                 <div className="mb-6 flex items-center gap-4">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="gap-2">
-                                <ChevronDown className="w-4 h-4" />
-                                {selectedDeviceTypes.length === 0
-                                    ? 'All device types'
-                                    : `${selectedDeviceTypes.length} type${selectedDeviceTypes.length > 1 ? 's' : ''}`}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56">
-                            <DropdownMenuLabel>Device Types</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {availableDeviceTypes.map(type => (
-                                <DropdownMenuCheckboxItem
-                                    key={type}
-                                    checked={selectedDeviceTypes.includes(type)}
-                                    onCheckedChange={checked => {
-                                        setSelectedDeviceTypes(prev =>
-                                            checked ? [...prev, type] : prev.filter(t => t !== type),
-                                        )
-                                    }}
-                                >
-                                    {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="gap-2">
-                                <ChevronDown className="w-4 h-4" />
-                                {selectedStatuses.length === 0
-                                    ? 'All statuses'
-                                    : `${selectedStatuses.length} status${selectedStatuses.length > 1 ? 'es' : ''}`}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-56">
-                            <DropdownMenuLabel>Status</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            {availableStatuses.map(status => (
-                                <DropdownMenuCheckboxItem
-                                    key={status}
-                                    checked={selectedStatuses.includes(status)}
-                                    onCheckedChange={checked => {
-                                        setSelectedStatuses(prev =>
-                                            checked ? [...prev, status] : prev.filter(s => s !== status),
-                                        )
-                                    }}
-                                >
-                                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                                </DropdownMenuCheckboxItem>
-                            ))}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    {/* View Mode Toggle - Prominent on Left */}
+                    <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
+                        <Button
+                            variant={viewMode === 'list' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setViewMode('list')}
+                            className="gap-2"
+                        >
+                            <List className="w-4 h-4" />
+                            List
+                        </Button>
+                        <Button
+                            variant={viewMode === 'diagram' ? 'default' : 'ghost'}
+                            size="sm"
+                            onClick={() => setViewMode('diagram')}
+                            className="gap-2"
+                        >
+                            <GitBranch className="w-4 h-4" />
+                            Visual
+                        </Button>
+                    </div>
 
                     <div className="flex-1" />
 
+                    {/* Refresh Button */}
                     <TooltipProvider>
-                        <div className="flex items-center gap-2">
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant={viewMode === 'list' ? 'default' : 'outline'}
-                                        size="icon"
-                                        onClick={() => setViewMode('list')}
-                                    >
-                                        <List className="w-4 h-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>List View</p>
-                                </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant={viewMode === 'diagram' ? 'default' : 'outline'}
-                                        size="icon"
-                                        onClick={() => setViewMode('diagram')}
-                                    >
-                                        <GitBranch className="w-4 h-4" />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>Network Diagram</p>
-                                </TooltipContent>
-                            </Tooltip>
-
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <Button
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={handleScanNetwork}
-                                        disabled={isScanning}
-                                    >
-                                        <RefreshCw
-                                            className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`}
-                                        />
-                                    </Button>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                    <p>{isScanning ? 'Scanning...' : 'Refresh Devices'}</p>
-                                </TooltipContent>
-                            </Tooltip>
-                        </div>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={handleScanNetwork}
+                                    disabled={isScanning}
+                                >
+                                    <RefreshCw
+                                        className={`w-4 h-4 ${isScanning ? 'animate-spin' : ''}`}
+                                    />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>{isScanning ? 'Scanning...' : 'Refresh Devices'}</p>
+                            </TooltipContent>
+                        </Tooltip>
                     </TooltipProvider>
 
-                    <div className="relative w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    {/* Search Bar with Integrated Filters */}
+                    <div className="relative w-96 flex items-center">
+                        {/* Filters Button */}
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="absolute left-2 z-10 h-7 gap-1.5"
+                                >
+                                    <Filter className="w-4 h-4" />
+                                    {selectedDeviceTypes.length + selectedStatuses.length > 0 && (
+                                        <Badge
+                                            variant="secondary"
+                                            className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+                                        >
+                                            {selectedDeviceTypes.length + selectedStatuses.length}
+                                        </Badge>
+                                    )}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80" align="start">
+                                <div className="space-y-4">
+                                    <div>
+                                        <h4 className="font-medium mb-3">Device Types</h4>
+                                        <div className="space-y-2">
+                                            {availableDeviceTypes.map(type => (
+                                                <label
+                                                    key={type}
+                                                    className="flex items-center gap-2 cursor-pointer"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedDeviceTypes.includes(type)}
+                                                        onChange={e => {
+                                                            setSelectedDeviceTypes(prev =>
+                                                                e.target.checked
+                                                                    ? [...prev, type]
+                                                                    : prev.filter(t => t !== type),
+                                                            )
+                                                        }}
+                                                        className="rounded border-input"
+                                                    />
+                                                    <span className="text-sm">
+                                                        {type
+                                                            .replace(/_/g, ' ')
+                                                            .replace(/\b\w/g, l => l.toUpperCase())}
+                                                    </span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <Separator />
+                                    <div>
+                                        <h4 className="font-medium mb-3">Status</h4>
+                                        <div className="space-y-2">
+                                            {availableStatuses.map(status => (
+                                                <label
+                                                    key={status}
+                                                    className="flex items-center gap-2 cursor-pointer"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedStatuses.includes(status)}
+                                                        onChange={e => {
+                                                            setSelectedStatuses(prev =>
+                                                                e.target.checked
+                                                                    ? [...prev, status]
+                                                                    : prev.filter(s => s !== status),
+                                                            )
+                                                        }}
+                                                        className="rounded border-input"
+                                                    />
+                                                    <span className="text-sm">
+                                                        {status.charAt(0).toUpperCase() +
+                                                            status.slice(1)}
+                                                    </span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    {(selectedDeviceTypes.length > 0 || selectedStatuses.length > 0) && (
+                                        <>
+                                            <Separator />
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full"
+                                                onClick={() => {
+                                                    setSelectedDeviceTypes([])
+                                                    setSelectedStatuses([])
+                                                }}
+                                            >
+                                                Clear All Filters
+                                            </Button>
+                                        </>
+                                    )}
+                                </div>
+                            </PopoverContent>
+                        </Popover>
+
+                        {/* Search Input */}
+                        <Search className="absolute left-16 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                         <Input
                             placeholder="Search devices..."
-                            className="pl-9"
+                            className="pl-24 pr-4"
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                         />
