@@ -29,7 +29,17 @@ const Catalog = () => {
         queryFn: () => api.devices.list(),
     })
 
+    const { data: networksData } = useQuery({
+        queryKey: ['networks'],
+        queryFn: () => api.networks.list(),
+    })
+
     const devices = data?.devices || []
+    const networks = networksData?.networks || []
+
+    const getNetworkInfo = (networkId: string) => {
+        return networks.find(n => n.id === networkId)
+    }
 
     const filteredDevices = useMemo(() => {
         if (!searchQuery.trim()) return devices
@@ -240,6 +250,7 @@ const Catalog = () => {
                                     <div className="divide-y divide-border">
                                         {filteredDevices.map((device, index) => {
                                             const Icon = getDeviceIcon(device.device_type)
+                                            const networkInfo = getNetworkInfo(device.network_id)
                                             return (
                                                 <Link
                                                     key={device.id}
@@ -258,9 +269,18 @@ const Catalog = () => {
                                                             >
                                                                 <Icon className="w-5 h-5" />
                                                             </div>
-                                                            <span className="font-medium group-hover:text-primary transition-colors">
-                                                                {device.hostname || device.ip_address}
-                                                            </span>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium group-hover:text-primary transition-colors">
+                                                                    {device.hostname ||
+                                                                        device.ip_address}
+                                                                </span>
+                                                                {networkInfo && (
+                                                                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                                                        <Wifi className="w-3 h-3" />
+                                                                        <span>{networkInfo.subnet}</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <div className="col-span-3 flex items-center text-muted-foreground text-sm">
                                                             {device.manufacturer ? (
