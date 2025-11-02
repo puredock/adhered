@@ -8,6 +8,7 @@ import {
     List,
     Loader2,
     Monitor,
+    Plus,
     RefreshCw,
     Search,
     Server,
@@ -284,7 +285,8 @@ const NetworkDetail = () => {
                             </div>
                         </div>
                         <Button
-                            className="bg-primary hover:bg-primary/90"
+                            size="sm"
+                            className="bg-accent-foreground text-accent hover:bg-accent-foreground/90"
                             onClick={handleScanNetwork}
                             disabled={isScanning}
                         >
@@ -294,7 +296,10 @@ const NetworkDetail = () => {
                                     Scanning...
                                 </>
                             ) : (
-                                'Scan Network'
+                                <>
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    Start new scan
+                                </>
                             )}
                         </Button>
                     </div>
