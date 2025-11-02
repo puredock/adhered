@@ -214,8 +214,8 @@ const Catalog = () => {
                                 {/* Table Header */}
                                 <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
                                     <div className="col-span-3">Device Name</div>
-                                    <div className="col-span-4">Details</div>
-                                    <div className="col-span-2">Type</div>
+                                    <div className="col-span-3">Manufacturer</div>
+                                    <div className="col-span-3">MAC Address</div>
                                     <div className="col-span-3">IP Address</div>
                                 </div>
 
@@ -252,7 +252,9 @@ const Catalog = () => {
                                                     <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-all cursor-pointer group">
                                                         <div className="col-span-3 flex items-center gap-3">
                                                             <div
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)} group-hover:scale-110 transition-transform`}
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(
+                                                                    index,
+                                                                )} group-hover:scale-110 transition-transform`}
                                                             >
                                                                 <Icon className="w-5 h-5" />
                                                             </div>
@@ -260,21 +262,39 @@ const Catalog = () => {
                                                                 {device.hostname || device.ip_address}
                                                             </span>
                                                         </div>
-                                                        <div className="col-span-4 flex items-center text-muted-foreground text-sm">
-                                                            {device.manufacturer}{' '}
-                                                            {device.model && `• ${device.model}`}
-                                                            {device.os && ` • ${device.os}`}
+                                                        <div className="col-span-3 flex items-center text-muted-foreground text-sm">
+                                                            {device.manufacturer ? (
+                                                                <span
+                                                                    className="truncate"
+                                                                    title={device.manufacturer}
+                                                                >
+                                                                    {device.manufacturer}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-muted-foreground/50">
+                                                                    —
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                        <div className="col-span-2 flex items-center text-sm">
-                                                            <Badge
-                                                                variant="outline"
-                                                                className="capitalize"
+                                                        <div className="col-span-3 flex items-center">
+                                                            {device.mac_address ? (
+                                                                <code className="font-mono text-xs px-2 py-0.5 rounded bg-muted/50 text-foreground border border-border">
+                                                                    {device.mac_address}
+                                                                </code>
+                                                            ) : (
+                                                                <span className="text-muted-foreground/50">
+                                                                    —
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="col-span-3 flex items-center">
+                                                            <Link
+                                                                to={`/networks/${device.network_id}/devices/${device.id}`}
+                                                                className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                                                                onClick={e => e.stopPropagation()}
                                                             >
-                                                                {device.device_type.replace(/_/g, ' ')}
-                                                            </Badge>
-                                                        </div>
-                                                        <div className="col-span-3 flex items-center text-sm font-mono text-muted-foreground">
-                                                            {device.ip_address}
+                                                                {device.ip_address}
+                                                            </Link>
                                                         </div>
                                                     </div>
                                                 </Link>

@@ -361,11 +361,12 @@ const NetworkDetail = () => {
                             <div className="overflow-hidden">
                                 {/* Table Header */}
                                 <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
-                                    <div className="col-span-3">Device Name</div>
-                                    <div className="col-span-3">Details</div>
+                                    <div className="col-span-3">Host</div>
+                                    <div className="col-span-2">Manufacturer</div>
+                                    <div className="col-span-2">MAC Address</div>
                                     <div className="col-span-2">IP Address</div>
                                     <div className="col-span-2">Status</div>
-                                    <div className="col-span-2">Last Seen</div>
+                                    <div className="col-span-1">Last Seen</div>
                                 </div>
 
                                 {/* Table Rows */}
@@ -403,17 +404,40 @@ const NetworkDetail = () => {
                                                                 {device.hostname || device.ip_address}
                                                             </span>
                                                         </div>
-                                                        <div className="col-span-3 flex items-center text-muted-foreground text-sm">
-                                                            {device.manufacturer}{' '}
-                                                            {device.model && `• ${device.model}`}
+                                                        <div className="col-span-2 flex items-center text-muted-foreground text-sm">
+                                                            {device.manufacturer ? (
+                                                                <span
+                                                                    className="truncate"
+                                                                    title={device.manufacturer}
+                                                                >
+                                                                    {device.manufacturer}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-muted-foreground/50">
+                                                                    —
+                                                                </span>
+                                                            )}
                                                         </div>
-                                                        <div className="col-span-2 flex items-center font-mono text-sm">
-                                                            {device.ip_address}
+                                                        <div className="col-span-2 flex items-center">
+                                                            {device.mac_address ? (
+                                                                <code className="font-mono text-xs px-2 py-0.5 rounded bg-muted/50 text-foreground border border-border">
+                                                                    {device.mac_address}
+                                                                </code>
+                                                            ) : (
+                                                                <span className="text-muted-foreground/50">
+                                                                    —
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="col-span-2 flex items-center">
+                                                            <span className="font-mono text-sm text-blue-600">
+                                                                {device.ip_address}
+                                                            </span>
                                                         </div>
                                                         <div className="col-span-2 flex items-center">
                                                             {getDeviceStatusBadge(device.last_seen)}
                                                         </div>
-                                                        <div className="col-span-2 flex items-center text-sm text-muted-foreground">
+                                                        <div className="col-span-1 flex items-center text-sm text-muted-foreground">
                                                             {formatTimeAgo(device.last_seen)}
                                                         </div>
                                                     </div>
