@@ -8,6 +8,8 @@ export interface Network {
     discovered_at: string
     last_scan: string | null
     device_count: number
+    is_saved: boolean
+    connected_at: string | null
 }
 
 export interface NetworkList {
@@ -121,6 +123,15 @@ export const api = {
         },
         get: (id: string) => fetchAPI<Network>(`/networks/${id}`),
         scan: (id: string) => fetchAPI(`/networks/scan/${id}`, { method: 'POST' }),
+        listAvailable: (params?: { skip?: number; limit?: number }) => {
+            const queryParams = new URLSearchParams()
+            if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString())
+            if (params?.limit !== undefined) queryParams.append('limit', params.limit.toString())
+
+            const query = queryParams.toString()
+            return fetchAPI<NetworkList>(`/networks/available${query ? `?${query}` : ''}`)
+        },
+        connect: (id: string) => fetchAPI(`/networks/connect/${id}`, { method: 'POST' }),
     },
 
     devices: {
