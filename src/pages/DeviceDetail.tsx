@@ -11,6 +11,7 @@ import {
     Monitor,
     RefreshCw,
     Shield,
+    Wifi,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -40,6 +41,12 @@ const DeviceDetail = () => {
         queryKey: ['device', deviceId],
         queryFn: () => api.devices.get(deviceId!),
         enabled: !!deviceId,
+    })
+
+    const { data: networkData, isLoading: networkLoading } = useQuery({
+        queryKey: ['network', device?.network_id],
+        queryFn: () => api.networks.get(device!.network_id),
+        enabled: !!device?.network_id,
     })
 
     const {
@@ -185,7 +192,7 @@ const DeviceDetail = () => {
                             <h1 className="text-2xl font-bold tracking-tight">
                                 {device.hostname || device.ip_address}
                             </h1>
-                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <p className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                                 <a
                                     href={`http://${device.ip_address}`}
                                     target="_blank"
@@ -200,6 +207,17 @@ const DeviceDetail = () => {
                                         <code className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted/50 text-foreground border border-border">
                                             {device.mac_address}
                                         </code>
+                                    </>
+                                )}
+                                {networkData && (
+                                    <>
+                                        <span>•</span>
+                                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200">
+                                            <Wifi className="w-3 h-3 text-blue-600" />
+                                            <span className="text-xs font-medium text-blue-700">
+                                                {networkData.subnet}
+                                            </span>
+                                        </div>
                                     </>
                                 )}
                             </p>
@@ -284,25 +302,48 @@ const DeviceDetail = () => {
 
                                 <Separator className="my-4" />
 
-                                <div>
-                                    <p className="text-sm text-muted-foreground mb-2">Open Ports</p>
-                                    {device.open_ports.length > 0 ? (
-                                        <div className="flex flex-wrap gap-2">
-                                            {device.open_ports.map(port => (
-                                                <Badge
-                                                    key={port}
-                                                    variant="outline"
-                                                    className="font-mono"
-                                                >
-                                                    {port}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-muted-foreground">
-                                            No open ports detected
-                                        </p>
-                                    )}
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                    <div>
+                                        <p className="text-sm text-muted-foreground mb-2">Network</p>
+                                        {networkData ? (
+                                            <div className="flex items-center gap-2">
+                                                <Wifi className="w-4 h-4 text-blue-600" />
+                                                <div className="flex flex-col">
+                                                    <span className="font-medium">
+                                                        {networkData.name}
+                                                    </span>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {networkData.subnet}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <p className="font-medium text-muted-foreground">
+                                                Loading...
+                                            </p>
+                                        )}
+                                    </div>
+
+                                    <div>
+                                        <p className="text-sm text-muted-foreground mb-2">Open Ports</p>
+                                        {device.open_ports.length > 0 ? (
+                                            <div className="flex flex-wrap gap-2">
+                                                {device.open_ports.map(port => (
+                                                    <Badge
+                                                        key={port}
+                                                        variant="outline"
+                                                        className="font-mono"
+                                                    >
+                                                        {port}
+                                                    </Badge>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-muted-foreground">
+                                                No open ports detected
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
                             </CardContent>
                         </Card>
