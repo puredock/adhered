@@ -15,6 +15,16 @@ export interface NetworkList {
     total: number
 }
 
+export interface Service {
+    port: number
+    protocol: string
+    service: string
+    product?: string
+    version?: string
+    extrainfo?: string
+    cpe?: string
+}
+
 export interface Device {
     id: string
     network_id: string
@@ -29,12 +39,19 @@ export interface Device {
         | 'server'
         | 'unknown'
     manufacturer: string | null
+    vendor: string | null
     model: string | null
     os: string | null
+    os_family: string | null
+    os_version: string | null
     open_ports: number[]
+    services: Service[]
+    cpe: string[]
     discovered_at: string
     last_seen: string
     scan_count: number
+    fingerprint_confidence: Record<string, number>
+    fingerprint_metadata: Record<string, any>
 }
 
 export interface DeviceList {
@@ -130,6 +147,23 @@ export const api = {
 
             const query = queryParams.toString()
             return fetchAPI<DeviceList>(`/devices/network/${networkId}${query ? `?${query}` : ''}`)
+        },
+        enrich: (id: string, force_rescan = false) =>
+            fetchAPI(`/devices/${id}/enrich?force_rescan=${force_rescan}`, { method: 'POST' }),
+        enrichNetwork: (
+            networkId: string,
+            params?: { force_rescan?: boolean; concurrency?: number },
+        ) => {
+            const queryParams = new URLSearchParams()
+            if (params?.force_rescan !== undefined)
+                queryParams.append('force_rescan', params.force_rescan.toString())
+            if (params?.concurrency !== undefined)
+                queryParams.append('concurrency', params.concurrency.toString())
+
+            const query = queryParams.toString()
+            return fetchAPI(`/devices/network/${networkId}/enrich${query ? `?${query}` : ''}`, {
+                method: 'POST',
+            })
         },
     },
 
