@@ -308,8 +308,23 @@ const DeviceDetail = () => {
                             <h1 className="text-2xl font-bold tracking-tight">
                                 {device.hostname || device.ip_address}
                             </h1>
-                            <p className="text-sm text-muted-foreground">
-                                {device.ip_address} • {device.mac_address || 'N/A'}
+                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                                <a
+                                    href={`http://${device.ip_address}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="font-mono text-blue-600 hover:text-blue-800 hover:underline"
+                                >
+                                    {device.ip_address}
+                                </a>
+                                {device.mac_address && (
+                                    <>
+                                        <span>•</span>
+                                        <code className="font-mono text-xs px-1.5 py-0.5 rounded bg-muted/50 text-foreground border border-border">
+                                            {device.mac_address}
+                                        </code>
+                                    </>
+                                )}
                             </p>
                         </div>
                     </div>
@@ -369,13 +384,24 @@ const DeviceDetail = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">IP Address</p>
-                                        <p className="font-mono font-medium">{device.ip_address}</p>
+                                        <a
+                                            href={`http://${device.ip_address}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="font-mono font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                                        >
+                                            {device.ip_address}
+                                        </a>
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">MAC Address</p>
-                                        <p className="font-mono font-medium">
-                                            {device.mac_address || 'N/A'}
-                                        </p>
+                                        {device.mac_address ? (
+                                            <code className="font-mono text-sm px-2 py-1 rounded bg-muted/50 text-foreground border border-border inline-block">
+                                                {device.mac_address}
+                                            </code>
+                                        ) : (
+                                            <p className="font-medium text-muted-foreground">N/A</p>
+                                        )}
                                     </div>
                                 </div>
 
