@@ -22,6 +22,14 @@ import { NetworkDiagram } from '@/components/NetworkDiagram'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
@@ -32,6 +40,8 @@ const NetworkDetail = () => {
     const [searchQuery, setSearchQuery] = useState('')
     const [isScanning, setIsScanning] = useState(false)
     const [viewMode, setViewMode] = useState<'list' | 'diagram'>('list')
+    const [selectedDeviceTypes, setSelectedDeviceTypes] = useState<string[]>([])
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
 
     const {
         data: network,
@@ -83,17 +93,69 @@ const NetworkDetail = () => {
         }
     }
 
-    const filteredDevices = useMemo(() => {
-        if (!searchQuery.trim()) return devices
+    // Get unique device types and statuses from devices
+    const availableDeviceTypes = useMemo(() => {
+        const types = new Set(devices.map(device => device.device_type))
+        return Array.from(types).sort()
+    }, [devices])
 
-        const query = searchQuery.toLowerCase()
-        return devices.filter(
-            device =>
-                device.hostname?.toLowerCase().includes(query) ||
-                device.ip_address.toLowerCase().includes(query) ||
-                device.manufacturer?.toLowerCase().includes(query),
-        )
-    }, [devices, searchQuery])
+    const availableStatuses = useMemo(() => {
+        const statuses = new Set<string>()
+        devices.forEach(device => {
+            const now = new Date()
+            const lastSeenDate = new Date(device.last_seen)
+            const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60))
+
+            if (diffInMinutes < 5) {
+                statuses.add('online')
+            } else if (diffInMinutes < 60) {
+                statuses.add('away')
+            } else {
+                statuses.add('offline')
+            }
+        })
+        return Array.from(statuses).sort()
+    }, [devices])
+
+    const filteredDevices = useMemo(() => {
+        let filtered = devices
+
+        // Apply device type filter
+        if (selectedDeviceTypes.length > 0) {
+            filtered = filtered.filter(device => selectedDeviceTypes.includes(device.device_type))
+        }
+
+        // Apply status filter
+        if (selectedStatuses.length > 0) {
+            filtered = filtered.filter(device => {
+                const now = new Date()
+                const lastSeenDate = new Date(device.last_seen)
+                const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60))
+
+                let status = 'offline'
+                if (diffInMinutes < 5) {
+                    status = 'online'
+                } else if (diffInMinutes < 60) {
+                    status = 'away'
+                }
+
+                return selectedStatuses.includes(status)
+            })
+        }
+
+        // Apply search query filter
+        if (searchQuery.trim()) {
+            const query = searchQuery.toLowerCase()
+            filtered = filtered.filter(
+                device =>
+                    device.hostname?.toLowerCase().includes(query) ||
+                    device.ip_address.toLowerCase().includes(query) ||
+                    device.manufacturer?.toLowerCase().includes(query),
+            )
+        }
+
+        return filtered
+    }, [devices, searchQuery, selectedDeviceTypes, selectedStatuses])
 
     const getDeviceIcon = (type: string) => {
         const icons = {
@@ -268,14 +330,61 @@ const NetworkDetail = () => {
 
                 {/* Filters and View Controls */}
                 <div className="mb-6 flex items-center gap-4">
-                    <Button variant="outline" className="gap-2">
-                        <ChevronDown className="w-4 h-4" />
-                        All device types
-                    </Button>
-                    <Button variant="outline" className="gap-2">
-                        <ChevronDown className="w-4 h-4" />
-                        All statuses
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <ChevronDown className="w-4 h-4" />
+                                {selectedDeviceTypes.length === 0
+                                    ? 'All device types'
+                                    : `${selectedDeviceTypes.length} type${selectedDeviceTypes.length > 1 ? 's' : ''}`}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuLabel>Device Types</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {availableDeviceTypes.map(type => (
+                                <DropdownMenuCheckboxItem
+                                    key={type}
+                                    checked={selectedDeviceTypes.includes(type)}
+                                    onCheckedChange={checked => {
+                                        setSelectedDeviceTypes(prev =>
+                                            checked ? [...prev, type] : prev.filter(t => t !== type),
+                                        )
+                                    }}
+                                >
+                                    {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className="gap-2">
+                                <ChevronDown className="w-4 h-4" />
+                                {selectedStatuses.length === 0
+                                    ? 'All statuses'
+                                    : `${selectedStatuses.length} status${selectedStatuses.length > 1 ? 'es' : ''}`}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="w-56">
+                            <DropdownMenuLabel>Status</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {availableStatuses.map(status => (
+                                <DropdownMenuCheckboxItem
+                                    key={status}
+                                    checked={selectedStatuses.includes(status)}
+                                    onCheckedChange={checked => {
+                                        setSelectedStatuses(prev =>
+                                            checked ? [...prev, status] : prev.filter(s => s !== status),
+                                        )
+                                    }}
+                                >
+                                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                                </DropdownMenuCheckboxItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
                     <div className="flex-1" />
 
@@ -435,7 +544,7 @@ const NetworkDetail = () => {
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                                 className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                                                                onClick={(e) => e.stopPropagation()}
+                                                                onClick={e => e.stopPropagation()}
                                                             >
                                                                 {device.ip_address}
                                                             </a>
