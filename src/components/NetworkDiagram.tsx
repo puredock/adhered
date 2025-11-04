@@ -314,6 +314,7 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
                         <div className="text-muted-foreground">{devices.length} device(s)</div>
                     </div>
                     <button
+                        type="button"
                         onClick={() => setShowFlows(!showFlows)}
                         className="w-full text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
@@ -322,16 +323,16 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
                 </Panel>
                 <Panel position="bottom-left" className="bg-card border border-border rounded-lg p-3">
                     <div className="text-xs space-y-2">
-                        <div className="font-semibold text-foreground mb-2">Legend</div>
+                        <div className="font-semibold text-foreground mb-2">Legends</div>
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-0.5 bg-slate-400 border-t-2 border-dashed" />
-                            <span className="text-muted-foreground">Base Topology</span>
+                            <span className="text-muted-foreground">Network Connections</span>
                         </div>
                         {showFlows && (
                             <>
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-0.5 bg-indigo-500" style={{ height: '2px' }} />
-                                    <span className="text-muted-foreground">Normal Traffic</span>
+                                    <span className="text-muted-foreground">Regular Traffic</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <div className="w-8 h-0.5 bg-orange-500" style={{ height: '3px' }} />

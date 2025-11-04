@@ -28,6 +28,8 @@ import {
 import { Input } from '@/components/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { api } from '@/lib/api'
+import { getScanStatusBadge } from '@/lib/status'
+import { formatTimeAgo } from '@/lib/time'
 
 const Scans = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -40,112 +42,115 @@ const Scans = () => {
     })
 
     const scans = data?.scans || []
-
-    const pentestingStandards = [
-        {
-            id: 'ptes',
-            name: 'PTES',
-            fullName: 'Penetration Testing Execution Standard',
-            description:
-                'A comprehensive standard covering all phases of penetration testing from pre-engagement to reporting',
-            icon: Shield,
-            iconColor: 'text-blue-600 bg-blue-50',
-            tags: ['Methodology', 'Full Coverage', 'Documentation'],
-            status: 'active',
-            lastScan: '1 day ago',
-            severity: 'info',
-        },
-        {
-            id: 'owasp-wstg',
-            name: 'OWASP WSTG',
-            fullName: 'OWASP Web Security Testing Guide',
-            description:
-                'Comprehensive testing guide for web application security vulnerabilities and attack vectors',
-            icon: Bug,
-            iconColor: 'text-red-600 bg-red-50',
-            tags: ['Web Security', 'Application', 'OWASP'],
-            status: 'active',
-            lastScan: '3 hours ago',
-            severity: 'high',
-        },
-        {
-            id: 'owasp-fstg',
-            name: 'OWASP FSTG',
-            fullName: 'OWASP Firmware Security Testing Guide',
-            description:
-                'Security testing methodology for firmware and embedded systems vulnerabilities',
-            icon: Lock,
-            iconColor: 'text-purple-600 bg-purple-50',
-            tags: ['Firmware', 'Embedded', 'IoT'],
-            status: 'pending',
-            lastScan: '2 days ago',
-            severity: 'medium',
-        },
-        {
-            id: 'nist-800-115',
-            name: 'NIST SP 800-115',
-            fullName: 'NIST Technical Guide to Information Security Testing',
-            description: 'Technical guide to information security testing and assessment methodologies',
-            icon: FileSearch,
-            iconColor: 'text-indigo-600 bg-indigo-50',
-            tags: ['Government', 'Assessment', 'Compliance'],
-            status: 'active',
-            lastScan: '12 hours ago',
-            severity: 'info',
-        },
-        {
-            id: 'osstmm',
-            name: 'OSSTMM',
-            fullName: 'Open Source Security Testing Methodology Manual',
-            description:
-                'Peer-reviewed methodology for security testing across networks, applications, and physical security',
-            icon: Shield,
-            iconColor: 'text-green-600 bg-green-50',
-            tags: ['Open Source', 'Comprehensive', 'Network'],
-            status: 'active',
-            lastScan: '6 hours ago',
-            severity: 'low',
-        },
-        {
-            id: 'pci-dss',
-            name: 'PCI DSS Guidance',
-            fullName: 'Payment Card Industry Data Security Standard',
-            description:
-                'Security standards for organizations handling credit card information with penetration testing requirements',
-            icon: Lock,
-            iconColor: 'text-yellow-600 bg-yellow-50',
-            tags: ['Payment', 'Compliance', 'Financial'],
-            status: 'active',
-            lastScan: '8 hours ago',
-            severity: 'high',
-        },
-        {
-            id: 'iso-27001',
-            name: 'ISO 27001',
-            fullName: 'Information Security Management Systems',
-            description:
-                'International standard for information security management systems with comprehensive security controls',
-            icon: Shield,
-            iconColor: 'text-cyan-600 bg-cyan-50',
-            tags: ['ISMS', 'Compliance', 'International'],
-            status: 'active',
-            lastScan: '4 hours ago',
-            severity: 'medium',
-        },
-        {
-            id: 'iec-62443',
-            name: 'IEC 62443',
-            fullName: 'Industrial Automation and Control Systems Security',
-            description:
-                'Security standard for industrial automation and control systems in critical infrastructure',
-            icon: Lock,
-            iconColor: 'text-orange-600 bg-orange-50',
-            tags: ['Industrial', 'ICS', 'Critical Infrastructure'],
-            status: 'pending',
-            lastScan: '1 day ago',
-            severity: 'high',
-        },
-    ]
+    const pentestingStandards = useMemo(
+        () => [
+            {
+                id: 'ptes',
+                name: 'PTES',
+                fullName: 'Penetration Testing Execution Standard',
+                description:
+                    'A comprehensive standard covering all phases of penetration testing from pre-engagement to reporting',
+                icon: Shield,
+                iconColor: 'text-blue-600 bg-blue-50',
+                tags: ['Methodology', 'Full Coverage', 'Documentation'],
+                status: 'active',
+                lastScan: '1 day ago',
+                severity: 'info',
+            },
+            {
+                id: 'owasp-wstg',
+                name: 'OWASP WSTG',
+                fullName: 'OWASP Web Security Testing Guide',
+                description:
+                    'Comprehensive testing guide for web application security vulnerabilities and attack vectors',
+                icon: Bug,
+                iconColor: 'text-red-600 bg-red-50',
+                tags: ['Web Security', 'Application', 'OWASP'],
+                status: 'active',
+                lastScan: '3 hours ago',
+                severity: 'high',
+            },
+            {
+                id: 'owasp-fstg',
+                name: 'OWASP FSTG',
+                fullName: 'OWASP Firmware Security Testing Guide',
+                description:
+                    'Security testing methodology for firmware and embedded systems vulnerabilities',
+                icon: Lock,
+                iconColor: 'text-purple-600 bg-purple-50',
+                tags: ['Firmware', 'Embedded', 'IoT'],
+                status: 'pending',
+                lastScan: '2 days ago',
+                severity: 'medium',
+            },
+            {
+                id: 'nist-800-115',
+                name: 'NIST SP 800-115',
+                fullName: 'NIST Technical Guide to Information Security Testing',
+                description:
+                    'Technical guide to information security testing and assessment methodologies',
+                icon: FileSearch,
+                iconColor: 'text-indigo-600 bg-indigo-50',
+                tags: ['Government', 'Assessment', 'Compliance'],
+                status: 'active',
+                lastScan: '12 hours ago',
+                severity: 'info',
+            },
+            {
+                id: 'osstmm',
+                name: 'OSSTMM',
+                fullName: 'Open Source Security Testing Methodology Manual',
+                description:
+                    'Peer-reviewed methodology for security testing across networks, applications, and physical security',
+                icon: Shield,
+                iconColor: 'text-green-600 bg-green-50',
+                tags: ['Open Source', 'Comprehensive', 'Network'],
+                status: 'active',
+                lastScan: '6 hours ago',
+                severity: 'low',
+            },
+            {
+                id: 'pci-dss',
+                name: 'PCI DSS Guidance',
+                fullName: 'Payment Card Industry Data Security Standard',
+                description:
+                    'Security standards for organizations handling credit card information with penetration testing requirements',
+                icon: Lock,
+                iconColor: 'text-yellow-600 bg-yellow-50',
+                tags: ['Payment', 'Compliance', 'Financial'],
+                status: 'active',
+                lastScan: '8 hours ago',
+                severity: 'high',
+            },
+            {
+                id: 'iso-27001',
+                name: 'ISO 27001',
+                fullName: 'Information Security Management Systems',
+                description:
+                    'International standard for information security management systems with comprehensive security controls',
+                icon: Shield,
+                iconColor: 'text-cyan-600 bg-cyan-50',
+                tags: ['ISMS', 'Compliance', 'International'],
+                status: 'active',
+                lastScan: '4 hours ago',
+                severity: 'medium',
+            },
+            {
+                id: 'iec-62443',
+                name: 'IEC 62443',
+                fullName: 'Industrial Automation and Control Systems Security',
+                description:
+                    'Security standard for industrial automation and control systems in critical infrastructure',
+                icon: Lock,
+                iconColor: 'text-orange-600 bg-orange-50',
+                tags: ['Industrial', 'ICS', 'Critical Infrastructure'],
+                status: 'pending',
+                lastScan: '1 day ago',
+                severity: 'high',
+            },
+        ],
+        [],
+    )
 
     const allStatuses = Array.from(
         new Set([...scans.map(s => s.status), ...pentestingStandards.map(s => s.status)]),
@@ -169,19 +174,7 @@ const Scans = () => {
         })
     }, [pentestingStandards, searchQuery, selectedStatuses])
 
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString)
-        const now = new Date()
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-        if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
-        const diffInHours = Math.floor(diffInMinutes / 60)
-        if (diffInHours < 24) return `${diffInHours} hours ago`
-        const diffInDays = Math.floor(diffInHours / 24)
-        return `${diffInDays} days ago`
-    }
-
-    const getStatusBadge = (status: string) => {
+    const getStandardStatusBadge = (status: string) => {
         const variants = {
             active: {
                 text: 'Active',
@@ -338,20 +331,7 @@ const Scans = () => {
                                                 </div>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Badge
-                                                    variant="outline"
-                                                    className={
-                                                        scan.status === 'completed'
-                                                            ? 'bg-success/10 text-success border-success/20'
-                                                            : scan.status === 'in_progress'
-                                                              ? 'bg-primary/10 text-primary border-primary/20'
-                                                              : scan.status === 'failed'
-                                                                ? 'bg-destructive/10 text-destructive border-destructive/20'
-                                                                : 'bg-warning/10 text-warning border-warning/20'
-                                                    }
-                                                >
-                                                    {scan.status.replace(/_/g, ' ')}
-                                                </Badge>
+                                                {getScanStatusBadge(scan.status)}
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between text-sm">
@@ -470,7 +450,7 @@ const Scans = () => {
                                                     <standard.icon className="w-6 h-6" />
                                                 </div>
                                                 <div className="flex flex-col gap-2 items-end">
-                                                    {getStatusBadge(standard.status)}
+                                                    {getStandardStatusBadge(standard.status)}
                                                     {getSeverityBadge(standard.severity)}
                                                 </div>
                                             </div>
@@ -528,7 +508,7 @@ const Scans = () => {
                                                             </p>
                                                         </div>
                                                         <div className="flex gap-2 ml-auto">
-                                                            {getStatusBadge(standard.status)}
+                                                            {getStandardStatusBadge(standard.status)}
                                                             {getSeverityBadge(standard.severity)}
                                                         </div>
                                                     </div>
