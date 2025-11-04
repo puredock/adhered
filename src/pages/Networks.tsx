@@ -28,6 +28,9 @@ import {
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { api, type Network as NetworkType } from '@/lib/api'
+import { getNetworkStatusBadge } from '@/lib/status'
+import { formatTimeAgo } from '@/lib/time'
+import { getCycleColor } from '@/lib/ui'
 
 const Networks = () => {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -108,61 +111,6 @@ const Networks = () => {
                 network.subnet.toLowerCase().includes(query),
         )
     }, [availableNetworks, searchQuery])
-
-    const getStatusBadge = (network: NetworkType, isActiveNetwork: boolean = false) => {
-        if (isActiveNetwork) {
-            return (
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                    Active
-                </Badge>
-            )
-        }
-
-        const variants = {
-            active: {
-                text: 'Connected',
-                className: 'bg-primary/10 text-primary border-primary/20',
-            },
-            inactive: {
-                text: 'Inactive',
-                className: 'bg-warning/10 text-warning border-warning/20',
-            },
-            scanning: {
-                text: 'Scanning',
-                className: 'bg-primary/10 text-primary border-primary/20',
-            },
-        }
-        const config = variants[network.status as keyof typeof variants] || variants.active
-        return (
-            <Badge variant="outline" className={config.className}>
-                {config.text}
-            </Badge>
-        )
-    }
-
-    const getIconColor = (index: number) => {
-        const colors = [
-            'text-purple-600 bg-purple-50',
-            'text-orange-600 bg-orange-50',
-            'text-pink-600 bg-pink-50',
-            'text-blue-600 bg-blue-50',
-            'text-green-600 bg-green-50',
-        ]
-        return colors[index % colors.length]
-    }
-
-    const formatTimeAgo = (dateString: string | null) => {
-        if (!dateString) return 'Never'
-        const date = new Date(dateString)
-        const now = new Date()
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-        if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
-        const diffInHours = Math.floor(diffInMinutes / 60)
-        if (diffInHours < 24) return `${diffInHours} hours ago`
-        const diffInDays = Math.floor(diffInHours / 24)
-        return `${diffInDays} days ago`
-    }
 
     const handleConnectClick = (network: NetworkType) => {
         setSelectedNetwork(network)
@@ -272,13 +220,19 @@ const Networks = () => {
                                             <CardHeader>
                                                 <div className="flex items-start justify-between mb-2">
                                                     <div
-                                                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${getIconColor(index)} group-hover:scale-110 transition-transform`}
+                                                        className={`w-12 h-12 rounded-lg flex items-center justify-center ${getCycleColor(index)} group-hover:scale-110 transition-transform`}
                                                     >
                                                         <Network className="w-6 h-6" />
                                                     </div>
-                                                    {getStatusBadge(
-                                                        network,
-                                                        activeNetwork?.id === network.id,
+                                                    {activeNetwork?.id === network.id ? (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="bg-success/10 text-success border-success/20"
+                                                        >
+                                                            Active
+                                                        </Badge>
+                                                    ) : (
+                                                        getNetworkStatusBadge(network.status)
                                                     )}
                                                 </div>
                                                 <CardTitle className="group-hover:text-primary transition-colors">
@@ -341,7 +295,7 @@ const Networks = () => {
                                                 <TableCell>
                                                     <Link to={`/networks/${network.id}`}>
                                                         <div
-                                                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)}`}
+                                                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(index)}`}
                                                         >
                                                             <Network className="w-5 h-5" />
                                                         </div>
@@ -366,9 +320,15 @@ const Networks = () => {
                                                     </span>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {getStatusBadge(
-                                                        network,
-                                                        activeNetwork?.id === network.id,
+                                                    {activeNetwork?.id === network.id ? (
+                                                        <Badge
+                                                            variant="outline"
+                                                            className="bg-success/10 text-success border-success/20"
+                                                        >
+                                                            Active
+                                                        </Badge>
+                                                    ) : (
+                                                        getNetworkStatusBadge(network.status)
                                                     )}
                                                 </TableCell>
                                                 <TableCell>

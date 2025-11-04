@@ -1,17 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import {
-    Camera,
-    Filter,
-    HardDrive,
-    Loader2,
-    Monitor,
-    Plus,
-    Search,
-    Server,
-    Smartphone,
-    Thermometer,
-    Wifi,
-} from 'lucide-react'
+import { Camera, Filter, Loader2, Monitor, Plus, Search, Smartphone, Thermometer, Wifi } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorState } from '@/components/ErrorState'
@@ -22,6 +10,8 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
 import { api } from '@/lib/api'
+import { getDeviceIcon } from '@/lib/devices'
+import { getCycleColor } from '@/lib/ui'
 
 const Catalog = () => {
     const [searchQuery, setSearchQuery] = useState('')
@@ -124,31 +114,7 @@ const Catalog = () => {
             icon: Activity,
         },
     ]
-    const getDeviceIcon = (type: string) => {
-        const icons = {
-            medical_device: Monitor,
-            iot_device: Thermometer,
-            network_device: Wifi,
-            workstation: HardDrive,
-            server: Server,
-            unknown: Monitor,
-        }
-        return icons[type as keyof typeof icons] || Monitor
-    }
 
-    const getIconColor = (index: number) => {
-        const colors = [
-            'text-purple-600 bg-purple-50',
-            'text-blue-600 bg-blue-50',
-            'text-teal-600 bg-teal-50',
-            'text-orange-600 bg-orange-50',
-            'text-pink-600 bg-pink-50',
-            'text-indigo-600 bg-indigo-50',
-            'text-cyan-600 bg-cyan-50',
-            'text-emerald-600 bg-emerald-50',
-        ]
-        return colors[index % colors.length]
-    }
     return (
         <div className="flex-1 min-h-screen bg-background">
             {/* Header */}
@@ -374,7 +340,7 @@ const Catalog = () => {
                                 ) : (
                                     <div className="divide-y divide-border">
                                         {filteredDevices.map((device, index) => {
-                                            const Icon = getDeviceIcon(device.device_type)
+                                            const Icon = getDeviceIcon(device)
                                             const networkInfo = getNetworkInfo(device.network_id)
                                             return (
                                                 <Link
@@ -388,8 +354,9 @@ const Catalog = () => {
                                                     <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-all cursor-pointer group">
                                                         <div className="col-span-3 flex items-center gap-3">
                                                             <div
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(
                                                                     index,
+                                                                    'extended',
                                                                 )} group-hover:scale-110 transition-transform`}
                                                             >
                                                                 <Icon className="w-5 h-5" />

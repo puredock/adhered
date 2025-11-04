@@ -24,8 +24,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+import { getDeviceOnlineBadge } from '@/lib/status'
+import { formatTimeAgo } from '@/lib/time'
 
 const DeviceDetail = () => {
     const { networkId, deviceId } = useParams()
@@ -86,19 +86,6 @@ const DeviceDetail = () => {
         }
     }, [activeScanId])
 
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString)
-        const now = new Date()
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-        if (diffInMinutes < 1) return 'Active now'
-        if (diffInMinutes < 60) return `${diffInMinutes} mins ago`
-        const diffInHours = Math.floor(diffInMinutes / 60)
-        if (diffInHours < 24) return `${diffInHours} hrs ago`
-        const diffInDays = Math.floor(diffInHours / 24)
-        return `${diffInDays} days ago`
-    }
-
     if (deviceLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -113,16 +100,8 @@ const DeviceDetail = () => {
 
     const handlePenTest = async () => {
         try {
-            const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/scan`, {
-                method: 'POST',
-            })
-
-            if (!response.ok) {
-                throw new Error('Failed to start penetration test')
-            }
-
-            const data = await response.json()
-            setActiveScanId(data.scan_id)
+            const data = await api.devices.scan(deviceId!)
+            setActiveScanId((data as any).scan_id)
 
             toast.success('Penetration test initiated', {
                 description: 'Comprehensive security testing in progress...',
@@ -147,31 +126,6 @@ const DeviceDetail = () => {
         toast.info('Regulatory advisory report', {
             description: 'Generating compliance recommendations...',
         })
-    }
-    const getStatusBadge = () => {
-        const now = new Date()
-        const lastSeen = new Date(device.last_seen)
-        const diffInMinutes = Math.floor((now.getTime() - lastSeen.getTime()) / (1000 * 60))
-
-        if (diffInMinutes < 5) {
-            return (
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                    Online
-                </Badge>
-            )
-        } else if (diffInMinutes < 60) {
-            return (
-                <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                    Away
-                </Badge>
-            )
-        } else {
-            return (
-                <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-muted">
-                    Offline
-                </Badge>
-            )
-        }
     }
     const getSeverityIcon = (severity: string) => {
         if (severity === 'success') return <CheckCircle2 className="w-4 h-4 text-success" />
@@ -240,7 +194,7 @@ const DeviceDetail = () => {
                                         </CardTitle>
                                         <CardDescription>Hardware and network details</CardDescription>
                                     </div>
-                                    {getStatusBadge()}
+                                    {getDeviceOnlineBadge(device.last_seen)}
                                 </div>
                             </CardHeader>
                             <CardContent>
