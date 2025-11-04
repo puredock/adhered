@@ -619,15 +619,20 @@ const NetworkDetail = () => {
                                                             )}
                                                         </div>
                                                         <div className="col-span-2 flex items-center">
-                                                            <a
-                                                                href={`http://${device.ip_address}`}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                                                                onClick={e => e.stopPropagation()}
+                                                            <span
+                                                                className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                                onClick={e => {
+                                                                    e.preventDefault()
+                                                                    e.stopPropagation()
+                                                                    window.open(
+                                                                        `http://${device.ip_address}`,
+                                                                        '_blank',
+                                                                        'noopener,noreferrer',
+                                                                    )
+                                                                }}
                                                             >
                                                                 {device.ip_address}
-                                                            </a>
+                                                            </span>
                                                         </div>
                                                         <div className="col-span-2 flex items-center">
                                                             {getDeviceStatusBadge(device.last_seen)}
