@@ -168,6 +168,7 @@ export const api = {
             const query = queryParams.toString()
             return fetchAPI<DeviceList>(`/devices/network/${networkId}${query ? `?${query}` : ''}`)
         },
+        scan: (id: string) => fetchAPI(`/devices/${id}/scan`, { method: 'POST' }),
         enrich: (id: string, force_rescan = false) =>
             fetchAPI(`/devices/${id}/enrich?force_rescan=${force_rescan}`, { method: 'POST' }),
         enrichNetwork: (
@@ -237,6 +238,8 @@ export const api = {
                 method: 'POST',
                 body: JSON.stringify(data),
             }),
+        retry: (id: string) => fetchAPI(`/scans/${id}/retry`, { method: 'POST' }),
         delete: (id: string) => fetchAPI(`/scans/${id}`, { method: 'DELETE' }),
+        streamUrl: (id: string) => `${API_BASE_URL}/scans/${id}/stream`,
     },
 }
