@@ -1,5 +1,5 @@
 import { Handle, Position } from '@xyflow/react'
-import { HardDrive, Monitor, Server, Thermometer, Wifi } from 'lucide-react'
+import { HardDrive, Monitor, Router, Server, Shield, Thermometer, Wifi } from 'lucide-react'
 import type { Device } from '@/lib/api'
 import { Badge } from './ui/badge'
 
@@ -11,8 +11,26 @@ interface DeviceNodeData {
 export default function DeviceNode({ data }: { data: DeviceNodeData }) {
     const { device } = data
 
+    // Check if device is infrastructure (router/gateway/AP)
+    const isGateway = device.fingerprint_metadata?.is_gateway
+    const isRouter = device.fingerprint_metadata?.is_router
+    const isAccessPoint = device.fingerprint_metadata?.is_access_point
+    const infrastructureRole = device.fingerprint_metadata?.infrastructure_role
+
     const getDeviceIcon = (type: string) => {
         const iconProps = { className: 'w-5 h-5' }
+
+        // Show special icons for infrastructure
+        if (isGateway || infrastructureRole === 'gateway') {
+            return <Shield {...iconProps} />
+        }
+        if (isRouter || infrastructureRole === 'router') {
+            return <Router {...iconProps} />
+        }
+        if (isAccessPoint || infrastructureRole === 'access_point') {
+            return <Wifi {...iconProps} />
+        }
+
         switch (type) {
             case 'medical_device':
                 return <Monitor {...iconProps} />
@@ -40,6 +58,17 @@ export default function DeviceNode({ data }: { data: DeviceNodeData }) {
     }
 
     const getNodeColor = (type: string) => {
+        // Special styling for infrastructure devices
+        if (isGateway || infrastructureRole === 'gateway') {
+            return 'from-emerald-500/30 to-emerald-600/30 border-emerald-500 border-[3px]'
+        }
+        if (isRouter || infrastructureRole === 'router') {
+            return 'from-teal-500/30 to-teal-600/30 border-teal-500 border-[3px]'
+        }
+        if (isAccessPoint || infrastructureRole === 'access_point') {
+            return 'from-cyan-500/30 to-cyan-600/30 border-cyan-500 border-[3px]'
+        }
+
         const colors = {
             medical_device: 'from-purple-500/20 to-purple-600/20 border-purple-500',
             iot_device: 'from-orange-500/20 to-orange-600/20 border-orange-500',
@@ -49,6 +78,27 @@ export default function DeviceNode({ data }: { data: DeviceNodeData }) {
             unknown: 'from-gray-500/20 to-gray-600/20 border-gray-500',
         }
         return colors[type as keyof typeof colors] || colors.unknown
+    }
+
+    const getInfrastructureBadge = () => {
+        if (isGateway || infrastructureRole === 'gateway') {
+            return (
+                <Badge className="bg-emerald-500/20 text-emerald-700 border-emerald-500 text-xs">
+                    Gateway
+                </Badge>
+            )
+        }
+        if (isRouter || infrastructureRole === 'router') {
+            return <Badge className="bg-teal-500/20 text-teal-700 border-teal-500 text-xs">Router</Badge>
+        }
+        if (isAccessPoint || infrastructureRole === 'access_point') {
+            return (
+                <Badge className="bg-cyan-500/20 text-cyan-700 border-cyan-500 text-xs">
+                    Access Point
+                </Badge>
+            )
+        }
+        return null
     }
 
     return (
@@ -71,6 +121,11 @@ export default function DeviceNode({ data }: { data: DeviceNodeData }) {
                     </div>
                 </div>
 
+                {/* Infrastructure role badge */}
+                {getInfrastructureBadge() && (
+                    <div className="flex justify-start">{getInfrastructureBadge()}</div>
+                )}
+
                 <div>
                     <div className="font-semibold text-sm text-foreground truncate">
                         {device.hostname || device.ip_address}
@@ -79,7 +134,10 @@ export default function DeviceNode({ data }: { data: DeviceNodeData }) {
                 </div>
 
                 {device.manufacturer && (
-                    <div className="text-xs text-muted-foreground truncate">{device.manufacturer}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                        {device.manufacturer}
+                        {device.model && ` ${device.model}`}
+                    </div>
                 )}
 
                 {device.open_ports.length > 0 && (

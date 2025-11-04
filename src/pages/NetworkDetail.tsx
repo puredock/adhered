@@ -10,8 +10,10 @@ import {
     Monitor,
     Plus,
     RefreshCw,
+    Router,
     Search,
     Server,
+    Shield,
     Thermometer,
     Wifi,
 } from 'lucide-react'
@@ -152,7 +154,19 @@ const NetworkDetail = () => {
         return filtered
     }, [devices, searchQuery, selectedDeviceTypes, selectedStatuses])
 
-    const getDeviceIcon = (type: string) => {
+    const getDeviceIcon = (device: any) => {
+        // Check for infrastructure roles
+        const isGateway = device.fingerprint_metadata?.is_gateway
+        const isRouter = device.fingerprint_metadata?.is_router
+        const isAccessPoint = device.fingerprint_metadata?.is_access_point
+        const infrastructureRole = device.fingerprint_metadata?.infrastructure_role
+
+        // Return infrastructure icons if applicable
+        if (isGateway || infrastructureRole === 'gateway') return Shield
+        if (isRouter || infrastructureRole === 'router') return Router
+        if (isAccessPoint || infrastructureRole === 'access_point') return Wifi
+
+        // Default device type icons
         const icons = {
             medical_device: Monitor,
             iot_device: Thermometer,
@@ -161,7 +175,7 @@ const NetworkDetail = () => {
             server: Server,
             unknown: Monitor,
         }
-        return icons[type as keyof typeof icons] || Monitor
+        return icons[device.device_type as keyof typeof icons] || Monitor
     }
 
     const getStatusBadge = (status: string) => {
@@ -529,7 +543,13 @@ const NetworkDetail = () => {
                                 ) : (
                                     <div className="divide-y divide-border">
                                         {filteredDevices.map((device, index) => {
-                                            const Icon = getDeviceIcon(device.device_type)
+                                            const Icon = getDeviceIcon(device)
+                                            const isInfrastructure =
+                                                device.fingerprint_metadata?.is_gateway ||
+                                                device.fingerprint_metadata?.is_router ||
+                                                device.fingerprint_metadata?.is_access_point
+                                            const infrastructureRole =
+                                                device.fingerprint_metadata?.infrastructure_role
                                             return (
                                                 <Link
                                                     key={device.id}
@@ -544,9 +564,33 @@ const NetworkDetail = () => {
                                                             >
                                                                 <Icon className="w-5 h-5" />
                                                             </div>
-                                                            <span className="font-medium group-hover:text-primary transition-colors">
-                                                                {device.hostname || device.ip_address}
-                                                            </span>
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className="font-medium group-hover:text-primary transition-colors">
+                                                                    {device.hostname ||
+                                                                        device.ip_address}
+                                                                </span>
+                                                                {isInfrastructure && (
+                                                                    <Badge
+                                                                        variant="outline"
+                                                                        className={
+                                                                            infrastructureRole ===
+                                                                            'gateway'
+                                                                                ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500 text-xs w-fit'
+                                                                                : infrastructureRole ===
+                                                                                    'router'
+                                                                                  ? 'bg-teal-500/10 text-teal-700 border-teal-500 text-xs w-fit'
+                                                                                  : 'bg-cyan-500/10 text-cyan-700 border-cyan-500 text-xs w-fit'
+                                                                        }
+                                                                    >
+                                                                        {infrastructureRole === 'gateway'
+                                                                            ? 'Gateway'
+                                                                            : infrastructureRole ===
+                                                                                'router'
+                                                                              ? 'Router'
+                                                                              : 'Access Point'}
+                                                                    </Badge>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <div className="col-span-2 flex items-center text-muted-foreground text-sm">
                                                             {device.manufacturer ? (
@@ -555,6 +599,7 @@ const NetworkDetail = () => {
                                                                     title={device.manufacturer}
                                                                 >
                                                                     {device.manufacturer}
+                                                                    {device.model && ` ${device.model}`}
                                                                 </span>
                                                             ) : (
                                                                 <span className="text-muted-foreground/50">

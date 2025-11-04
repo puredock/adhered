@@ -46,8 +46,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 
     nodes.forEach(node => {
         dagreGraph.setNode(node.id, {
-            width: node.id === 'gateway' ? 160 : 180,
-            height: node.id === 'gateway' ? 48 : 100,
+            width: node.id === 'network' ? 160 : 180,
+            height: node.id === 'network' ? 48 : 100,
         })
     })
 
@@ -62,8 +62,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
         return {
             ...node,
             position: {
-                x: nodeWithPosition.x - (node.id === 'gateway' ? 80 : 90),
-                y: nodeWithPosition.y - (node.id === 'gateway' ? 24 : 50),
+                x: nodeWithPosition.x - (node.id === 'network' ? 80 : 90),
+                y: nodeWithPosition.y - (node.id === 'network' ? 24 : 50),
             },
         }
     })
@@ -76,15 +76,15 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
 
     // Create initial nodes and edges
     const { initialNodes: rawNodes, initialEdges: rawEdges } = useMemo(() => {
-        const gatewayNode: Node = {
-            id: 'gateway',
+        const networkNode: Node = {
+            id: 'network',
             type: 'input',
-            data: { label: `Gateway\n${subnet}` },
+            data: { label: `Network\n${subnet}` },
             position: { x: 0, y: 0 }, // Will be positioned by Dagre
             style: {
-                background: '#10b981',
+                background: '#6366f1',
                 color: 'white',
-                border: '2px solid #059669',
+                border: '2px solid #4f46e5',
                 borderRadius: '8px',
                 padding: '12px 20px',
                 fontSize: '14px',
@@ -100,14 +100,14 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
         }))
 
         const edges: Edge[] = devices.map(device => ({
-            id: `gateway-${device.id}`,
-            source: 'gateway',
+            id: `network-${device.id}`,
+            source: 'network',
             target: device.id,
             animated: true,
             style: { stroke: '#94a3b8', strokeWidth: 2 },
         }))
 
-        return { initialNodes: [gatewayNode, ...deviceNodes], initialEdges: edges }
+        return { initialNodes: [networkNode, ...deviceNodes], initialEdges: edges }
     }, [devices, networkId, subnet])
 
     // Apply Dagre layout
@@ -132,7 +132,7 @@ export function NetworkDiagram({ devices, networkId, subnet }: NetworkDiagramPro
 
     const onNodeClick = useCallback(
         (_: React.MouseEvent, node: Node) => {
-            if (node.id !== 'gateway' && node.data.device) {
+            if (node.id !== 'network' && node.data.device) {
                 navigate(`/networks/${networkId}/devices/${node.id}`)
             }
         },
