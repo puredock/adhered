@@ -4,20 +4,15 @@ import {
     Camera,
     Filter,
     GitBranch,
-    HardDrive,
     List,
     Loader2,
     Monitor,
     Plus,
     RefreshCw,
-    Router,
     Search,
-    Server,
-    Shield,
-    Thermometer,
     Wifi,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ErrorState } from '@/components/ErrorState'
@@ -30,6 +25,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
+import { getDeviceIcon, getInfrastructureRole } from '@/lib/devices'
+import { getDeviceOnlineBadge, getDeviceStatus, getNetworkStatusBadge } from '@/lib/status'
+import { formatTimeAgo } from '@/lib/time'
+import { getCycleColor } from '@/lib/ui'
 
 const NetworkDetail = () => {
     const { id } = useParams()
@@ -39,6 +38,8 @@ const NetworkDetail = () => {
     const [viewMode, setViewMode] = useState<'list' | 'diagram'>('list')
     const [selectedDeviceTypes, setSelectedDeviceTypes] = useState<string[]>([])
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
+    const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
+    const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     const {
         data: network,
@@ -58,8 +59,20 @@ const NetworkDetail = () => {
 
     const devices = devicesData?.devices || []
 
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+            if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current)
+        }
+    }, [])
+
     const handleScanNetwork = async () => {
         if (!id) return
+
+        // Clear any existing intervals
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+        if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current)
 
         setIsScanning(true)
         try {
@@ -68,21 +81,23 @@ const NetworkDetail = () => {
                 description: 'Discovering devices on this network...',
             })
 
-            // Poll for updates
-            const pollInterval = setInterval(async () => {
+            // Poll for updates every 3 seconds
+            pollIntervalRef.current = setInterval(async () => {
                 await queryClient.invalidateQueries({ queryKey: ['devices', id] })
                 await queryClient.invalidateQueries({ queryKey: ['network', id] })
             }, 3000)
 
             // Stop polling after 30 seconds
-            setTimeout(() => {
-                clearInterval(pollInterval)
+            pollTimeoutRef.current = setTimeout(() => {
+                if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
                 setIsScanning(false)
                 toast.success('Scan complete', {
                     description: 'Device list has been updated',
                 })
             }, 30000)
         } catch (error) {
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current)
+            if (pollTimeoutRef.current) clearTimeout(pollTimeoutRef.current)
             setIsScanning(false)
             toast.error('Failed to start network scan', {
                 description: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -125,17 +140,7 @@ const NetworkDetail = () => {
         // Apply status filter
         if (selectedStatuses.length > 0) {
             filtered = filtered.filter(device => {
-                const now = new Date()
-                const lastSeenDate = new Date(device.last_seen)
-                const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60))
-
-                let status = 'offline'
-                if (diffInMinutes < 5) {
-                    status = 'online'
-                } else if (diffInMinutes < 60) {
-                    status = 'away'
-                }
-
+                const status = getDeviceStatus(device.last_seen)
                 return selectedStatuses.includes(status)
             })
         }
@@ -153,104 +158,6 @@ const NetworkDetail = () => {
 
         return filtered
     }, [devices, searchQuery, selectedDeviceTypes, selectedStatuses])
-
-    const getDeviceIcon = (device: any) => {
-        // Check for infrastructure roles
-        const isGateway = device.fingerprint_metadata?.is_gateway
-        const isRouter = device.fingerprint_metadata?.is_router
-        const isAccessPoint = device.fingerprint_metadata?.is_access_point
-        const infrastructureRole = device.fingerprint_metadata?.infrastructure_role
-
-        // Return infrastructure icons if applicable
-        if (isGateway || infrastructureRole === 'gateway') return Shield
-        if (isRouter || infrastructureRole === 'router') return Router
-        if (isAccessPoint || infrastructureRole === 'access_point') return Wifi
-
-        // Default device type icons
-        const icons = {
-            medical_device: Monitor,
-            iot_device: Thermometer,
-            network_device: Wifi,
-            workstation: HardDrive,
-            server: Server,
-            unknown: Monitor,
-        }
-        return icons[device.device_type as keyof typeof icons] || Monitor
-    }
-
-    const getStatusBadge = (status: string) => {
-        const variants = {
-            active: {
-                text: 'Active',
-                className: 'bg-success/10 text-success border-success/20',
-            },
-            inactive: {
-                text: 'Inactive',
-                className: 'bg-warning/10 text-warning border-warning/20',
-            },
-            scanning: {
-                text: 'Scanning',
-                className: 'bg-primary/10 text-primary border-primary/20',
-            },
-        }
-        const config = variants[status as keyof typeof variants] || variants.active
-        return (
-            <Badge variant="outline" className={config.className}>
-                {config.text}
-            </Badge>
-        )
-    }
-
-    const getDeviceStatusBadge = (lastSeen: string) => {
-        const now = new Date()
-        const lastSeenDate = new Date(lastSeen)
-        const diffInMinutes = Math.floor((now.getTime() - lastSeenDate.getTime()) / (1000 * 60))
-
-        if (diffInMinutes < 5) {
-            return (
-                <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                    Online
-                </Badge>
-            )
-        } else if (diffInMinutes < 60) {
-            return (
-                <Badge variant="outline" className="bg-warning/10 text-warning border-warning/20">
-                    Away
-                </Badge>
-            )
-        } else {
-            return (
-                <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-muted">
-                    Offline
-                </Badge>
-            )
-        }
-    }
-
-    const formatTimeAgo = (dateString: string) => {
-        const date = new Date(dateString)
-        const now = new Date()
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-        if (diffInMinutes < 1) return 'Active now'
-        if (diffInMinutes < 60) return `${diffInMinutes} min ago`
-        const diffInHours = Math.floor(diffInMinutes / 60)
-        if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`
-        const diffInDays = Math.floor(diffInHours / 24)
-        return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`
-    }
-
-    const getIconColor = (index: number) => {
-        const colors = [
-            'text-purple-600 bg-purple-50',
-            'text-blue-600 bg-blue-50',
-            'text-teal-600 bg-teal-50',
-            'text-orange-600 bg-orange-50',
-            'text-pink-600 bg-pink-50',
-            'text-indigo-600 bg-indigo-50',
-        ]
-        return colors[index % colors.length]
-    }
 
     if (networkLoading) {
         return (
@@ -286,7 +193,7 @@ const NetworkDetail = () => {
                             <div>
                                 <h1 className="text-2xl font-bold tracking-tight">{network.name}</h1>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                    {getStatusBadge(network.status)}
+                                    {getNetworkStatusBadge(network.status)}
                                     <span>•</span>
                                     <span>{network.subnet}</span>
                                 </div>
@@ -544,12 +451,11 @@ const NetworkDetail = () => {
                                     <div className="divide-y divide-border">
                                         {filteredDevices.map((device, index) => {
                                             const Icon = getDeviceIcon(device)
-                                            const isInfrastructure =
-                                                device.fingerprint_metadata?.is_gateway ||
-                                                device.fingerprint_metadata?.is_router ||
-                                                device.fingerprint_metadata?.is_access_point
-                                            const infrastructureRole =
-                                                device.fingerprint_metadata?.infrastructure_role
+                                            const {
+                                                isInfrastructure,
+                                                label: roleLabel,
+                                                badgeClass,
+                                            } = getInfrastructureRole(device)
                                             return (
                                                 <Link
                                                     key={device.id}
@@ -558,9 +464,7 @@ const NetworkDetail = () => {
                                                     <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors cursor-pointer group">
                                                         <div className="col-span-3 flex items-center gap-3">
                                                             <div
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(
-                                                                    index,
-                                                                )}`}
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(index)}`}
                                                             >
                                                                 <Icon className="w-5 h-5" />
                                                             </div>
@@ -572,22 +476,9 @@ const NetworkDetail = () => {
                                                                 {isInfrastructure && (
                                                                     <Badge
                                                                         variant="outline"
-                                                                        className={
-                                                                            infrastructureRole ===
-                                                                            'gateway'
-                                                                                ? 'bg-emerald-500/10 text-emerald-700 border-emerald-500 text-xs w-fit'
-                                                                                : infrastructureRole ===
-                                                                                    'router'
-                                                                                  ? 'bg-teal-500/10 text-teal-700 border-teal-500 text-xs w-fit'
-                                                                                  : 'bg-cyan-500/10 text-cyan-700 border-cyan-500 text-xs w-fit'
-                                                                        }
+                                                                        className={`${badgeClass} text-xs w-fit`}
                                                                     >
-                                                                        {infrastructureRole === 'gateway'
-                                                                            ? 'Gateway'
-                                                                            : infrastructureRole ===
-                                                                                'router'
-                                                                              ? 'Router'
-                                                                              : 'Access Point'}
+                                                                        {roleLabel}
                                                                     </Badge>
                                                                 )}
                                                             </div>
@@ -619,8 +510,9 @@ const NetworkDetail = () => {
                                                             )}
                                                         </div>
                                                         <div className="col-span-2 flex items-center">
-                                                            <span
-                                                                className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                                                            <button
+                                                                type="button"
+                                                                className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline"
                                                                 onClick={e => {
                                                                     e.preventDefault()
                                                                     e.stopPropagation()
@@ -630,12 +522,23 @@ const NetworkDetail = () => {
                                                                         'noopener,noreferrer',
                                                                     )
                                                                 }}
+                                                                onKeyDown={e => {
+                                                                    if (e.key === 'Enter') {
+                                                                        e.preventDefault()
+                                                                        e.stopPropagation()
+                                                                        window.open(
+                                                                            `http://${device.ip_address}`,
+                                                                            '_blank',
+                                                                            'noopener,noreferrer',
+                                                                        )
+                                                                    }
+                                                                }}
                                                             >
                                                                 {device.ip_address}
-                                                            </span>
+                                                            </button>
                                                         </div>
                                                         <div className="col-span-2 flex items-center">
-                                                            {getDeviceStatusBadge(device.last_seen)}
+                                                            {getDeviceOnlineBadge(device.last_seen)}
                                                         </div>
                                                         <div className="col-span-1 flex items-center text-sm text-muted-foreground">
                                                             {formatTimeAgo(device.last_seen)}

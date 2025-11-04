@@ -76,19 +76,19 @@ export function getScanStatusBadge(status: 'pending' | 'in_progress' | 'complete
     const variants = {
         pending: {
             text: 'Pending',
-            className: 'bg-slate-100 text-slate-700 border-slate-300',
+            className: 'bg-warning/10 text-warning border-warning/20',
         },
         in_progress: {
             text: 'In Progress',
-            className: 'bg-blue-100 text-blue-700 border-blue-300',
+            className: 'bg-primary/10 text-primary border-primary/20',
         },
         completed: {
             text: 'Completed',
-            className: 'bg-green-100 text-green-700 border-green-300',
+            className: 'bg-success/10 text-success border-success/20',
         },
         failed: {
             text: 'Failed',
-            className: 'bg-red-100 text-red-700 border-red-300',
+            className: 'bg-destructive/10 text-destructive border-destructive/20',
         },
     }
 

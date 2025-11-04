@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { api } from '@/lib/api'
+import { getNetworkStatusBadge } from '@/lib/status'
+import { formatTimeAgo } from '@/lib/time'
+import { getCycleColor } from '@/lib/ui'
 import Landing from './Landing'
 
 const Index = () => {
@@ -65,52 +68,6 @@ const Index = () => {
         },
     ]
 
-    const getStatusBadge = (status: string) => {
-        const variants = {
-            active: {
-                text: 'Active',
-                className: 'bg-success/10 text-success border-success/20',
-            },
-            inactive: {
-                text: 'Inactive',
-                className: 'bg-warning/10 text-warning border-warning/20',
-            },
-            scanning: {
-                text: 'Scanning',
-                className: 'bg-primary/10 text-primary border-primary/20',
-            },
-        }
-        const config = variants[status as keyof typeof variants] || variants.active
-        return (
-            <Badge variant="outline" className={config.className}>
-                {config.text}
-            </Badge>
-        )
-    }
-
-    const formatTimeAgo = (dateString: string | null) => {
-        if (!dateString) return 'Never'
-        const date = new Date(dateString)
-        const now = new Date()
-        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-
-        if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`
-        const diffInHours = Math.floor(diffInMinutes / 60)
-        if (diffInHours < 24) return `${diffInHours} hours ago`
-        const diffInDays = Math.floor(diffInHours / 24)
-        return `${diffInDays} days ago`
-    }
-
-    const getIconColor = (index: number) => {
-        const colors = [
-            'text-purple-600 bg-purple-50',
-            'text-orange-600 bg-orange-50',
-            'text-pink-600 bg-pink-50',
-            'text-blue-600 bg-blue-50',
-            'text-green-600 bg-green-50',
-        ]
-        return colors[index % colors.length]
-    }
     return (
         <div className="min-h-screen bg-background flex-1">
             {/* Header */}
@@ -182,7 +139,7 @@ const Index = () => {
                                         <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group">
                                             <div className="flex items-center gap-4">
                                                 <div
-                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)} group-hover:scale-110 transition-transform`}
+                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(index)} group-hover:scale-110 transition-transform`}
                                                 >
                                                     <Network className="w-5 h-5" />
                                                 </div>
@@ -196,7 +153,7 @@ const Index = () => {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div>{getStatusBadge(network.status)}</div>
+                                            <div>{getNetworkStatusBadge(network.status)}</div>
                                         </div>
                                     </Link>
                                 ))}
@@ -228,7 +185,7 @@ const Index = () => {
                                         <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group">
                                             <div className="flex items-center gap-4">
                                                 <div
-                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getIconColor(index)} group-hover:scale-110 transition-transform`}
+                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(index)} group-hover:scale-110 transition-transform`}
                                                 >
                                                     <Activity className="w-5 h-5" />
                                                 </div>
