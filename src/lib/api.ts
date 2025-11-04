@@ -54,6 +54,15 @@ export interface Device {
     scan_count: number
     fingerprint_confidence: Record<string, number>
     fingerprint_metadata: Record<string, any>
+    role?: string[]
+}
+
+export interface NetworkFlow {
+    source: string
+    target: string
+    protocol: string
+    port?: number
+    bandwidth?: number
 }
 
 export interface DeviceList {
