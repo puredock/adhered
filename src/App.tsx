@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AppSidebar } from '@/components/AppSidebar'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
+import { LayoutProvider, useLayout } from '@/contexts/LayoutContext'
 
 import Audit from './pages/Audit'
 import AuditDetail from './pages/AuditDetail'
@@ -18,14 +19,13 @@ import ScansDetail from './pages/ScansDetail'
 const queryClient = new QueryClient()
 
 const AppContent = () => {
-    const location = useLocation()
     const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
-    const showLanding = (location.state as { showLanding?: boolean })?.showLanding || false
+    const { showSidebar } = useLayout()
 
     return (
         <div className="flex min-h-screen w-full">
-            {/* Show sidebar on all pages when not in demo mode and not showing landing */}
-            {!isDemoMode && !showLanding && <AppSidebar />}
+            {/* Show sidebar on all pages when not in demo mode and layout allows it */}
+            {!isDemoMode && showSidebar && <AppSidebar />}
 
             <Routes>
                 <Route path="/" element={<Index />} />
@@ -58,7 +58,9 @@ const App = () => (
         <TooltipProvider>
             <Sonner />
             <BrowserRouter>
-                <AppContent />
+                <LayoutProvider>
+                    <AppContent />
+                </LayoutProvider>
             </BrowserRouter>
         </TooltipProvider>
     </QueryClientProvider>

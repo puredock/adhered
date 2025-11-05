@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { Activity, AlertTriangle, Home, Loader2, Network, Search, Shield } from 'lucide-react'
 import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { useLayout } from '@/contexts/LayoutContext'
 import { api } from '@/lib/api'
 import { getNetworkStatusBadge } from '@/lib/status'
 import { formatTimeAgo } from '@/lib/time'
@@ -13,7 +14,7 @@ import { getCycleColor } from '@/lib/ui'
 import Landing from './Landing'
 
 const Index = () => {
-    const navigate = useNavigate()
+    const { setShowSidebar } = useLayout()
     const { data: networksData, isLoading: networksLoading } = useQuery({
         queryKey: ['networks'],
         queryFn: () => api.networks.list(),
@@ -40,10 +41,9 @@ const Index = () => {
     const shouldShowLanding = isEmpty || isDemoMode
 
     useEffect(() => {
-        if (shouldShowLanding) {
-            navigate('/', { state: { showLanding: true }, replace: true })
-        }
-    }, [shouldShowLanding, navigate])
+        // Hide sidebar when showing landing page, show it when showing dashboard
+        setShowSidebar(!shouldShowLanding)
+    }, [shouldShowLanding, setShowSidebar])
 
     if (shouldShowLanding) {
         return <Landing />
@@ -150,7 +150,9 @@ const Index = () => {
                                         <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group">
                                             <div className="flex items-center gap-4">
                                                 <div
-                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(index)} group-hover:scale-110 transition-transform`}
+                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(
+                                                        index,
+                                                    )} group-hover:scale-110 transition-transform`}
                                                 >
                                                     <Network className="w-5 h-5" />
                                                 </div>
@@ -196,7 +198,9 @@ const Index = () => {
                                         <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border hover:border-primary hover:bg-accent/30 transition-all cursor-pointer group">
                                             <div className="flex items-center gap-4">
                                                 <div
-                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(index)} group-hover:scale-110 transition-transform`}
+                                                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(
+                                                        index,
+                                                    )} group-hover:scale-110 transition-transform`}
                                                 >
                                                     <Activity className="w-5 h-5" />
                                                 </div>
