@@ -160,6 +160,21 @@ export const api = {
             return fetchAPI<DeviceList>(`/devices${query ? `?${query}` : ''}`)
         },
         get: (id: string) => fetchAPI<Device>(`/devices/${id}`),
+        create: (data: {
+            network_id: string
+            ip_address: string
+            hostname?: string
+            mac_address?: string
+            device_type?: string
+            manufacturer?: string
+            model?: string
+            tags?: string[]
+            bridged_devices?: string[]
+        }) =>
+            fetchAPI<Device>('/devices', {
+                method: 'POST',
+                body: JSON.stringify(data),
+            }),
         listByNetwork: (networkId: string, params?: { skip?: number; limit?: number }) => {
             const queryParams = new URLSearchParams()
             if (params?.skip !== undefined) queryParams.append('skip', params.skip.toString())
