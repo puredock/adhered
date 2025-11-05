@@ -15,6 +15,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import { AddDeviceDialog } from '@/components/AddDeviceDialog'
 import { ErrorState } from '@/components/ErrorState'
 import { NetworkDiagram } from '@/components/NetworkDiagram'
 import { Badge } from '@/components/ui/badge'
@@ -38,6 +39,7 @@ const NetworkDetail = () => {
     const [viewMode, setViewMode] = useState<'list' | 'diagram'>('list')
     const [selectedDeviceTypes, setSelectedDeviceTypes] = useState<string[]>([])
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
+    const [showAddDeviceDialog, setShowAddDeviceDialog] = useState(false)
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
     const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -57,7 +59,13 @@ const NetworkDetail = () => {
         enabled: !!id,
     })
 
+    const { data: networksData } = useQuery({
+        queryKey: ['networks'],
+        queryFn: () => api.networks.list(),
+    })
+
     const devices = devicesData?.devices || []
+    const networks = networksData?.networks || []
 
     // Cleanup polling on unmount
     useEffect(() => {
@@ -420,9 +428,13 @@ const NetworkDetail = () => {
                                         network
                                     </CardDescription>
                                 </div>
-                                <Button size="sm" variant="outline">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setShowAddDeviceDialog(true)}
+                                >
                                     <Plus className="w-4 h-4 mr-1" />
-                                    New Device
+                                    Add New
                                 </Button>
                             </div>
                         </CardHeader>
@@ -468,7 +480,9 @@ const NetworkDetail = () => {
                                                     <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors cursor-pointer group">
                                                         <div className="col-span-3 flex items-center gap-3">
                                                             <div
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(index)}`}
+                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(
+                                                                    index,
+                                                                )}`}
                                                             >
                                                                 <Icon className="w-5 h-5" />
                                                             </div>
@@ -560,6 +574,14 @@ const NetworkDetail = () => {
                     <NetworkDiagram devices={devices} networkId={id!} subnet={network.subnet} />
                 )}
             </main>
+
+            {/* Add Device Dialog */}
+            <AddDeviceDialog
+                open={showAddDeviceDialog}
+                onOpenChange={setShowAddDeviceDialog}
+                preselectedNetworkId={id}
+                networks={networks}
+            />
         </div>
     )
 }

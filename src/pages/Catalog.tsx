@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { AddDeviceDialog } from '@/components/AddDeviceDialog'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -27,6 +28,7 @@ const Catalog = () => {
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategories, setSelectedCategories] = useState<string[]>([])
     const [selectedSources, setSelectedSources] = useState<string[]>([])
+    const [showAddDeviceDialog, setShowAddDeviceDialog] = useState(false)
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['devices'],
@@ -146,9 +148,10 @@ const Catalog = () => {
                             <Button
                                 size="sm"
                                 className="bg-accent-foreground text-accent hover:bg-accent-foreground/90"
+                                onClick={() => setShowAddDeviceDialog(true)}
                             >
                                 <Plus className="w-4 h-4 mr-1" />
-                                New Device
+                                Add New
                             </Button>
                         </div>
                     </div>
@@ -493,6 +496,13 @@ const Catalog = () => {
                     </Card>
                 </div>
             </main>
+
+            {/* Add Device Dialog */}
+            <AddDeviceDialog
+                open={showAddDeviceDialog}
+                onOpenChange={setShowAddDeviceDialog}
+                networks={networks}
+            />
         </div>
     )
 }
