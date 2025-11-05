@@ -1,5 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
-import { Camera, Filter, Loader2, Monitor, Plus, Search, Smartphone, Thermometer, Wifi } from 'lucide-react'
+import {
+    Camera,
+    Filter,
+    Loader2,
+    Monitor,
+    Plus,
+    Search,
+    Smartphone,
+    Thermometer,
+    Wifi,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ErrorState } from '@/components/ErrorState'
@@ -138,7 +148,7 @@ const Catalog = () => {
                                 className="bg-accent-foreground text-accent hover:bg-accent-foreground/90"
                             >
                                 <Plus className="w-4 h-4 mr-1" />
-                                Add new device
+                                New Device
                             </Button>
                         </div>
                     </div>

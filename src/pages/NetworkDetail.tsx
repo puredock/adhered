@@ -213,7 +213,7 @@ const NetworkDetail = () => {
                             ) : (
                                 <>
                                     <Plus className="w-4 h-4 mr-1" />
-                                    Start new scan
+                                    New Scan
                                 </>
                             )}
                         </Button>
@@ -420,6 +420,10 @@ const NetworkDetail = () => {
                                         network
                                     </CardDescription>
                                 </div>
+                                <Button size="sm" variant="outline">
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    New Device
+                                </Button>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
