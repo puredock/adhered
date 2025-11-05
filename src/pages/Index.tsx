@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { Activity, AlertTriangle, Home, Loader2, Network, Search, Shield } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -8,9 +9,11 @@ import { api } from '@/lib/api'
 import { getNetworkStatusBadge } from '@/lib/status'
 import { formatTimeAgo } from '@/lib/time'
 import { getCycleColor } from '@/lib/ui'
+
 import Landing from './Landing'
 
 const Index = () => {
+    const navigate = useNavigate()
     const { data: networksData, isLoading: networksLoading } = useQuery({
         queryKey: ['networks'],
         queryFn: () => api.networks.list(),
@@ -34,7 +37,15 @@ const Index = () => {
     const isEmpty = !loading && networks.length === 0 && devices.length === 0 && scans.length === 0
     const isDemoMode = import.meta.env.VITE_DEMO_MODE === 'true'
 
-    if (isEmpty || isDemoMode) {
+    const shouldShowLanding = isEmpty || isDemoMode
+
+    useEffect(() => {
+        if (shouldShowLanding) {
+            navigate('/', { state: { showLanding: true }, replace: true })
+        }
+    }, [shouldShowLanding, navigate])
+
+    if (shouldShowLanding) {
         return <Landing />
     }
 
