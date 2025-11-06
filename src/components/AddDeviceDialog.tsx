@@ -1,14 +1,24 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { MonitorSmartphone, Plus, Wifi, X } from 'lucide-react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Check, ChevronsUpDown, MonitorSmartphone, Plus, Wifi, X } from 'lucide-react'
 import { useEffect, useId, useState } from 'react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+} from '@/components/ui/command'
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
+import { cn } from '@/lib/utils'
 
 interface AddDeviceDialogProps {
     open: boolean
@@ -37,6 +47,18 @@ export function AddDeviceDialog({
     const [bridgedDeviceInput, setBridgedDeviceInput] = useState('')
     const [bridgedDevices, setBridgedDevices] = useState<string[]>([])
     const [showAnimation, setShowAnimation] = useState(false)
+    const [comboboxOpen, setComboboxOpen] = useState(false)
+
+    const { data: networkDevices } = useQuery({
+        queryKey: ['devices', networkId],
+        queryFn: () =>
+            networkId
+                ? api.devices.listByNetwork(networkId)
+                : Promise.resolve({ devices: [], total: 0 }),
+        enabled: !!networkId,
+    })
+
+    const availableIPs = networkDevices?.devices.map(d => d.ip_address) || []
 
     const networkIdField = useId()
     const ipAddressField = useId()
@@ -78,9 +100,20 @@ export function AddDeviceDialog({
             setBridgedDevices([])
             setTagInput('')
             setBridgedDeviceInput('')
+            setComboboxOpen(false)
         }
         onOpenChange(newOpen)
     }
+
+    // Reset bridged devices when network changes
+    useEffect(() => {
+        if (networkId) {
+            setBridgedDevices([])
+            setBridgedDeviceInput('')
+            setComboboxOpen(false)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [networkId])
 
     const handleAddTag = () => {
         const tag = tagInput.trim()
@@ -94,12 +127,31 @@ export function AddDeviceDialog({
         setTags(tags.filter(t => t !== tagToRemove))
     }
 
-    const handleAddBridgedDevice = () => {
-        const device = bridgedDeviceInput.trim()
-        if (device && !bridgedDevices.includes(device)) {
-            setBridgedDevices([...bridgedDevices, device])
-            setBridgedDeviceInput('')
+    const handleAddBridgedDevice = (ip?: string) => {
+        const device = (ip || bridgedDeviceInput).trim()
+
+        if (!device) return
+
+        if (!networkId) {
+            toast.error('Please select a network first')
+            return
         }
+
+        if (!availableIPs.includes(device)) {
+            toast.error('Invalid bridged device IP', {
+                description: 'Bridged device IP must be from an existing device in the selected network',
+            })
+            return
+        }
+
+        if (bridgedDevices.includes(device)) {
+            toast.error('IP already added')
+            return
+        }
+
+        setBridgedDevices([...bridgedDevices, device])
+        setBridgedDeviceInput('')
+        setComboboxOpen(false)
     }
 
     const handleRemoveBridgedDevice = (deviceToRemove: string) => {
@@ -436,27 +488,84 @@ export function AddDeviceDialog({
                             </span>
                         </Label>
                         <div className="flex gap-2">
-                            <Input
-                                id={bridgedDevicesField}
-                                placeholder="192.168.1.1"
-                                value={bridgedDeviceInput}
-                                onChange={e => setBridgedDeviceInput(e.target.value)}
-                                onKeyDown={e => {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault()
-                                        handleAddBridgedDevice()
-                                    }
-                                }}
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={handleAddBridgedDevice}
-                            >
-                                <Plus className="w-4 h-4" />
-                            </Button>
+                            <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        id={bridgedDevicesField}
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={comboboxOpen}
+                                        className="w-full justify-between font-normal"
+                                        type="button"
+                                        disabled={!networkId}
+                                    >
+                                        <span
+                                            className={bridgedDeviceInput ? '' : 'text-muted-foreground'}
+                                        >
+                                            {bridgedDeviceInput || 'Select IP from network...'}
+                                        </span>
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[400px] p-0">
+                                    <Command>
+                                        <CommandInput
+                                            placeholder="Search IP addresses..."
+                                            value={bridgedDeviceInput}
+                                            onValueChange={setBridgedDeviceInput}
+                                        />
+                                        <CommandList>
+                                            <CommandEmpty>
+                                                {networkId
+                                                    ? 'No devices found in this network.'
+                                                    : 'Please select a network first.'}
+                                            </CommandEmpty>
+                                            <CommandGroup>
+                                                {availableIPs
+                                                    .filter(ip => !bridgedDevices.includes(ip))
+                                                    .map(ip => (
+                                                        <CommandItem
+                                                            key={ip}
+                                                            value={ip}
+                                                            onSelect={() => {
+                                                                handleAddBridgedDevice(ip)
+                                                            }}
+                                                        >
+                                                            <Check
+                                                                className={cn(
+                                                                    'mr-2 h-4 w-4',
+                                                                    bridgedDeviceInput === ip
+                                                                        ? 'opacity-100'
+                                                                        : 'opacity-0',
+                                                                )}
+                                                            />
+                                                            {ip}
+                                                            {networkDevices?.devices.find(
+                                                                d => d.ip_address === ip,
+                                                            )?.hostname && (
+                                                                <span className="ml-2 text-xs text-muted-foreground">
+                                                                    (
+                                                                    {
+                                                                        networkDevices.devices.find(
+                                                                            d => d.ip_address === ip,
+                                                                        )?.hostname
+                                                                    }
+                                                                    )
+                                                                </span>
+                                                            )}
+                                                        </CommandItem>
+                                                    ))}
+                                            </CommandGroup>
+                                        </CommandList>
+                                    </Command>
+                                </PopoverContent>
+                            </Popover>
                         </div>
+                        {!networkId && (
+                            <p className="text-xs text-muted-foreground">
+                                Select a network to see available devices
+                            </p>
+                        )}
                         {bridgedDevices.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                                 {bridgedDevices.map(device => (
