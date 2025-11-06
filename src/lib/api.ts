@@ -201,6 +201,15 @@ export const api = {
                 method: 'POST',
             })
         },
+        delete: (id: string) =>
+            fetchAPI(`/devices/${id}`, {
+                method: 'DELETE',
+            }),
+        bulkDelete: (ids: string[]) =>
+            fetchAPI('/devices/bulk-delete', {
+                method: 'POST',
+                body: JSON.stringify({ device_ids: ids }),
+            }),
     },
 
     scans: {
