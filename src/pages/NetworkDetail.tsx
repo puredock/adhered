@@ -10,6 +10,7 @@ import {
     Plus,
     RefreshCw,
     Search,
+    Trash2,
     Wifi,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -18,9 +19,20 @@ import { toast } from 'sonner'
 import { AddDeviceDialog } from '@/components/AddDeviceDialog'
 import { ErrorState } from '@/components/ErrorState'
 import { NetworkDiagram } from '@/components/NetworkDiagram'
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Separator } from '@/components/ui/separator'
@@ -40,6 +52,9 @@ const NetworkDetail = () => {
     const [selectedDeviceTypes, setSelectedDeviceTypes] = useState<string[]>([])
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>([])
     const [showAddDeviceDialog, setShowAddDeviceDialog] = useState(false)
+    const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set())
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
     const pollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -166,6 +181,55 @@ const NetworkDetail = () => {
 
         return filtered
     }, [devices, searchQuery, selectedDeviceTypes, selectedStatuses])
+
+    const handleToggleDevice = (deviceId: string) => {
+        const newSelected = new Set(selectedDevices)
+        if (newSelected.has(deviceId)) {
+            newSelected.delete(deviceId)
+        } else {
+            newSelected.add(deviceId)
+        }
+        setSelectedDevices(newSelected)
+    }
+
+    const handleToggleAllDevices = () => {
+        if (selectedDevices.size === filteredDevices.length && filteredDevices.length > 0) {
+            setSelectedDevices(new Set())
+        } else {
+            setSelectedDevices(new Set(filteredDevices.map(d => d.id)))
+        }
+    }
+
+    const handleDeleteDevices = async () => {
+        if (selectedDevices.size === 0) return
+
+        setIsDeleting(true)
+        try {
+            if (selectedDevices.size === 1) {
+                const deviceId = Array.from(selectedDevices)[0]
+                await api.devices.delete(deviceId)
+                toast.success('Device deleted successfully')
+            } else {
+                await api.devices.bulkDelete(Array.from(selectedDevices))
+                toast.success(`${selectedDevices.size} devices deleted successfully`)
+            }
+
+            // Refresh device list
+            await queryClient.invalidateQueries({ queryKey: ['devices', id] })
+            await queryClient.invalidateQueries({ queryKey: ['network', id] })
+
+            // Clear selection
+            setSelectedDevices(new Set())
+            setShowDeleteDialog(false)
+        } catch (error) {
+            console.error('Failed to delete devices:', error)
+            toast.error('Failed to delete devices', {
+                description: error instanceof Error ? error.message : 'Unknown error occurred',
+            })
+        } finally {
+            setIsDeleting(false)
+        }
+    }
 
     if (networkLoading) {
         return (
@@ -426,23 +490,49 @@ const NetworkDetail = () => {
                                         {filteredDevices.length} device
                                         {filteredDevices.length !== 1 ? 's' : ''} detected on this
                                         network
+                                        {selectedDevices.size > 0 && (
+                                            <span className="ml-2 text-primary">
+                                                ({selectedDevices.size} selected)
+                                            </span>
+                                        )}
                                     </CardDescription>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setShowAddDeviceDialog(true)}
-                                >
-                                    <Plus className="w-4 h-4 mr-1" />
-                                    Add New
-                                </Button>
+                                <div className="flex gap-2">
+                                    {selectedDevices.size > 0 && (
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() => setShowDeleteDialog(true)}
+                                        >
+                                            <Trash2 className="w-4 h-4 mr-1" />
+                                            Delete ({selectedDevices.size})
+                                        </Button>
+                                    )}
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setShowAddDeviceDialog(true)}
+                                    >
+                                        <Plus className="w-4 h-4 mr-1" />
+                                        Add New
+                                    </Button>
+                                </div>
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="overflow-hidden">
                                 {/* Table Header */}
                                 <div className="grid grid-cols-12 gap-4 px-6 py-3 bg-muted/50 border-b border-border text-sm font-medium text-muted-foreground">
-                                    <div className="col-span-3">Host</div>
+                                    <div className="col-span-1 flex items-center">
+                                        <Checkbox
+                                            checked={
+                                                filteredDevices.length > 0 &&
+                                                selectedDevices.size === filteredDevices.length
+                                            }
+                                            onCheckedChange={handleToggleAllDevices}
+                                        />
+                                    </div>
+                                    <div className="col-span-2">Host</div>
                                     <div className="col-span-2">Manufacturer</div>
                                     <div className="col-span-2">MAC Address</div>
                                     <div className="col-span-2">IP Address</div>
@@ -473,65 +563,85 @@ const NetworkDetail = () => {
                                                 badgeClass,
                                             } = getInfrastructureRole(device)
                                             return (
-                                                <Link
+                                                <div
                                                     key={device.id}
-                                                    to={`/networks/${id}/devices/${device.id}`}
+                                                    className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors group"
                                                 >
-                                                    <div className="grid grid-cols-12 gap-4 px-6 py-4 hover:bg-accent/30 transition-colors cursor-pointer group">
-                                                        <div className="col-span-3 flex items-center gap-3">
-                                                            <div
-                                                                className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(
-                                                                    index,
-                                                                )}`}
-                                                            >
-                                                                <Icon className="w-5 h-5" />
-                                                            </div>
-                                                            <div className="flex flex-col gap-1">
-                                                                <span className="font-medium group-hover:text-primary transition-colors">
-                                                                    {device.hostname ||
-                                                                        device.ip_address}
-                                                                </span>
-                                                                {isInfrastructure && (
-                                                                    <Badge
-                                                                        variant="outline"
-                                                                        className={`${badgeClass} text-xs w-fit`}
-                                                                    >
-                                                                        {roleLabel}
-                                                                    </Badge>
-                                                                )}
-                                                            </div>
+                                                    <div className="col-span-1 flex items-center">
+                                                        <Checkbox
+                                                            checked={selectedDevices.has(device.id)}
+                                                            onCheckedChange={() =>
+                                                                handleToggleDevice(device.id)
+                                                            }
+                                                            onClick={e => e.stopPropagation()}
+                                                        />
+                                                    </div>
+                                                    <Link
+                                                        to={`/networks/${id}/devices/${device.id}`}
+                                                        className="col-span-2 flex items-center gap-3 cursor-pointer"
+                                                    >
+                                                        <div
+                                                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${getCycleColor(
+                                                                index,
+                                                            )}`}
+                                                        >
+                                                            <Icon className="w-5 h-5" />
                                                         </div>
-                                                        <div className="col-span-2 flex items-center text-muted-foreground text-sm">
-                                                            {device.manufacturer ? (
-                                                                <span
-                                                                    className="truncate"
-                                                                    title={device.manufacturer}
+                                                        <div className="flex flex-col gap-1">
+                                                            <span className="font-medium group-hover:text-primary transition-colors">
+                                                                {device.hostname || device.ip_address}
+                                                            </span>
+                                                            {isInfrastructure && (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={`${badgeClass} text-xs w-fit`}
                                                                 >
-                                                                    {device.manufacturer}
-                                                                    {device.model && ` ${device.model}`}
-                                                                </span>
-                                                            ) : (
-                                                                <span className="text-muted-foreground/50">
-                                                                    —
-                                                                </span>
+                                                                    {roleLabel}
+                                                                </Badge>
                                                             )}
                                                         </div>
-                                                        <div className="col-span-2 flex items-center">
-                                                            {device.mac_address ? (
-                                                                <code className="font-mono text-xs px-2 py-0.5 rounded bg-muted/50 text-foreground border border-border">
-                                                                    {device.mac_address}
-                                                                </code>
-                                                            ) : (
-                                                                <span className="text-muted-foreground/50">
-                                                                    —
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="col-span-2 flex items-center">
-                                                            <button
-                                                                type="button"
-                                                                className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                                                                onClick={e => {
+                                                    </Link>
+                                                    <div className="col-span-2 flex items-center text-muted-foreground text-sm">
+                                                        {device.manufacturer ? (
+                                                            <span
+                                                                className="truncate"
+                                                                title={device.manufacturer}
+                                                            >
+                                                                {device.manufacturer}
+                                                                {device.model && ` ${device.model}`}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-muted-foreground/50">
+                                                                —
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="col-span-2 flex items-center">
+                                                        {device.mac_address ? (
+                                                            <code className="font-mono text-xs px-2 py-0.5 rounded bg-muted/50 text-foreground border border-border">
+                                                                {device.mac_address}
+                                                            </code>
+                                                        ) : (
+                                                            <span className="text-muted-foreground/50">
+                                                                —
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="col-span-2 flex items-center">
+                                                        <button
+                                                            type="button"
+                                                            className="font-mono text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                                                            onClick={e => {
+                                                                e.preventDefault()
+                                                                e.stopPropagation()
+                                                                window.open(
+                                                                    `http://${device.ip_address}`,
+                                                                    '_blank',
+                                                                    'noopener,noreferrer',
+                                                                )
+                                                            }}
+                                                            onKeyDown={e => {
+                                                                if (e.key === 'Enter') {
                                                                     e.preventDefault()
                                                                     e.stopPropagation()
                                                                     window.open(
@@ -539,30 +649,19 @@ const NetworkDetail = () => {
                                                                         '_blank',
                                                                         'noopener,noreferrer',
                                                                     )
-                                                                }}
-                                                                onKeyDown={e => {
-                                                                    if (e.key === 'Enter') {
-                                                                        e.preventDefault()
-                                                                        e.stopPropagation()
-                                                                        window.open(
-                                                                            `http://${device.ip_address}`,
-                                                                            '_blank',
-                                                                            'noopener,noreferrer',
-                                                                        )
-                                                                    }
-                                                                }}
-                                                            >
-                                                                {device.ip_address}
-                                                            </button>
-                                                        </div>
-                                                        <div className="col-span-2 flex items-center">
-                                                            {getDeviceOnlineBadge(device.last_seen)}
-                                                        </div>
-                                                        <div className="col-span-1 flex items-center text-sm text-muted-foreground">
-                                                            {formatTimeAgo(device.last_seen)}
-                                                        </div>
+                                                                }
+                                                            }}
+                                                        >
+                                                            {device.ip_address}
+                                                        </button>
                                                     </div>
-                                                </Link>
+                                                    <div className="col-span-2 flex items-center">
+                                                        {getDeviceOnlineBadge(device.last_seen)}
+                                                    </div>
+                                                    <div className="col-span-1 flex items-center text-sm text-muted-foreground">
+                                                        {formatTimeAgo(device.last_seen)}
+                                                    </div>
+                                                </div>
                                             )
                                         })}
                                     </div>
@@ -582,6 +681,31 @@ const NetworkDetail = () => {
                 preselectedNetworkId={id}
                 networks={networks}
             />
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Delete Device{selectedDevices.size > 1 ? 's' : ''}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete {selectedDevices.size} device
+                            {selectedDevices.size > 1 ? 's' : ''}? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleDeleteDevices}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
