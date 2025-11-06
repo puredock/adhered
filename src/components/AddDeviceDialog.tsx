@@ -243,9 +243,10 @@ export function AddDeviceDialog({
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Network Selection */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-700 ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '700ms' : '0ms' }}
                     >
                         <Label htmlFor={networkIdField}>
                             Network <span className="text-destructive">*</span>
@@ -270,9 +271,10 @@ export function AddDeviceDialog({
 
                     {/* IP Address */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[800ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '750ms' : '0ms' }}
                     >
                         <Label htmlFor={ipAddressField}>
                             IP Address <span className="text-destructive">*</span>
@@ -288,9 +290,10 @@ export function AddDeviceDialog({
 
                     {/* Hostname */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[900ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '800ms' : '0ms' }}
                     >
                         <Label htmlFor={hostnameField}>Device Name / Hostname</Label>
                         <Input
@@ -303,9 +306,10 @@ export function AddDeviceDialog({
 
                     {/* MAC Address */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[1000ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '850ms' : '0ms' }}
                     >
                         <Label htmlFor={macAddressField}>MAC Address</Label>
                         <Input
@@ -318,9 +322,10 @@ export function AddDeviceDialog({
 
                     {/* Device Type */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[1100ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '900ms' : '0ms' }}
                     >
                         <Label htmlFor={deviceTypeField}>Device Type</Label>
                         <Select value={deviceType} onValueChange={setDeviceType}>
@@ -340,9 +345,10 @@ export function AddDeviceDialog({
 
                     {/* Manufacturer */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[1200ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '950ms' : '0ms' }}
                     >
                         <Label htmlFor={manufacturerField}>Manufacturer</Label>
                         <Input
@@ -355,9 +361,10 @@ export function AddDeviceDialog({
 
                     {/* Model */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[1300ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '1000ms' : '0ms' }}
                     >
                         <Label htmlFor={modelField}>Model</Label>
                         <Input
@@ -370,9 +377,10 @@ export function AddDeviceDialog({
 
                     {/* Tags */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[1400ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '1050ms' : '0ms' }}
                     >
                         <Label htmlFor={tagsField}>Tags / Labels</Label>
                         <div className="flex gap-2">
@@ -416,9 +424,10 @@ export function AddDeviceDialog({
 
                     {/* Bridged Devices */}
                     <div
-                        className={`space-y-2 transition-all duration-500 delay-[1500ms] ${
+                        className={`space-y-2 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '1100ms' : '0ms' }}
                     >
                         <Label htmlFor={bridgedDevicesField}>
                             Bridged Device(s) IP
@@ -472,9 +481,10 @@ export function AddDeviceDialog({
 
                     {/* Submit Button */}
                     <div
-                        className={`flex gap-3 pt-4 transition-all duration-500 delay-[1600ms] ${
+                        className={`flex gap-3 pt-4 transition-all duration-500 ${
                             showAnimation ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                         }`}
+                        style={{ transitionDelay: showAnimation ? '1150ms' : '0ms' }}
                     >
                         <Button
                             type="button"
