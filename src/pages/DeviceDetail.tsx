@@ -5,13 +5,16 @@ import {
     AlertTriangle,
     ArrowLeft,
     BrushCleaning,
+    Check,
     CheckCircle2,
+    Edit2,
     FileText,
     Loader2,
     Monitor,
     RefreshCw,
     Shield,
     Wifi,
+    X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
@@ -21,6 +24,9 @@ import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
@@ -32,6 +38,16 @@ const DeviceDetail = () => {
     const queryClient = useQueryClient()
     const [activeScanId, setActiveScanId] = useState<string | null>(null)
     const [activityScans, setActivityScans] = useState<any[]>([])
+    const [isEditing, setIsEditing] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+    const [editForm, setEditForm] = useState({
+        hostname: '',
+        manufacturer: '',
+        model: '',
+        device_type: '',
+        mac_address: '',
+        os: '',
+    })
 
     const {
         data: device,
@@ -72,6 +88,20 @@ const DeviceDetail = () => {
         })
     }
 
+    // Populate edit form when device data loads
+    useEffect(() => {
+        if (device) {
+            setEditForm({
+                hostname: device.hostname || '',
+                manufacturer: device.manufacturer || '',
+                model: device.model || '',
+                device_type: device.device_type || 'unknown',
+                mac_address: device.mac_address || '',
+                os: device.os || '',
+            })
+        }
+    }, [device])
+
     // Update activity scans when a new scan is initiated
     useEffect(() => {
         if (activeScanId) {
@@ -85,6 +115,47 @@ const DeviceDetail = () => {
             setActivityScans(prev => [newScan, ...prev])
         }
     }, [activeScanId])
+
+    const handleEdit = () => {
+        setIsEditing(true)
+    }
+
+    const handleCancelEdit = () => {
+        setIsEditing(false)
+        // Reset form to current device values
+        if (device) {
+            setEditForm({
+                hostname: device.hostname || '',
+                manufacturer: device.manufacturer || '',
+                model: device.model || '',
+                device_type: device.device_type || 'unknown',
+                mac_address: device.mac_address || '',
+                os: device.os || '',
+            })
+        }
+    }
+
+    const handleSave = async () => {
+        if (!deviceId) return
+
+        setIsSaving(true)
+        try {
+            await api.devices.update(deviceId, editForm)
+
+            // Refresh device data
+            await queryClient.invalidateQueries({ queryKey: ['device', deviceId] })
+
+            toast.success('Device updated successfully')
+            setIsEditing(false)
+        } catch (error) {
+            console.error('Failed to update device:', error)
+            toast.error('Failed to update device', {
+                description: error instanceof Error ? error.message : 'Unknown error occurred',
+            })
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
     if (deviceLoading) {
         return (
@@ -146,7 +217,7 @@ const DeviceDetail = () => {
                             <h1 className="text-2xl font-bold tracking-tight">
                                 {device.hostname || device.ip_address}
                             </h1>
-                            <p className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+                            <div className="text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
                                 <a
                                     href={`http://${device.ip_address}`}
                                     target="_blank"
@@ -174,7 +245,7 @@ const DeviceDetail = () => {
                                         </div>
                                     </>
                                 )}
-                            </p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -194,32 +265,168 @@ const DeviceDetail = () => {
                                         </CardTitle>
                                         <CardDescription>Hardware and network details</CardDescription>
                                     </div>
-                                    {getDeviceOnlineBadge(device.last_seen)}
+                                    <div className="flex items-center gap-2">
+                                        {getDeviceOnlineBadge(device.last_seen)}
+                                        {!isEditing ? (
+                                            <Button size="sm" variant="outline" onClick={handleEdit}>
+                                                <Edit2 className="w-4 h-4 mr-1" />
+                                                Edit
+                                            </Button>
+                                        ) : (
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={handleCancelEdit}
+                                                    disabled={isSaving}
+                                                >
+                                                    <X className="w-4 h-4 mr-1" />
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    onClick={handleSave}
+                                                    disabled={isSaving}
+                                                >
+                                                    <Check className="w-4 h-4 mr-1" />
+                                                    {isSaving ? 'Saving...' : 'Save'}
+                                                </Button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className="text-sm text-muted-foreground mb-1">
+                                        <Label className="text-sm text-muted-foreground mb-1">
                                             Manufacturer
-                                        </p>
-                                        <p className="font-medium">{device.manufacturer || 'Unknown'}</p>
+                                        </Label>
+                                        {isEditing ? (
+                                            <Input
+                                                value={editForm.manufacturer}
+                                                onChange={e =>
+                                                    setEditForm({
+                                                        ...editForm,
+                                                        manufacturer: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="Unknown"
+                                                className="mt-1"
+                                            />
+                                        ) : (
+                                            <p className="font-medium">
+                                                {device.manufacturer || 'Unknown'}
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
-                                        <p className="text-sm text-muted-foreground mb-1">Model</p>
-                                        <p className="font-medium">{device.model || 'Unknown'}</p>
+                                        <Label className="text-sm text-muted-foreground mb-1">
+                                            Model
+                                        </Label>
+                                        {isEditing ? (
+                                            <Input
+                                                value={editForm.model}
+                                                onChange={e =>
+                                                    setEditForm({ ...editForm, model: e.target.value })
+                                                }
+                                                placeholder="Unknown"
+                                                className="mt-1"
+                                            />
+                                        ) : (
+                                            <p className="font-medium">{device.model || 'Unknown'}</p>
+                                        )}
                                     </div>
                                     <div>
-                                        <p className="text-sm text-muted-foreground mb-1">Device Type</p>
-                                        <p className="font-medium capitalize">
-                                            {device.device_type.replace(/_/g, ' ')}
-                                        </p>
+                                        <Label className="text-sm text-muted-foreground mb-1">
+                                            Device Type
+                                        </Label>
+                                        {isEditing ? (
+                                            <Select
+                                                value={editForm.device_type}
+                                                onValueChange={value =>
+                                                    setEditForm({ ...editForm, device_type: value })
+                                                }
+                                            >
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="unknown">Unknown</SelectItem>
+                                                    <SelectItem value="medical_device">
+                                                        Medical Device
+                                                    </SelectItem>
+                                                    <SelectItem value="iot_device">
+                                                        IoT Device
+                                                    </SelectItem>
+                                                    <SelectItem value="network_device">
+                                                        Network Device
+                                                    </SelectItem>
+                                                    <SelectItem value="workstation">
+                                                        Workstation
+                                                    </SelectItem>
+                                                    <SelectItem value="server">Server</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <p className="font-medium capitalize">
+                                                {device.device_type.replace(/_/g, ' ')}
+                                            </p>
+                                        )}
                                     </div>
                                     <div>
-                                        <p className="text-sm text-muted-foreground mb-1">
+                                        <Label className="text-sm text-muted-foreground mb-1">
                                             Operating System
-                                        </p>
-                                        <p className="font-medium">{device.os || 'Unknown'}</p>
+                                        </Label>
+                                        {isEditing ? (
+                                            <Select
+                                                value={editForm.os || 'Unknown'}
+                                                onValueChange={value =>
+                                                    setEditForm({
+                                                        ...editForm,
+                                                        os: value === 'Unknown' ? '' : value,
+                                                    })
+                                                }
+                                            >
+                                                <SelectTrigger className="mt-1">
+                                                    <SelectValue placeholder="Select OS" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="Unknown">Unknown</SelectItem>
+                                                    <SelectItem value="Linux">Linux</SelectItem>
+                                                    <SelectItem value="Windows">Windows</SelectItem>
+                                                    <SelectItem value="Windows 10">
+                                                        Windows 10
+                                                    </SelectItem>
+                                                    <SelectItem value="Windows 11">
+                                                        Windows 11
+                                                    </SelectItem>
+                                                    <SelectItem value="Windows Server">
+                                                        Windows Server
+                                                    </SelectItem>
+                                                    <SelectItem value="macOS">macOS</SelectItem>
+                                                    <SelectItem value="iOS">iOS</SelectItem>
+                                                    <SelectItem value="Android">Android</SelectItem>
+                                                    <SelectItem value="Unix">Unix</SelectItem>
+                                                    <SelectItem value="FreeBSD">FreeBSD</SelectItem>
+                                                    <SelectItem value="Ubuntu">Ubuntu</SelectItem>
+                                                    <SelectItem value="Debian">Debian</SelectItem>
+                                                    <SelectItem value="CentOS">CentOS</SelectItem>
+                                                    <SelectItem value="Red Hat">Red Hat</SelectItem>
+                                                    <SelectItem value="Firmware">Firmware</SelectItem>
+                                                    <SelectItem value="Embedded Linux">
+                                                        Embedded Linux
+                                                    </SelectItem>
+                                                    <SelectItem value="RTOS">
+                                                        RTOS (Real-Time OS)
+                                                    </SelectItem>
+                                                    <SelectItem value="VxWorks">VxWorks</SelectItem>
+                                                    <SelectItem value="QNX">QNX</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        ) : (
+                                            <p className="font-medium">{device.os || 'Unknown'}</p>
+                                        )}
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">Last Active</p>
@@ -244,7 +451,19 @@ const DeviceDetail = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm text-muted-foreground mb-1">MAC Address</p>
-                                        {device.mac_address ? (
+                                        {isEditing ? (
+                                            <Input
+                                                value={editForm.mac_address}
+                                                onChange={e =>
+                                                    setEditForm({
+                                                        ...editForm,
+                                                        mac_address: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="00:1A:2B:3C:4D:5E"
+                                                className="font-mono"
+                                            />
+                                        ) : device.mac_address ? (
                                             <code className="font-mono text-sm px-2 py-1 rounded bg-muted/50 text-foreground border border-border inline-block">
                                                 {device.mac_address}
                                             </code>
