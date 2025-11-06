@@ -201,6 +201,21 @@ export const api = {
                 method: 'POST',
             })
         },
+        update: (
+            id: string,
+            data: {
+                hostname?: string
+                manufacturer?: string
+                model?: string
+                device_type?: string
+                mac_address?: string
+                os?: string
+            },
+        ) =>
+            fetchAPI(`/devices/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data),
+            }),
         delete: (id: string) =>
             fetchAPI(`/devices/${id}`, {
                 method: 'DELETE',
