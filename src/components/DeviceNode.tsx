@@ -101,6 +101,11 @@ export default function DeviceNode({ data }: { data: DeviceNodeData }) {
         return null
     }
 
+    const isBridgedDevice = () => {
+        const bridgedDevices = device.fingerprint_metadata?.bridged_devices || device.bridged_devices
+        return bridgedDevices && bridgedDevices.length > 0
+    }
+
     return (
         <div
             className={`bg-gradient-to-br ${getNodeColor(device.device_type)} border-2 rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer min-w-[180px]`}
@@ -124,6 +129,15 @@ export default function DeviceNode({ data }: { data: DeviceNodeData }) {
                 {/* Infrastructure role badge */}
                 {getInfrastructureBadge() && (
                     <div className="flex justify-start">{getInfrastructureBadge()}</div>
+                )}
+
+                {/* Bridged device badge */}
+                {isBridgedDevice() && (
+                    <div className="flex justify-start">
+                        <Badge className="bg-violet-500/20 text-violet-700 border-violet-500 text-xs">
+                            Bridged
+                        </Badge>
+                    </div>
                 )}
 
                 <div>

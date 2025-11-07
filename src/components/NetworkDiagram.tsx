@@ -83,17 +83,58 @@ function generateNetworkFlows(devices: Device[]): NetworkFlow[] {
 
     if (!gateway) return flows
 
-    // All devices communicate with gateway
+    // Create a map of IP addresses to device IDs for bridged device lookup
+    const ipToDeviceMap = new Map<string, Device>()
+    devices.forEach(device => {
+        ipToDeviceMap.set(device.ip_address, device)
+    })
+
+    // Helper function to find bridge device by IP
+    const findBridgeDevice = (bridgedIPs: string[] | undefined): Device | undefined => {
+        if (!bridgedIPs || bridgedIPs.length === 0) return undefined
+        // Use the first bridged IP to find the bridge device
+        return ipToDeviceMap.get(bridgedIPs[0])
+    }
+
+    // Track which bridge-to-gateway flows we've already created
+    const bridgeToGatewayCreated = new Set<string>()
+
+    // All devices communicate with gateway (directly or through bridge)
     devices.forEach(device => {
         if (device.id === gateway.id) return
 
-        // Bidirectional flows to gateway
-        flows.push({
-            source: device.id,
-            target: gateway.id,
-            protocol: 'TCP',
-            bandwidth: Math.random() * 100,
-        })
+        const bridgeDevice = findBridgeDevice(
+            device.fingerprint_metadata?.bridged_devices || device.bridged_devices,
+        )
+
+        if (bridgeDevice && bridgeDevice.id !== gateway.id) {
+            // Device is bridged: create flow device -> bridge
+            flows.push({
+                source: device.id,
+                target: bridgeDevice.id,
+                protocol: 'TCP',
+                bandwidth: Math.random() * 100,
+            })
+
+            // Only create bridge -> gateway flow if we haven't already
+            if (!bridgeToGatewayCreated.has(bridgeDevice.id)) {
+                flows.push({
+                    source: bridgeDevice.id,
+                    target: gateway.id,
+                    protocol: 'TCP',
+                    bandwidth: Math.random() * 100,
+                })
+                bridgeToGatewayCreated.add(bridgeDevice.id)
+            }
+        } else if (!bridgeToGatewayCreated.has(device.id)) {
+            // Direct connection to gateway (only if this device isn't already a bridge)
+            flows.push({
+                source: device.id,
+                target: gateway.id,
+                protocol: 'TCP',
+                bandwidth: Math.random() * 100,
+            })
+        }
     })
 
     // Servers and workstations might communicate with each other
@@ -135,69 +176,213 @@ function makeEdges(devices: Device[], flows: NetworkFlow[], showFlows: boolean):
         flowMap.set(key, flow)
     })
 
-    // Base topology: gateway connections
-    // When flows are enabled, these get highlighted if they have active traffic
+    // Create a map of IP addresses to device IDs for bridged device lookup
+    const ipToDeviceMap = new Map<string, Device>()
+    devices.forEach(device => {
+        ipToDeviceMap.set(device.ip_address, device)
+    })
+
+    // Helper function to find bridge device by IP
+    const findBridgeDevice = (bridgedIPs: string[] | undefined): Device | undefined => {
+        if (!bridgedIPs || bridgedIPs.length === 0) return undefined
+        return ipToDeviceMap.get(bridgedIPs[0])
+    }
+
+    // Find all devices that are being used as bridges
+    const bridgeDeviceIds = new Set<string>()
+    devices.forEach(device => {
+        const bridgeDevice = findBridgeDevice(
+            device.fingerprint_metadata?.bridged_devices || device.bridged_devices,
+        )
+        if (bridgeDevice && bridgeDevice.id !== gateway.id) {
+            bridgeDeviceIds.add(bridgeDevice.id)
+        }
+    })
+
+    // Keep track of which connections we've already drawn
+    const drawnConnections = new Set<string>()
+
+    // Base topology: gateway connections (direct or through bridge)
     devices
         .filter(d => d.id !== gateway.id)
         .forEach(d => {
-            // Check if there's an active flow on this connection
-            const flowToGateway = flowMap.get(`${d.id}-${gateway.id}`)
-            const flowFromGateway = flowMap.get(`${gateway.id}-${d.id}`)
-            const activeFlow = flowToGateway || flowFromGateway
+            const bridgeDevice = findBridgeDevice(
+                d.fingerprint_metadata?.bridged_devices || d.bridged_devices,
+            )
 
-            if (showFlows && activeFlow) {
-                // Highlight this connection with active flow styling
-                const bandwidth = activeFlow.bandwidth || 0
-                const strokeWidth = Math.max(2, Math.min(5, bandwidth / 20))
-                const isHighTraffic = bandwidth > 60
+            if (bridgeDevice && bridgeDevice.id !== gateway.id) {
+                // Device is bridged: draw device -> bridge connection
+                const flowToBridge = flowMap.get(`${d.id}-${bridgeDevice.id}`)
+                const flowFromBridge = flowMap.get(`${bridgeDevice.id}-${d.id}`)
+                const activeFlowToBridge = flowToBridge || flowFromBridge
 
-                edges.push({
-                    id: `topology-${gateway.id}-${d.id}`,
-                    source: gateway.id,
-                    target: d.id,
-                    type: 'default',
-                    animated: true,
-                    markerEnd: {
-                        type: MarkerType.ArrowClosed,
-                        color: isHighTraffic ? '#f59e0b' : '#6366f1',
-                    },
-                    style: {
-                        stroke: isHighTraffic ? '#f59e0b' : '#6366f1',
-                        strokeWidth,
-                    },
-                    label: activeFlow.protocol,
-                    labelStyle: {
-                        fontSize: 10,
-                        fill: isHighTraffic ? '#f59e0b' : '#6366f1',
-                        fontWeight: 600,
-                    },
-                    labelBgStyle: {
-                        fill: '#ffffff',
-                        fillOpacity: 0.8,
-                    },
-                })
-            } else {
-                // Show as subtle base topology with animated dashes
-                edges.push({
-                    id: `topology-${gateway.id}-${d.id}`,
-                    source: gateway.id,
-                    target: d.id,
-                    type: 'default',
-                    markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8' },
-                    style: {
-                        stroke: '#94a3b8',
-                        strokeWidth: 2,
-                        strokeDasharray: '5,5',
-                    },
-                    animated: true,
-                })
+                if (showFlows && activeFlowToBridge) {
+                    const bandwidth = activeFlowToBridge.bandwidth || 0
+                    const strokeWidth = Math.max(2, Math.min(5, bandwidth / 20))
+                    const isHighTraffic = bandwidth > 60
+
+                    edges.push({
+                        id: `bridged-${d.id}-${bridgeDevice.id}`,
+                        source: d.id,
+                        target: bridgeDevice.id,
+                        type: 'default',
+                        animated: true,
+                        markerEnd: {
+                            type: MarkerType.ArrowClosed,
+                            color: isHighTraffic ? '#f59e0b' : '#8b5cf6',
+                        },
+                        style: {
+                            stroke: isHighTraffic ? '#f59e0b' : '#8b5cf6',
+                            strokeWidth,
+                        },
+                        label: activeFlowToBridge.protocol,
+                        labelStyle: {
+                            fontSize: 10,
+                            fill: isHighTraffic ? '#f59e0b' : '#8b5cf6',
+                            fontWeight: 600,
+                        },
+                        labelBgStyle: {
+                            fill: '#ffffff',
+                            fillOpacity: 0.8,
+                        },
+                    })
+                } else {
+                    // Show as purple dashed line for bridged topology
+                    edges.push({
+                        id: `bridged-${d.id}-${bridgeDevice.id}`,
+                        source: d.id,
+                        target: bridgeDevice.id,
+                        type: 'default',
+                        markerEnd: { type: MarkerType.ArrowClosed, color: '#8b5cf6' },
+                        style: {
+                            stroke: '#8b5cf6',
+                            strokeWidth: 2,
+                            strokeDasharray: '5,5',
+                        },
+                        animated: true,
+                    })
+                }
+
+                drawnConnections.add(`${d.id}-${bridgeDevice.id}`)
+
+                // Draw bridge -> gateway connection (if not already drawn)
+                const bridgeToGatewayKey = `${bridgeDevice.id}-${gateway.id}`
+                if (!drawnConnections.has(bridgeToGatewayKey)) {
+                    const flowBridgeToGateway = flowMap.get(bridgeToGatewayKey)
+                    const flowGatewayToBridge = flowMap.get(`${gateway.id}-${bridgeDevice.id}`)
+                    const activeFlowBridgeGateway = flowBridgeToGateway || flowGatewayToBridge
+
+                    if (showFlows && activeFlowBridgeGateway) {
+                        const bandwidth = activeFlowBridgeGateway.bandwidth || 0
+                        const strokeWidth = Math.max(2, Math.min(5, bandwidth / 20))
+                        const isHighTraffic = bandwidth > 60
+
+                        edges.push({
+                            id: `topology-${bridgeDevice.id}-${gateway.id}`,
+                            source: bridgeDevice.id,
+                            target: gateway.id,
+                            type: 'default',
+                            animated: true,
+                            markerEnd: {
+                                type: MarkerType.ArrowClosed,
+                                color: isHighTraffic ? '#f59e0b' : '#6366f1',
+                            },
+                            style: {
+                                stroke: isHighTraffic ? '#f59e0b' : '#6366f1',
+                                strokeWidth,
+                            },
+                            label: activeFlowBridgeGateway.protocol,
+                            labelStyle: {
+                                fontSize: 10,
+                                fill: isHighTraffic ? '#f59e0b' : '#6366f1',
+                                fontWeight: 600,
+                            },
+                            labelBgStyle: {
+                                fill: '#ffffff',
+                                fillOpacity: 0.8,
+                            },
+                        })
+                    } else {
+                        edges.push({
+                            id: `topology-${bridgeDevice.id}-${gateway.id}`,
+                            source: bridgeDevice.id,
+                            target: gateway.id,
+                            type: 'default',
+                            markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8' },
+                            style: {
+                                stroke: '#94a3b8',
+                                strokeWidth: 2,
+                                strokeDasharray: '5,5',
+                            },
+                            animated: true,
+                        })
+                    }
+
+                    drawnConnections.add(bridgeToGatewayKey)
+                }
+            } else if (!bridgeDeviceIds.has(d.id)) {
+                // Direct connection to gateway (only if this device is not a bridge for others)
+                const flowToGateway = flowMap.get(`${d.id}-${gateway.id}`)
+                const flowFromGateway = flowMap.get(`${gateway.id}-${d.id}`)
+                const activeFlow = flowToGateway || flowFromGateway
+
+                if (showFlows && activeFlow) {
+                    const bandwidth = activeFlow.bandwidth || 0
+                    const strokeWidth = Math.max(2, Math.min(5, bandwidth / 20))
+                    const isHighTraffic = bandwidth > 60
+
+                    edges.push({
+                        id: `topology-${gateway.id}-${d.id}`,
+                        source: gateway.id,
+                        target: d.id,
+                        type: 'default',
+                        animated: true,
+                        markerEnd: {
+                            type: MarkerType.ArrowClosed,
+                            color: isHighTraffic ? '#f59e0b' : '#6366f1',
+                        },
+                        style: {
+                            stroke: isHighTraffic ? '#f59e0b' : '#6366f1',
+                            strokeWidth,
+                        },
+                        label: activeFlow.protocol,
+                        labelStyle: {
+                            fontSize: 10,
+                            fill: isHighTraffic ? '#f59e0b' : '#6366f1',
+                            fontWeight: 600,
+                        },
+                        labelBgStyle: {
+                            fill: '#ffffff',
+                            fillOpacity: 0.8,
+                        },
+                    })
+                } else {
+                    edges.push({
+                        id: `topology-${gateway.id}-${d.id}`,
+                        source: gateway.id,
+                        target: d.id,
+                        type: 'default',
+                        markerEnd: { type: MarkerType.ArrowClosed, color: '#94a3b8' },
+                        style: {
+                            stroke: '#94a3b8',
+                            strokeWidth: 2,
+                            strokeDasharray: '5,5',
+                        },
+                        animated: true,
+                    })
+                }
             }
         })
 
-    // Peer-to-peer flows (device to device, not through gateway)
+    // Peer-to-peer flows (device to device, excluding bridge connections already drawn)
     if (showFlows) {
         flows
-            .filter(flow => flow.source !== gateway.id && flow.target !== gateway.id)
+            .filter(
+                flow =>
+                    flow.source !== gateway.id &&
+                    flow.target !== gateway.id &&
+                    !drawnConnections.has(`${flow.source}-${flow.target}`),
+            )
             .forEach((flow, idx) => {
                 const bandwidth = flow.bandwidth || 0
                 const strokeWidth = Math.max(2, Math.min(5, bandwidth / 20))

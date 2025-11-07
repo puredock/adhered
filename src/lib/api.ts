@@ -55,6 +55,7 @@ export interface Device {
     fingerprint_confidence: Record<string, number>
     fingerprint_metadata: Record<string, any>
     role?: string[]
+    bridged_devices?: string[]
 }
 
 export interface NetworkFlow {
