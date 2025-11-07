@@ -157,6 +157,26 @@ const DeviceDetail = () => {
         }
     }
 
+    const handleClearIssues = async () => {
+        if (!deviceId) return
+
+        try {
+            await api.scans.clearDeviceIssues(deviceId)
+
+            // Refresh scans data
+            await refetchScans()
+
+            toast.success('Issues Cleared', {
+                description: 'All issues have been cleared from this device.',
+            })
+        } catch (error) {
+            console.error('Failed to clear issues:', error)
+            toast.error('Failed to clear issues', {
+                description: error instanceof Error ? error.message : 'Unknown error occurred',
+            })
+        }
+    }
+
     if (deviceLoading) {
         return (
             <div className="min-h-screen bg-background flex items-center justify-center">
@@ -634,12 +654,7 @@ const DeviceDetail = () => {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    onClick={() => {
-                                                        toast.success('Issues Cleared', {
-                                                            description:
-                                                                'All issues have been cleared from this device.',
-                                                        })
-                                                    }}
+                                                    onClick={handleClearIssues}
                                                     disabled={
                                                         !scans.some(
                                                             scan => scan.vulnerabilities.length > 0,

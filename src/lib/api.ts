@@ -279,6 +279,8 @@ export const api = {
             }),
         retry: (id: string) => fetchAPI(`/scans/${id}/retry`, { method: 'POST' }),
         delete: (id: string) => fetchAPI(`/scans/${id}`, { method: 'DELETE' }),
+        clearDeviceIssues: (deviceId: string) =>
+            fetchAPI(`/devices/${deviceId}/clear/issues`, { method: 'POST' }),
         streamUrl: (id: string) => `${API_BASE_URL}/scans/${id}/stream`,
     },
 }
