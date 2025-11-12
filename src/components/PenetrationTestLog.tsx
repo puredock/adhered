@@ -99,12 +99,13 @@ export function PenetrationTestLog({
             } else if (data.type === 'step_init') {
                 // Initialize steps
                 const totalSteps = data.total_steps
-                console.log('Received step_init, total steps:', totalSteps)
+                const stepNames = data.step_names || []
+                console.log('Received step_init, total steps:', totalSteps, 'names:', stepNames)
                 const initialSteps: Step[] = []
                 for (let i = 1; i <= totalSteps; i++) {
                     initialSteps.push({
                         index: i,
-                        name: `Step ${i}`,
+                        name: stepNames[i - 1] || `Step ${i}`,
                         status: 'pending',
                         logs: [],
                         severity: 'medium',
