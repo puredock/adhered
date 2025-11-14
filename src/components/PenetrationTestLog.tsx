@@ -55,6 +55,12 @@ export function PenetrationTestLog({
     const eventSourceRef = useRef<EventSource | null>(null)
     const currentStepIndexRef = useRef<number | null>(null)
 
+    // Stabilize callbacks using refs to avoid effect re-runs
+    const onCompleteRef = useRef(onComplete)
+    useEffect(() => {
+        onCompleteRef.current = onComplete
+    }, [onComplete])
+
     console.log('PenetrationTestLog render - scanId:', scanId, 'steps:', steps.length, 'status:', status)
 
     useEffect(() => {
@@ -65,11 +71,25 @@ export function PenetrationTestLog({
             initialStatus,
         )
 
+        // Short-circuit if scan already completed (don't include in deps)
         if (initialStatus !== 'running') {
             console.log('Skipping EventSource connection - scan already completed/failed')
             return
         }
 
+        // Prevent duplicate connections - check if one already exists and is active
+        if (eventSourceRef.current) {
+            const state = eventSourceRef.current.readyState
+            if (state === EventSource.CONNECTING || state === EventSource.OPEN) {
+                console.log('EventSource already active, skipping duplicate connection')
+                return
+            }
+            // If CLOSED, clean it up
+            eventSourceRef.current.close()
+            eventSourceRef.current = null
+        }
+
+        console.log(`Creating new EventSource for ${API_BASE_URL}/scans/${scanId}/stream`)
         const eventSource = new EventSource(`${API_BASE_URL}/scans/${scanId}/stream`)
         eventSourceRef.current = eventSource
 
@@ -80,6 +100,9 @@ export function PenetrationTestLog({
 
         eventSource.onmessage = event => {
             const data = JSON.parse(event.data)
+
+            // Log all events for debugging
+            console.log('[SSE] Received event:', data.type, data)
 
             if (data.type === 'complete') {
                 const finalStatus = data.status === 'completed' ? 'completed' : 'failed'
@@ -95,12 +118,14 @@ export function PenetrationTestLog({
                 )
 
                 eventSource.close()
-                onComplete?.(data.status)
+                onCompleteRef.current?.(data.status)
             } else if (data.type === 'step_init') {
-                // Initialize steps
-                const totalSteps = data.total_steps
-                const stepNames = data.step_names || []
-                console.log('Received step_init, total steps:', totalSteps, 'names:', stepNames)
+                // Handle both old and new formats
+                const payload = data.payload || data
+                const totalSteps = payload.total_steps || data.total_steps
+                const stepNames = payload.step_names || []
+
+                console.log('Received step_init, total steps:', totalSteps)
                 const initialSteps: Step[] = []
                 for (let i = 1; i <= totalSteps; i++) {
                     initialSteps.push({
@@ -114,28 +139,80 @@ export function PenetrationTestLog({
                 console.log('Setting steps state to:', initialSteps)
                 setSteps(initialSteps)
             } else if (data.type === 'step_start') {
-                currentStepIndexRef.current = data.step_index
+                // Handle both old and new formats
+                const payload = data.payload || data
+                const stepIndex = payload.step_index || data.step_index
+                const stepName = payload.step_name || data.step_name
+
+                currentStepIndexRef.current = stepIndex
                 setSteps(prev =>
                     prev.map(step =>
-                        step.index === data.step_index
-                            ? { ...step, name: data.step_name, status: 'running' }
-                            : step,
+                        step.index === stepIndex ? { ...step, name: stepName, status: 'running' } : step,
                     ),
                 )
             } else if (data.type === 'step_success') {
+                // Handle both old and new formats
+                const payload = data.payload || data
+                const stepIndex = payload.step_index || data.step_index
+
                 setSteps(prev =>
-                    prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'success' } : step,
-                    ),
+                    prev.map(step => (step.index === stepIndex ? { ...step, status: 'success' } : step)),
                 )
             } else if (data.type === 'step_error') {
+                // Handle both old and new formats
+                const payload = data.payload || data
+                const stepIndex = payload.step_index || data.step_index
+
                 setSteps(prev =>
-                    prev.map(step =>
-                        step.index === data.step_index ? { ...step, status: 'error' } : step,
-                    ),
+                    prev.map(step => (step.index === stepIndex ? { ...step, status: 'error' } : step)),
                 )
+            } else if (data.type === 'tool_use' || data.type === 'tool_use_updated') {
+                // Tool use events from Redis - pass through to logs for ArtifactsModal
+                console.log('Received tool_use event:', data)
+                const logEntry: LogEntry = {
+                    timestamp: data.data?.timestamp || new Date().toISOString(),
+                    level: 'info',
+                    message: `Tool: ${data.data?.name}`,
+                    type: data.type,
+                    ...data, // Include all data fields
+                }
+                setLogs(prev => [...prev, logEntry])
+
+                // Also add to step logs if we have a current step
+                const stepIndex = currentStepIndexRef.current
+                if (stepIndex !== null) {
+                    setSteps(prev =>
+                        prev.map(step =>
+                            step.index === stepIndex
+                                ? { ...step, logs: [...step.logs, logEntry] }
+                                : step,
+                        ),
+                    )
+                }
+            } else if (data.type === 'log') {
+                // Structured log event from EventBus
+                const payload = data.payload || data
+                const logEntry: LogEntry = {
+                    timestamp: data.timestamp || new Date().toISOString(),
+                    level: data.level || 'info',
+                    message: payload.message || '',
+                    source: payload.source,
+                    type: data.type,
+                }
+                setLogs(prev => [...prev, logEntry])
+
+                const stepIndex = currentStepIndexRef.current
+                if (stepIndex !== null) {
+                    setSteps(prev =>
+                        prev.map(step =>
+                            step.index === stepIndex
+                                ? { ...step, logs: [...step.logs, logEntry] }
+                                : step,
+                        ),
+                    )
+                }
             } else {
-                // Regular log entry - skip step markers themselves
+                // Legacy format: Regular log entry - skip step markers themselves
                 if (data.message && !data.message.startsWith('[STEP_')) {
                     const logEntry: LogEntry = {
                         timestamp: data.timestamp,
@@ -186,9 +263,11 @@ export function PenetrationTestLog({
         }
 
         return () => {
+            console.log('PenetrationTestLog cleanup - closing EventSource')
             eventSource.close()
+            eventSourceRef.current = null
         }
-    }, [scanId, onComplete, initialStatus])
+    }, [scanId]) // Only scanId - onComplete and initialStatus stabilized
 
     useEffect(() => {
         if (scrollRef.current) {
