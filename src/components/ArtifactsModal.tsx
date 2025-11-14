@@ -1,19 +1,6 @@
-import {
-    BarChart3,
-    CheckCircle2,
-    Code2,
-    Download,
-    FileText,
-    Image,
-    Info,
-    ListTodo,
-    ScrollText,
-    Terminal,
-    XCircle,
-} from 'lucide-react'
+import { CheckCircle2, Code2, Info, ListTodo, ScrollText, Terminal, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
     Dialog,
     DialogContent,
@@ -22,7 +9,6 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
 export interface Artifact {
@@ -72,18 +58,6 @@ export function ArtifactsModal({
     stepName,
     logs = [],
 }: ArtifactsModalProps) {
-    const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(
-        artifacts.length > 0 ? artifacts[0] : null,
-    )
-
-    const [activeTab, setActiveTab] = useState<string>(() => {
-        // Auto-select the first available view when there are no artifacts
-        if (artifacts.length > 0) return 'all'
-        // If no artifacts, check what's available and auto-select
-        if (logs.length > 0) return 'logs'
-        return 'all'
-    })
-
     // Extract TodoWrite and Bash tool uses from logs
     // Maintain a live, merged view of todos (not snapshots)
     const { liveTodos, bashCommands } = useMemo(() => {
@@ -158,91 +132,13 @@ export function ArtifactsModal({
         return { liveTodos, bashCommands }
     }, [logs])
 
-    const getTypeIcon = (type: Artifact['type']) => {
-        switch (type) {
-            case 'report':
-                return <FileText className="h-4 w-4" />
-            case 'image':
-                return <Image className="h-4 w-4" />
-            case 'graph':
-                return <BarChart3 className="h-4 w-4" />
-            case 'script':
-                return <Terminal className="h-4 w-4" />
-        }
-    }
-
-    const getTypeColor = (type: Artifact['type']) => {
-        switch (type) {
-            case 'report':
-                return 'bg-blue-100 text-blue-700 border-blue-200'
-            case 'image':
-                return 'bg-purple-100 text-purple-700 border-purple-200'
-            case 'graph':
-                return 'bg-green-100 text-green-700 border-green-200'
-            case 'script':
-                return 'bg-orange-100 text-orange-700 border-orange-200'
-        }
-    }
-
-    const renderArtifactContent = (artifact: Artifact) => {
-        switch (artifact.type) {
-            case 'image':
-                return (
-                    <div className="flex items-center justify-center p-8 bg-muted/30 rounded-lg">
-                        <img
-                            src={artifact.url || '/placeholder.svg'}
-                            alt={artifact.name}
-                            className="max-w-full max-h-[500px] object-contain rounded-lg shadow-lg"
-                        />
-                    </div>
-                )
-            case 'script':
-                return (
-                    <div className="relative">
-                        <div className="absolute top-2 right-2 z-10">
-                            <Badge variant="secondary" className="font-mono text-xs">
-                                {artifact.language || 'script'}
-                            </Badge>
-                        </div>
-                        <ScrollArea className="h-[500px] w-full rounded-lg border bg-slate-950">
-                            <pre className="p-4 text-sm font-mono text-slate-200">
-                                <code>{artifact.content || '# Script content would appear here'}</code>
-                            </pre>
-                        </ScrollArea>
-                    </div>
-                )
-            case 'report':
-                return (
-                    <ScrollArea className="h-[500px] w-full rounded-lg border bg-background">
-                        <div className="p-6 prose prose-sm max-w-none">
-                            <div className="whitespace-pre-wrap text-sm">
-                                {artifact.content || 'Report content would appear here...'}
-                            </div>
-                        </div>
-                    </ScrollArea>
-                )
-            case 'graph':
-                return (
-                    <div className="flex items-center justify-center p-8 bg-muted/30 rounded-lg">
-                        <div className="text-center text-muted-foreground">
-                            <BarChart3 className="h-16 w-16 mx-auto mb-4" />
-                            <p>Graph visualization would appear here</p>
-                        </div>
-                    </div>
-                )
-        }
-    }
-
-    const groupedArtifacts = artifacts.reduce(
-        (acc, artifact) => {
-            if (!acc[artifact.type]) {
-                acc[artifact.type] = []
-            }
-            acc[artifact.type].push(artifact)
-            return acc
-        },
-        {} as Record<Artifact['type'], Artifact[]>,
-    )
+    const [activeTab, setActiveTab] = useState<string>(() => {
+        // Auto-select the first available view
+        if (liveTodos.length > 0) return 'plan'
+        if (bashCommands.length > 0) return 'commands'
+        if (logs.length > 0) return 'logs'
+        return 'plan'
+    })
 
     const getLevelIcon = (level: LogEntry['level']) => {
         switch (level) {
@@ -259,321 +155,102 @@ export function ArtifactsModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-6xl max-h-[90vh] p-0 flex flex-col">
                 <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
-                    <DialogTitle>Artifacts - {stepName}</DialogTitle>
-                    <DialogDescription>
-                        View reports, images, graphs, and exploit scripts generated during this step
-                    </DialogDescription>
+                    <DialogTitle>Summary</DialogTitle>
+                    <DialogDescription>Execution details for "{stepName}"</DialogDescription>
                 </DialogHeader>
 
                 {artifacts.length === 0 && logs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-12 text-muted-foreground">
-                        <FileText className="h-12 w-12 mb-4" />
-                        <p>No artifacts available for this step</p>
+                        <p>No data available for this step</p>
                     </div>
                 ) : (
                     <div className="flex flex-1 min-h-0">
                         {/* Sidebar */}
                         <div className="w-80 border-r bg-muted/30">
-                            <Tabs
-                                defaultValue="all"
-                                value={activeTab}
-                                onValueChange={value => {
-                                    setActiveTab(value)
-                                    if (value === 'logs') {
-                                        setSelectedArtifact(null)
-                                    }
-                                }}
-                                className="h-full flex flex-col"
-                            >
-                                <div className="overflow-x-auto border-b">
-                                    <TabsList className="w-full justify-start rounded-none px-4 pt-2 h-auto">
-                                        <TabsTrigger value="all" className="whitespace-nowrap">
-                                            All (
-                                            {artifacts.length +
-                                                (logs.length > 0 ? 1 : 0) +
-                                                (liveTodos.length > 0 ? 1 : 0) +
-                                                (bashCommands.length > 0 ? 1 : 0)}
-                                            )
-                                        </TabsTrigger>
-                                        {liveTodos.length > 0 && (
-                                            <TabsTrigger value="plan" className="whitespace-nowrap">
-                                                Plan
-                                            </TabsTrigger>
-                                        )}
-                                        {bashCommands.length > 0 && (
-                                            <TabsTrigger value="commands" className="whitespace-nowrap">
-                                                Commands ({bashCommands.length})
-                                            </TabsTrigger>
-                                        )}
-                                        {logs.length > 0 && (
-                                            <TabsTrigger value="logs" className="whitespace-nowrap">
-                                                Logs ({logs.length})
-                                            </TabsTrigger>
-                                        )}
-                                        {Object.keys(groupedArtifacts).map(type => (
-                                            <TabsTrigger
-                                                key={type}
-                                                value={type}
-                                                className="whitespace-nowrap"
-                                            >
-                                                {type}s (
-                                                {groupedArtifacts[type as Artifact['type']].length})
-                                            </TabsTrigger>
-                                        ))}
-                                    </TabsList>
-                                </div>
-
-                                <ScrollArea className="flex-1">
-                                    <TabsContent value="all" className="m-0 p-2">
-                                        <div className="space-y-1">
-                                            {liveTodos.length > 0 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setActiveTab('plan')
-                                                        setSelectedArtifact(null)
-                                                    }}
-                                                    className={cn(
-                                                        'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                        activeTab === 'plan' &&
-                                                            'bg-background shadow-sm ring-1 ring-primary/20',
-                                                    )}
-                                                >
-                                                    <div className="flex items-start gap-2">
-                                                        <div className="mt-0.5">
-                                                            <ListTodo className="h-4 w-4" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0 relative z-10">
-                                                            <p className="text-sm font-medium truncate">
-                                                                Task Plan
-                                                            </p>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {liveTodos.length} items
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            )}
-                                            {bashCommands.length > 0 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setActiveTab('commands')
-                                                        setSelectedArtifact(null)
-                                                    }}
-                                                    className={cn(
-                                                        'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                        activeTab === 'commands' &&
-                                                            'bg-background shadow-sm ring-1 ring-primary/20',
-                                                    )}
-                                                >
-                                                    <div className="flex items-start gap-2">
-                                                        <div className="mt-0.5">
-                                                            <Code2 className="h-4 w-4" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium truncate">
-                                                                Shell Commands
-                                                            </p>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {bashCommands.length} commands
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            )}
-                                            {logs.length > 0 && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setActiveTab('logs')
-                                                        setSelectedArtifact(null)
-                                                    }}
-                                                    className={cn(
-                                                        'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                        activeTab === 'logs' &&
-                                                            'bg-background shadow-sm ring-1 ring-primary/20',
-                                                    )}
-                                                >
-                                                    <div className="flex items-start gap-2">
-                                                        <div className="mt-0.5">
-                                                            <ScrollText className="h-4 w-4" />
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium truncate">
-                                                                Execution Logs
-                                                            </p>
-                                                            <span className="text-xs text-muted-foreground">
-                                                                {logs.length} entries
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            )}
-                                            {artifacts.map(artifact => (
-                                                <button
-                                                    type="button"
-                                                    key={artifact.id}
-                                                    onClick={() => setSelectedArtifact(artifact)}
-                                                    className={cn(
-                                                        'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                        selectedArtifact?.id === artifact.id &&
-                                                            'bg-background shadow-sm ring-1 ring-primary/20',
-                                                    )}
-                                                >
-                                                    <div className="flex items-start gap-2">
-                                                        <div className="mt-0.5">
-                                                            {getTypeIcon(artifact.type)}
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <p className="text-sm font-medium truncate">
-                                                                {artifact.name}
-                                                            </p>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className={cn(
-                                                                        'text-xs',
-                                                                        getTypeColor(artifact.type),
-                                                                    )}
-                                                                >
-                                                                    {artifact.type}
-                                                                </Badge>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {artifact.size}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </TabsContent>
-
+                            <ScrollArea className="h-full">
+                                <div className="p-2 space-y-1">
                                     {liveTodos.length > 0 && (
-                                        <TabsContent value="plan" className="m-0 p-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setActiveTab('plan')}
-                                                className={cn(
-                                                    'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                    activeTab === 'plan' &&
-                                                        'bg-background shadow-sm ring-1 ring-primary/20',
-                                                )}
-                                            >
-                                                <div className="flex items-start gap-2">
-                                                    <div className="mt-0.5">
-                                                        <ListTodo className="h-4 w-4" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium truncate">
-                                                            Task Plan
-                                                        </p>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {liveTodos.length} items
-                                                        </span>
-                                                    </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveTab('plan')}
+                                            className={cn(
+                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                activeTab === 'plan' &&
+                                                    'bg-background shadow-sm ring-1 ring-primary/20',
+                                            )}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="mt-0.5">
+                                                    <ListTodo className="h-4 w-4" />
                                                 </div>
-                                            </button>
-                                        </TabsContent>
+                                                <div className="flex-1 min-w-0 relative z-10">
+                                                    <p className="text-sm font-medium truncate">
+                                                        Task Plan
+                                                    </p>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {liveTodos.length} items
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
                                     )}
-
                                     {bashCommands.length > 0 && (
-                                        <TabsContent value="commands" className="m-0 p-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setActiveTab('commands')}
-                                                className={cn(
-                                                    'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                    activeTab === 'commands' &&
-                                                        'bg-background shadow-sm ring-1 ring-primary/20',
-                                                )}
-                                            >
-                                                <div className="flex items-start gap-2">
-                                                    <div className="mt-0.5">
-                                                        <Code2 className="h-4 w-4" />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-medium truncate">
-                                                            Shell Commands
-                                                        </p>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {bashCommands.length} commands
-                                                        </span>
-                                                    </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveTab('commands')}
+                                            className={cn(
+                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                activeTab === 'commands' &&
+                                                    'bg-background shadow-sm ring-1 ring-primary/20',
+                                            )}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="mt-0.5">
+                                                    <Code2 className="h-4 w-4" />
                                                 </div>
-                                            </button>
-                                        </TabsContent>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">
+                                                        Shell Commands
+                                                    </p>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {bashCommands.length} commands
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
                                     )}
-
                                     {logs.length > 0 && (
-                                        <TabsContent value="logs" className="m-0 p-2">
-                                            <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
-                                                <ScrollText className="h-4 w-4" />
-                                                <span>Step execution logs</span>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveTab('logs')}
+                                            className={cn(
+                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                activeTab === 'logs' &&
+                                                    'bg-background shadow-sm ring-1 ring-primary/20',
+                                            )}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="mt-0.5">
+                                                    <ScrollText className="h-4 w-4" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">
+                                                        Execution Logs
+                                                    </p>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {logs.length} entries
+                                                    </span>
+                                                </div>
                                             </div>
-                                        </TabsContent>
+                                        </button>
                                     )}
-
-                                    {Object.entries(groupedArtifacts).map(([type, items]) => (
-                                        <TabsContent key={type} value={type} className="m-0 p-2">
-                                            <div className="space-y-1">
-                                                {items.map(artifact => (
-                                                    <button
-                                                        type="button"
-                                                        key={artifact.id}
-                                                        onClick={() => setSelectedArtifact(artifact)}
-                                                        className={cn(
-                                                            'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                            selectedArtifact?.id === artifact.id &&
-                                                                'bg-background shadow-sm ring-1 ring-primary/20',
-                                                        )}
-                                                    >
-                                                        <div className="flex items-start gap-2">
-                                                            <div className="mt-0.5">
-                                                                {getTypeIcon(artifact.type)}
-                                                            </div>
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="text-sm font-medium truncate">
-                                                                    {artifact.name}
-                                                                </p>
-                                                                <span className="text-xs text-muted-foreground">
-                                                                    {artifact.size}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </TabsContent>
-                                    ))}
-                                </ScrollArea>
-                            </Tabs>
+                                </div>
+                            </ScrollArea>
                         </div>
 
                         {/* Content Viewer */}
                         <div className="flex-1 flex flex-col min-w-0">
-                            {selectedArtifact ? (
-                                <>
-                                    <div className="px-6 py-4 border-b flex items-center justify-between flex-shrink-0">
-                                        <div>
-                                            <h3 className="font-semibold">{selectedArtifact.name}</h3>
-                                            <p className="text-sm text-muted-foreground">
-                                                {selectedArtifact.timestamp} • {selectedArtifact.size}
-                                            </p>
-                                        </div>
-                                        <Button variant="outline" size="sm">
-                                            <Download className="h-4 w-4 mr-2" />
-                                            Download
-                                        </Button>
-                                    </div>
-                                    <ScrollArea className="flex-1 p-6">
-                                        {renderArtifactContent(selectedArtifact)}
-                                    </ScrollArea>
-                                </>
-                            ) : (activeTab === 'plan' ||
-                                  (activeTab === 'all' && !selectedArtifact && liveTodos.length > 0)) &&
-                              liveTodos.length > 0 ? (
+                            {activeTab === 'plan' && liveTodos.length > 0 ? (
                                 <>
                                     <div className="px-6 py-4 border-b flex-shrink-0">
                                         <h3 className="font-semibold">Task Plan</h3>
@@ -637,12 +314,7 @@ export function ArtifactsModal({
                                         </div>
                                     </ScrollArea>
                                 </>
-                            ) : (activeTab === 'commands' ||
-                                  (activeTab === 'all' &&
-                                      !selectedArtifact &&
-                                      bashCommands.length > 0 &&
-                                      liveTodos.length === 0)) &&
-                              bashCommands.length > 0 ? (
+                            ) : activeTab === 'commands' && bashCommands.length > 0 ? (
                                 <>
                                     <div className="px-6 py-4 border-b flex-shrink-0">
                                         <h3 className="font-semibold">Shell Commands</h3>
@@ -682,13 +354,7 @@ export function ArtifactsModal({
                                         </div>
                                     </ScrollArea>
                                 </>
-                            ) : (activeTab === 'logs' ||
-                                  (activeTab === 'all' &&
-                                      !selectedArtifact &&
-                                      logs.length > 0 &&
-                                      liveTodos.length === 0 &&
-                                      bashCommands.length === 0)) &&
-                              logs.length > 0 ? (
+                            ) : activeTab === 'logs' && logs.length > 0 ? (
                                 <>
                                     <div className="px-6 py-4 border-b flex-shrink-0">
                                         <h3 className="font-semibold">Execution Logs</h3>
