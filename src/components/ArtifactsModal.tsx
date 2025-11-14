@@ -1,16 +1,17 @@
 import {
     BarChart3,
     CheckCircle2,
+    Code2,
     Download,
     FileText,
     Image,
     Info,
+    ListTodo,
     ScrollText,
     Terminal,
-    X,
     XCircle,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -41,6 +42,25 @@ interface LogEntry {
     message: string
 }
 
+interface TodoItem {
+    id: string
+    content: string
+    status: 'todo' | 'in-progress' | 'completed'
+    priority: 'low' | 'medium' | 'high'
+}
+
+interface TodoWrite {
+    timestamp: string
+    todos: TodoItem[]
+}
+
+interface BashCommand {
+    id: string
+    timestamp: string
+    command: string
+    output?: string
+}
+
 interface ArtifactsModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -59,7 +79,59 @@ export function ArtifactsModal({
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(
         artifacts.length > 0 ? artifacts[0] : null,
     )
-    const [activeTab, setActiveTab] = useState<string>('all')
+
+    const [activeTab, setActiveTab] = useState<string>(() => {
+        // Auto-select the first available view when there are no artifacts
+        if (artifacts.length > 0) return 'all'
+        // If no artifacts, check what's available and auto-select
+        if (logs.length > 0) return 'logs'
+        return 'all'
+    })
+
+    // Extract TodoWrite and Bash tool uses from logs
+    // Now these come directly from SSE events with type='tool_use'
+    const { todoWrites, bashCommands } = useMemo(() => {
+        const todoWrites: TodoWrite[] = []
+        const bashCommands: BashCommand[] = []
+
+        console.log('[ARTIFACTS] Processing logs, total count:', logs.length)
+
+        for (const log of logs) {
+            // Debug: log all events with 'tool' in type
+            if ((log as any).type?.includes('tool')) {
+                console.log('[ARTIFACTS] Found tool-related event:', log)
+            }
+
+            // Check if this is a tool_use event (from new Redis pub/sub system)
+            if ((log as any).type === 'tool_use' && (log as any).data) {
+                console.log('[ARTIFACTS] Found tool_use event:', log)
+                const toolData = (log as any).data
+
+                if (toolData.name === 'TodoWrite' && toolData.input?.todos) {
+                    todoWrites.push({
+                        timestamp: toolData.timestamp || log.timestamp,
+                        todos: toolData.input.todos,
+                    })
+                } else if (toolData.name === 'Bash' && toolData.input?.cmd) {
+                    bashCommands.push({
+                        id: toolData.id,
+                        timestamp: toolData.timestamp || log.timestamp,
+                        command: toolData.input.cmd,
+                        output: toolData.output || undefined,
+                    })
+                }
+            }
+        }
+
+        console.log('[ARTIFACTS] Extracted data:', {
+            todoWritesCount: todoWrites.length,
+            bashCommandsCount: bashCommands.length,
+            todoWrites,
+            bashCommands,
+        })
+
+        return { todoWrites, bashCommands }
+    }, [logs])
 
     const getTypeIcon = (type: Artifact['type']) => {
         switch (type) {
@@ -191,8 +263,23 @@ export function ArtifactsModal({
                                 <div className="overflow-x-auto border-b">
                                     <TabsList className="w-full justify-start rounded-none px-4 pt-2 h-auto">
                                         <TabsTrigger value="all" className="whitespace-nowrap">
-                                            All ({artifacts.length + (logs.length > 0 ? 1 : 0)})
+                                            All (
+                                            {artifacts.length +
+                                                (logs.length > 0 ? 1 : 0) +
+                                                (todoWrites.length > 0 ? 1 : 0) +
+                                                (bashCommands.length > 0 ? 1 : 0)}
+                                            )
                                         </TabsTrigger>
+                                        {todoWrites.length > 0 && (
+                                            <TabsTrigger value="plan" className="whitespace-nowrap">
+                                                Plan
+                                            </TabsTrigger>
+                                        )}
+                                        {bashCommands.length > 0 && (
+                                            <TabsTrigger value="commands" className="whitespace-nowrap">
+                                                Commands ({bashCommands.length})
+                                            </TabsTrigger>
+                                        )}
                                         {logs.length > 0 && (
                                             <TabsTrigger value="logs" className="whitespace-nowrap">
                                                 Logs ({logs.length})
@@ -214,8 +301,69 @@ export function ArtifactsModal({
                                 <ScrollArea className="flex-1">
                                     <TabsContent value="all" className="m-0 p-2">
                                         <div className="space-y-1">
+                                            {todoWrites.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setActiveTab('plan')
+                                                        setSelectedArtifact(null)
+                                                    }}
+                                                    className={cn(
+                                                        'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                        activeTab === 'plan' &&
+                                                            'bg-background shadow-sm ring-1 ring-primary/20',
+                                                    )}
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="mt-0.5">
+                                                            <ListTodo className="h-4 w-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium truncate">
+                                                                Task Plan
+                                                            </p>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {todoWrites.reduce(
+                                                                    (sum, tw) => sum + tw.todos.length,
+                                                                    0,
+                                                                )}{' '}
+                                                                items
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            )}
+                                            {bashCommands.length > 0 && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setActiveTab('commands')
+                                                        setSelectedArtifact(null)
+                                                    }}
+                                                    className={cn(
+                                                        'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                        activeTab === 'commands' &&
+                                                            'bg-background shadow-sm ring-1 ring-primary/20',
+                                                    )}
+                                                >
+                                                    <div className="flex items-start gap-2">
+                                                        <div className="mt-0.5">
+                                                            <Code2 className="h-4 w-4" />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-sm font-medium truncate">
+                                                                Shell Commands
+                                                            </p>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                {bashCommands.length} commands
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            )}
                                             {logs.length > 0 && (
                                                 <button
+                                                    type="button"
                                                     onClick={() => {
                                                         setActiveTab('logs')
                                                         setSelectedArtifact(null)
@@ -243,6 +391,7 @@ export function ArtifactsModal({
                                             )}
                                             {artifacts.map(artifact => (
                                                 <button
+                                                    type="button"
                                                     key={artifact.id}
                                                     onClick={() => setSelectedArtifact(artifact)}
                                                     className={cn(
@@ -280,6 +429,66 @@ export function ArtifactsModal({
                                         </div>
                                     </TabsContent>
 
+                                    {todoWrites.length > 0 && (
+                                        <TabsContent value="plan" className="m-0 p-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setActiveTab('plan')}
+                                                className={cn(
+                                                    'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                    activeTab === 'plan' &&
+                                                        'bg-background shadow-sm ring-1 ring-primary/20',
+                                                )}
+                                            >
+                                                <div className="flex items-start gap-2">
+                                                    <div className="mt-0.5">
+                                                        <ListTodo className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate">
+                                                            Task Plan
+                                                        </p>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {todoWrites.reduce(
+                                                                (sum, tw) => sum + tw.todos.length,
+                                                                0,
+                                                            )}{' '}
+                                                            items
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </TabsContent>
+                                    )}
+
+                                    {bashCommands.length > 0 && (
+                                        <TabsContent value="commands" className="m-0 p-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setActiveTab('commands')}
+                                                className={cn(
+                                                    'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                    activeTab === 'commands' &&
+                                                        'bg-background shadow-sm ring-1 ring-primary/20',
+                                                )}
+                                            >
+                                                <div className="flex items-start gap-2">
+                                                    <div className="mt-0.5">
+                                                        <Code2 className="h-4 w-4" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium truncate">
+                                                            Shell Commands
+                                                        </p>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {bashCommands.length} commands
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </TabsContent>
+                                    )}
+
                                     {logs.length > 0 && (
                                         <TabsContent value="logs" className="m-0 p-2">
                                             <div className="flex items-center gap-2 p-3 text-sm text-muted-foreground">
@@ -294,6 +503,7 @@ export function ArtifactsModal({
                                             <div className="space-y-1">
                                                 {items.map(artifact => (
                                                     <button
+                                                        type="button"
                                                         key={artifact.id}
                                                         onClick={() => setSelectedArtifact(artifact)}
                                                         className={cn(
@@ -344,7 +554,146 @@ export function ArtifactsModal({
                                         {renderArtifactContent(selectedArtifact)}
                                     </ScrollArea>
                                 </>
-                            ) : logs.length > 0 ? (
+                            ) : (activeTab === 'plan' ||
+                                  (activeTab === 'all' && !selectedArtifact && todoWrites.length > 0)) &&
+                              todoWrites.length > 0 ? (
+                                <>
+                                    <div className="px-6 py-4 border-b flex-shrink-0">
+                                        <h3 className="font-semibold">Task Plan</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Todo items and their current status
+                                        </p>
+                                    </div>
+                                    <ScrollArea className="flex-1 p-6">
+                                        <div className="space-y-6">
+                                            {todoWrites.map((todoWrite, writeIndex) => (
+                                                <div key={writeIndex} className="space-y-3">
+                                                    {writeIndex > 0 && <div className="border-t pt-4" />}
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {new Date(todoWrite.timestamp).toLocaleString()}
+                                                    </p>
+                                                    <div className="space-y-2">
+                                                        {todoWrite.todos.map(todo => (
+                                                            <div
+                                                                key={todo.id}
+                                                                className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                                                            >
+                                                                <div className="flex-shrink-0 mt-0.5">
+                                                                    {todo.status === 'completed' ? (
+                                                                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                                                    ) : todo.status === 'in-progress' ? (
+                                                                        <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                                                                    ) : (
+                                                                        <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p
+                                                                        className={cn(
+                                                                            'text-sm',
+                                                                            todo.status ===
+                                                                                'completed' &&
+                                                                                'line-through text-muted-foreground',
+                                                                        )}
+                                                                    >
+                                                                        {todo.content}
+                                                                    </p>
+                                                                    <div className="flex items-center gap-2 mt-1">
+                                                                        <Badge
+                                                                            variant="outline"
+                                                                            className={cn(
+                                                                                'text-xs',
+                                                                                todo.status ===
+                                                                                    'completed' &&
+                                                                                    'bg-green-100 text-green-700 border-green-200',
+                                                                                todo.status ===
+                                                                                    'in-progress' &&
+                                                                                    'bg-blue-100 text-blue-700 border-blue-200',
+                                                                                todo.status === 'todo' &&
+                                                                                    'bg-gray-100 text-gray-700 border-gray-200',
+                                                                            )}
+                                                                        >
+                                                                            {todo.status}
+                                                                        </Badge>
+                                                                        <Badge
+                                                                            variant="outline"
+                                                                            className={cn(
+                                                                                'text-xs',
+                                                                                todo.priority ===
+                                                                                    'high' &&
+                                                                                    'bg-red-100 text-red-700 border-red-200',
+                                                                                todo.priority ===
+                                                                                    'medium' &&
+                                                                                    'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                                                                todo.priority ===
+                                                                                    'low' &&
+                                                                                    'bg-slate-100 text-slate-700 border-slate-200',
+                                                                            )}
+                                                                        >
+                                                                            {todo.priority}
+                                                                        </Badge>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </>
+                            ) : (activeTab === 'commands' ||
+                                  (activeTab === 'all' &&
+                                      !selectedArtifact &&
+                                      bashCommands.length > 0 &&
+                                      todoWrites.length === 0)) &&
+                              bashCommands.length > 0 ? (
+                                <>
+                                    <div className="px-6 py-4 border-b flex-shrink-0">
+                                        <h3 className="font-semibold">Shell Commands</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Commands executed and their outputs
+                                        </p>
+                                    </div>
+                                    <ScrollArea className="flex-1 p-6">
+                                        <div className="space-y-4">
+                                            {bashCommands.map(cmd => (
+                                                <div
+                                                    key={cmd.id}
+                                                    className="border rounded-lg overflow-hidden"
+                                                >
+                                                    <div className="bg-slate-950 p-3 border-b border-slate-800">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <Terminal className="h-4 w-4 text-green-400" />
+                                                            <span className="text-xs text-slate-400">
+                                                                {new Date(
+                                                                    cmd.timestamp,
+                                                                ).toLocaleTimeString()}
+                                                            </span>
+                                                        </div>
+                                                        <code className="text-sm text-slate-200 font-mono">
+                                                            $ {cmd.command}
+                                                        </code>
+                                                    </div>
+                                                    {cmd.output && (
+                                                        <div className="bg-slate-900 p-3">
+                                                            <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap">
+                                                                {cmd.output}
+                                                            </pre>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </>
+                            ) : (activeTab === 'logs' ||
+                                  (activeTab === 'all' &&
+                                      !selectedArtifact &&
+                                      logs.length > 0 &&
+                                      todoWrites.length === 0 &&
+                                      bashCommands.length === 0)) &&
+                              logs.length > 0 ? (
                                 <>
                                     <div className="px-6 py-4 border-b flex-shrink-0">
                                         <h3 className="font-semibold">Execution Logs</h3>
