@@ -45,13 +45,9 @@ interface LogEntry {
 interface TodoItem {
     id: string
     content: string
-    status: 'todo' | 'in-progress' | 'completed'
+    status: 'todo' | 'in-progress' | 'in_progress' | 'completed'
     priority: 'low' | 'medium' | 'high'
-}
-
-interface TodoWrite {
-    timestamp: string
-    todos: TodoItem[]
+    order?: number
 }
 
 interface BashCommand {
@@ -89,9 +85,9 @@ export function ArtifactsModal({
     })
 
     // Extract TodoWrite and Bash tool uses from logs
-    // Now these come directly from SSE events with type='tool_use'
-    const { todoWrites, bashCommands } = useMemo(() => {
-        const todoWrites: TodoWrite[] = []
+    // Maintain a live, merged view of todos (not snapshots)
+    const { liveTodos, bashCommands } = useMemo(() => {
+        const todoMap = new Map<string, TodoItem>()
         const bashCommands: BashCommand[] = []
 
         console.log('[ARTIFACTS] Processing logs, total count:', logs.length)
@@ -108,10 +104,22 @@ export function ArtifactsModal({
                 const toolData = (log as any).data
 
                 if (toolData.name === 'TodoWrite' && toolData.input?.todos) {
-                    todoWrites.push({
-                        timestamp: toolData.timestamp || log.timestamp,
-                        todos: toolData.input.todos,
-                    })
+                    // Merge todos into the live map (update existing or add new)
+                    // Clear map to use latest ordering from most recent TodoWrite
+                    todoMap.clear()
+
+                    for (let i = 0; i < toolData.input.todos.length; i++) {
+                        const todo = toolData.input.todos[i]
+                        // Use content as the unique key since todos don't have IDs
+                        const todoKey = todo.content || todo.activeForm || JSON.stringify(todo)
+                        todoMap.set(todoKey, {
+                            id: todoKey,
+                            content: todo.content || todo.activeForm,
+                            status: todo.status,
+                            priority: todo.priority || 'medium',
+                            order: i, // Preserve order from TodoWrite
+                        })
+                    }
                 } else if (toolData.name === 'Bash' && toolData.input?.cmd) {
                     bashCommands.push({
                         id: toolData.id,
@@ -123,14 +131,17 @@ export function ArtifactsModal({
             }
         }
 
+        // Convert map to array, sorted by order from most recent TodoWrite
+        const liveTodos = Array.from(todoMap.values()).sort((a, b) => (a.order || 0) - (b.order || 0))
+
         console.log('[ARTIFACTS] Extracted data:', {
-            todoWritesCount: todoWrites.length,
+            liveTodosCount: liveTodos.length,
             bashCommandsCount: bashCommands.length,
-            todoWrites,
+            liveTodos,
             bashCommands,
         })
 
-        return { todoWrites, bashCommands }
+        return { liveTodos, bashCommands }
     }, [logs])
 
     const getTypeIcon = (type: Artifact['type']) => {
@@ -266,11 +277,11 @@ export function ArtifactsModal({
                                             All (
                                             {artifacts.length +
                                                 (logs.length > 0 ? 1 : 0) +
-                                                (todoWrites.length > 0 ? 1 : 0) +
+                                                (liveTodos.length > 0 ? 1 : 0) +
                                                 (bashCommands.length > 0 ? 1 : 0)}
                                             )
                                         </TabsTrigger>
-                                        {todoWrites.length > 0 && (
+                                        {liveTodos.length > 0 && (
                                             <TabsTrigger value="plan" className="whitespace-nowrap">
                                                 Plan
                                             </TabsTrigger>
@@ -301,7 +312,7 @@ export function ArtifactsModal({
                                 <ScrollArea className="flex-1">
                                     <TabsContent value="all" className="m-0 p-2">
                                         <div className="space-y-1">
-                                            {todoWrites.length > 0 && (
+                                            {liveTodos.length > 0 && (
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -318,16 +329,12 @@ export function ArtifactsModal({
                                                         <div className="mt-0.5">
                                                             <ListTodo className="h-4 w-4" />
                                                         </div>
-                                                        <div className="flex-1 min-w-0">
+                                                        <div className="flex-1 min-w-0 relative z-10">
                                                             <p className="text-sm font-medium truncate">
                                                                 Task Plan
                                                             </p>
                                                             <span className="text-xs text-muted-foreground">
-                                                                {todoWrites.reduce(
-                                                                    (sum, tw) => sum + tw.todos.length,
-                                                                    0,
-                                                                )}{' '}
-                                                                items
+                                                                {liveTodos.length} items
                                                             </span>
                                                         </div>
                                                     </div>
@@ -429,7 +436,7 @@ export function ArtifactsModal({
                                         </div>
                                     </TabsContent>
 
-                                    {todoWrites.length > 0 && (
+                                    {liveTodos.length > 0 && (
                                         <TabsContent value="plan" className="m-0 p-2">
                                             <button
                                                 type="button"
@@ -449,11 +456,7 @@ export function ArtifactsModal({
                                                             Task Plan
                                                         </p>
                                                         <span className="text-xs text-muted-foreground">
-                                                            {todoWrites.reduce(
-                                                                (sum, tw) => sum + tw.todos.length,
-                                                                0,
-                                                            )}{' '}
-                                                            items
+                                                            {liveTodos.length} items
                                                         </span>
                                                     </div>
                                                 </div>
@@ -555,87 +558,81 @@ export function ArtifactsModal({
                                     </ScrollArea>
                                 </>
                             ) : (activeTab === 'plan' ||
-                                  (activeTab === 'all' && !selectedArtifact && todoWrites.length > 0)) &&
-                              todoWrites.length > 0 ? (
+                                  (activeTab === 'all' && !selectedArtifact && liveTodos.length > 0)) &&
+                              liveTodos.length > 0 ? (
                                 <>
                                     <div className="px-6 py-4 border-b flex-shrink-0">
                                         <h3 className="font-semibold">Task Plan</h3>
                                         <p className="text-sm text-muted-foreground">
-                                            Todo items and their current status
+                                            Live task list with current status
                                         </p>
                                     </div>
                                     <ScrollArea className="flex-1 p-6">
-                                        <div className="space-y-6">
-                                            {todoWrites.map((todoWrite, writeIndex) => (
-                                                <div key={writeIndex} className="space-y-3">
-                                                    {writeIndex > 0 && <div className="border-t pt-4" />}
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {new Date(todoWrite.timestamp).toLocaleString()}
-                                                    </p>
-                                                    <div className="space-y-2">
-                                                        {todoWrite.todos.map(todo => (
-                                                            <div
-                                                                key={todo.id}
-                                                                className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                                        <div className="space-y-2">
+                                            {liveTodos.map(todo => (
+                                                <div
+                                                    key={todo.id}
+                                                    className={cn(
+                                                        'flex items-start gap-3 p-3 rounded-lg border transition-all relative',
+                                                        todo.status === 'in-progress' ||
+                                                            todo.status === 'in_progress'
+                                                            ? 'bg-blue-50 border-blue-400 shadow-lg animate-pulse ring-2 ring-blue-300 ring-opacity-50'
+                                                            : todo.status === 'completed'
+                                                              ? 'bg-green-50 border-green-200'
+                                                              : 'bg-card hover:bg-accent/50',
+                                                    )}
+                                                >
+                                                    <div className="flex-shrink-0 mt-0.5 relative z-10">
+                                                        {todo.status === 'completed' ? (
+                                                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                                        ) : todo.status === 'in-progress' ||
+                                                          todo.status === 'in_progress' ? (
+                                                            <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                                                        ) : (
+                                                            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0 relative z-10">
+                                                        <p
+                                                            className={cn(
+                                                                'text-sm',
+                                                                todo.status === 'completed' &&
+                                                                    'line-through text-muted-foreground',
+                                                            )}
+                                                        >
+                                                            {todo.content}
+                                                        </p>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={cn(
+                                                                    'text-xs',
+                                                                    todo.status === 'completed' &&
+                                                                        'bg-green-100 text-green-700 border-green-200',
+                                                                    (todo.status === 'in-progress' ||
+                                                                        todo.status === 'in_progress') &&
+                                                                        'bg-blue-100 text-blue-700 border-blue-200',
+                                                                    todo.status === 'todo' &&
+                                                                        'bg-gray-100 text-gray-700 border-gray-200',
+                                                                )}
                                                             >
-                                                                <div className="flex-shrink-0 mt-0.5">
-                                                                    {todo.status === 'completed' ? (
-                                                                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                                                    ) : todo.status === 'in-progress' ? (
-                                                                        <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-                                                                    ) : (
-                                                                        <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
-                                                                    )}
-                                                                </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <p
-                                                                        className={cn(
-                                                                            'text-sm',
-                                                                            todo.status ===
-                                                                                'completed' &&
-                                                                                'line-through text-muted-foreground',
-                                                                        )}
-                                                                    >
-                                                                        {todo.content}
-                                                                    </p>
-                                                                    <div className="flex items-center gap-2 mt-1">
-                                                                        <Badge
-                                                                            variant="outline"
-                                                                            className={cn(
-                                                                                'text-xs',
-                                                                                todo.status ===
-                                                                                    'completed' &&
-                                                                                    'bg-green-100 text-green-700 border-green-200',
-                                                                                todo.status ===
-                                                                                    'in-progress' &&
-                                                                                    'bg-blue-100 text-blue-700 border-blue-200',
-                                                                                todo.status === 'todo' &&
-                                                                                    'bg-gray-100 text-gray-700 border-gray-200',
-                                                                            )}
-                                                                        >
-                                                                            {todo.status}
-                                                                        </Badge>
-                                                                        <Badge
-                                                                            variant="outline"
-                                                                            className={cn(
-                                                                                'text-xs',
-                                                                                todo.priority ===
-                                                                                    'high' &&
-                                                                                    'bg-red-100 text-red-700 border-red-200',
-                                                                                todo.priority ===
-                                                                                    'medium' &&
-                                                                                    'bg-yellow-100 text-yellow-700 border-yellow-200',
-                                                                                todo.priority ===
-                                                                                    'low' &&
-                                                                                    'bg-slate-100 text-slate-700 border-slate-200',
-                                                                            )}
-                                                                        >
-                                                                            {todo.priority}
-                                                                        </Badge>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        ))}
+                                                                {todo.status}
+                                                            </Badge>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={cn(
+                                                                    'text-xs',
+                                                                    todo.priority === 'high' &&
+                                                                        'bg-red-100 text-red-700 border-red-200',
+                                                                    todo.priority === 'medium' &&
+                                                                        'bg-yellow-100 text-yellow-700 border-yellow-200',
+                                                                    todo.priority === 'low' &&
+                                                                        'bg-slate-100 text-slate-700 border-slate-200',
+                                                                )}
+                                                            >
+                                                                {todo.priority}
+                                                            </Badge>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -646,7 +643,7 @@ export function ArtifactsModal({
                                   (activeTab === 'all' &&
                                       !selectedArtifact &&
                                       bashCommands.length > 0 &&
-                                      todoWrites.length === 0)) &&
+                                      liveTodos.length === 0)) &&
                               bashCommands.length > 0 ? (
                                 <>
                                     <div className="px-6 py-4 border-b flex-shrink-0">
@@ -691,7 +688,7 @@ export function ArtifactsModal({
                                   (activeTab === 'all' &&
                                       !selectedArtifact &&
                                       logs.length > 0 &&
-                                      todoWrites.length === 0 &&
+                                      liveTodos.length === 0 &&
                                       bashCommands.length === 0)) &&
                               logs.length > 0 ? (
                                 <>
@@ -704,9 +701,9 @@ export function ArtifactsModal({
                                     <div className="flex-1 overflow-auto p-6">
                                         <div className="bg-slate-950 rounded-md p-4 overflow-x-auto">
                                             <div className="font-mono text-xs space-y-1">
-                                                {logs.map((log, index) => (
+                                                {logs.map(log => (
                                                     <div
-                                                        key={index}
+                                                        key={`${log.timestamp}-${log.message.slice(0, 20)}`}
                                                         className="flex items-start gap-2 text-slate-200 whitespace-nowrap"
                                                     >
                                                         <span className="text-slate-500 min-w-[100px] text-[10px] flex-shrink-0">
