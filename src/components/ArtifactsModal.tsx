@@ -120,11 +120,11 @@ export function ArtifactsModal({
                             order: i, // Preserve order from TodoWrite
                         })
                     }
-                } else if (toolData.name === 'Bash' && toolData.input?.cmd) {
+                } else if (toolData.name === 'Bash' && (toolData.input?.cmd || toolData.input?.command)) {
                     bashCommands.push({
                         id: toolData.id,
                         timestamp: toolData.timestamp || log.timestamp,
-                        command: toolData.input.cmd,
+                        command: toolData.input.cmd || toolData.input.command,
                         output: toolData.output || undefined,
                     })
                 }
