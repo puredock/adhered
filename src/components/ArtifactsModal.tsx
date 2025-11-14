@@ -88,7 +88,7 @@ export function ArtifactsModal({
     // Maintain a live, merged view of todos (not snapshots)
     const { liveTodos, bashCommands } = useMemo(() => {
         const todoMap = new Map<string, TodoItem>()
-        const bashCommands: BashCommand[] = []
+        const bashCommandMap = new Map<string, BashCommand>()
 
         console.log('[ARTIFACTS] Processing logs, total count:', logs.length)
 
@@ -120,19 +120,33 @@ export function ArtifactsModal({
                             order: i, // Preserve order from TodoWrite
                         })
                     }
-                } else if (toolData.name === 'Bash' && (toolData.input?.cmd || toolData.input?.command)) {
-                    bashCommands.push({
+                } else if (
+                    toolData.name === 'Bash' &&
+                    (toolData.input?.cmd || toolData.input?.command)
+                ) {
+                    bashCommandMap.set(toolData.id, {
                         id: toolData.id,
                         timestamp: toolData.timestamp || log.timestamp,
                         command: toolData.input.cmd || toolData.input.command,
                         output: toolData.output || undefined,
                     })
                 }
+            } else if ((log as any).type === 'tool_use_updated' && (log as any).data) {
+                // Handle tool output updates
+                console.log('[ARTIFACTS] Found tool_use_updated event:', log)
+                const toolData = (log as any).data
+
+                // Update the output for existing Bash command
+                if (bashCommandMap.has(toolData.id)) {
+                    const cmd = bashCommandMap.get(toolData.id)!
+                    cmd.output = toolData.output
+                }
             }
         }
 
-        // Convert map to array, sorted by order from most recent TodoWrite
+        // Convert maps to arrays
         const liveTodos = Array.from(todoMap.values()).sort((a, b) => (a.order || 0) - (b.order || 0))
+        const bashCommands = Array.from(bashCommandMap.values())
 
         console.log('[ARTIFACTS] Extracted data:', {
             liveTodosCount: liveTodos.length,
