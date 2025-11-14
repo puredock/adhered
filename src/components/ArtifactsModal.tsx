@@ -602,37 +602,21 @@ export function ArtifactsModal({
                                                         >
                                                             {todo.content}
                                                         </p>
-                                                        <div className="flex items-center gap-2 mt-1">
-                                                            <Badge
-                                                                variant="outline"
-                                                                className={cn(
-                                                                    'text-xs',
-                                                                    todo.status === 'completed' &&
-                                                                        'bg-green-100 text-green-700 border-green-200',
-                                                                    (todo.status === 'in-progress' ||
-                                                                        todo.status === 'in_progress') &&
-                                                                        'bg-blue-100 text-blue-700 border-blue-200',
-                                                                    todo.status === 'todo' &&
-                                                                        'bg-gray-100 text-gray-700 border-gray-200',
-                                                                )}
-                                                            >
-                                                                {todo.status}
-                                                            </Badge>
-                                                            <Badge
-                                                                variant="outline"
-                                                                className={cn(
-                                                                    'text-xs',
-                                                                    todo.priority === 'high' &&
-                                                                        'bg-red-100 text-red-700 border-red-200',
-                                                                    todo.priority === 'medium' &&
-                                                                        'bg-yellow-100 text-yellow-700 border-yellow-200',
-                                                                    todo.priority === 'low' &&
-                                                                        'bg-slate-100 text-slate-700 border-slate-200',
-                                                                )}
-                                                            >
-                                                                {todo.priority}
-                                                            </Badge>
-                                                        </div>
+                                                        <Badge
+                                                            variant="outline"
+                                                            className={cn(
+                                                                'text-xs mt-1',
+                                                                todo.status === 'completed' &&
+                                                                    'bg-green-100 text-green-700 border-green-200',
+                                                                (todo.status === 'in-progress' ||
+                                                                    todo.status === 'in_progress') &&
+                                                                    'bg-blue-100 text-blue-700 border-blue-200',
+                                                                todo.status === 'todo' &&
+                                                                    'bg-gray-100 text-gray-700 border-gray-200',
+                                                            )}
+                                                        >
+                                                            {todo.status.replace('_', '-')}
+                                                        </Badge>
                                                     </div>
                                                 </div>
                                             ))}
