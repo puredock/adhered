@@ -5,13 +5,11 @@ import {
     ChevronRight,
     Copy,
     FileStack,
-    Info,
     Loader2,
     RotateCw,
     ShieldCheck,
-    XCircle,
 } from 'lucide-react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { type Artifact, ArtifactsModal } from '@/components/ArtifactsModal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -23,6 +21,14 @@ interface LogEntry {
     level: 'info' | 'error' | 'success'
     message: string
     source?: string
+}
+
+interface TodoItem {
+    id: string
+    content: string
+    status: 'todo' | 'in-progress' | 'in_progress' | 'completed'
+    priority: 'low' | 'medium' | 'high'
+    order?: number
 }
 
 interface AttackVectorStepProps {
@@ -52,6 +58,35 @@ export function AttackVectorStep({
     const [isRetrying, setIsRetrying] = useState(false)
     const [artifactsOpen, setArtifactsOpen] = useState(false)
     const [copied, setCopied] = useState(false)
+
+    // Extract todos from logs
+    const liveTodos = useMemo(() => {
+        const todoMap = new Map<string, TodoItem>()
+
+        for (const log of logs) {
+            if ((log as any).type === 'tool_use' && (log as any).data) {
+                const toolData = (log as any).data
+
+                if (toolData.name === 'TodoWrite' && toolData.input?.todos) {
+                    todoMap.clear()
+
+                    for (let i = 0; i < toolData.input.todos.length; i++) {
+                        const todo = toolData.input.todos[i]
+                        const todoKey = todo.content || todo.activeForm || JSON.stringify(todo)
+                        todoMap.set(todoKey, {
+                            id: todoKey,
+                            content: todo.content || todo.activeForm,
+                            status: todo.status,
+                            priority: todo.priority || 'medium',
+                            order: i,
+                        })
+                    }
+                }
+            }
+        }
+
+        return Array.from(todoMap.values()).sort((a, b) => (a.order || 0) - (b.order || 0))
+    }, [logs])
 
     const getStatusIcon = () => {
         switch (status) {
@@ -89,17 +124,6 @@ export function AttackVectorStep({
                 return 'bg-teal-100 text-teal-700 border-teal-200'
             case 'low':
                 return 'bg-gray-100 text-gray-700 border-gray-200'
-        }
-    }
-
-    const getLevelIcon = (level: LogEntry['level']) => {
-        switch (level) {
-            case 'success':
-                return <CheckCircle2 className="h-3 w-3 text-green-500 flex-shrink-0" />
-            case 'error':
-                return <XCircle className="h-3 w-3 text-red-500 flex-shrink-0" />
-            case 'info':
-                return <Info className="h-3 w-3 text-blue-500 flex-shrink-0" />
         }
     }
 
@@ -222,20 +246,59 @@ export function AttackVectorStep({
                     </div>
                 </div>
 
-                {isExpanded && logs.length > 0 && (
+                {isExpanded && liveTodos.length > 0 && (
                     <div className="mt-4 pt-4 border-t">
-                        <div className="bg-slate-950 rounded-md p-3 max-h-[300px] overflow-y-auto">
-                            <div className="font-mono text-xs space-y-1">
-                                {logs.map((log, index) => (
-                                    <div key={index} className="flex items-start gap-2 text-slate-200">
-                                        <span className="text-slate-500 min-w-[80px] text-[10px]">
-                                            {new Date(log.timestamp).toLocaleTimeString()}
-                                        </span>
-                                        {getLevelIcon(log.level)}
-                                        <span className="flex-1 break-words">{log.message}</span>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                            {liveTodos.map(todo => (
+                                <div
+                                    key={todo.id}
+                                    className={cn(
+                                        'flex items-start gap-3 p-3 rounded-lg border transition-all relative',
+                                        todo.status === 'in-progress' || todo.status === 'in_progress'
+                                            ? 'bg-blue-50 border-blue-400 shadow-lg animate-pulse ring-2 ring-blue-300 ring-opacity-50'
+                                            : todo.status === 'completed'
+                                              ? 'bg-green-50 border-green-200'
+                                              : 'bg-card hover:bg-accent/50',
+                                    )}
+                                >
+                                    <div className="flex-shrink-0 mt-0.5 relative z-10">
+                                        {todo.status === 'completed' ? (
+                                            <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                        ) : todo.status === 'in-progress' ||
+                                          todo.status === 'in_progress' ? (
+                                            <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                                        ) : (
+                                            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
+                                        )}
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="flex-1 min-w-0 relative z-10">
+                                        <p
+                                            className={cn(
+                                                'text-sm',
+                                                todo.status === 'completed' &&
+                                                    'line-through text-muted-foreground',
+                                            )}
+                                        >
+                                            {todo.content}
+                                        </p>
+                                        <Badge
+                                            variant="outline"
+                                            className={cn(
+                                                'text-xs mt-1',
+                                                todo.status === 'completed' &&
+                                                    'bg-green-100 text-green-700 border-green-200',
+                                                (todo.status === 'in-progress' ||
+                                                    todo.status === 'in_progress') &&
+                                                    'bg-blue-100 text-blue-700 border-blue-200',
+                                                todo.status === 'todo' &&
+                                                    'bg-gray-100 text-gray-700 border-gray-200',
+                                            )}
+                                        >
+                                            {todo.status.replace('_', '-')}
+                                        </Badge>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                         <div className="flex justify-end gap-2 mt-2">
                             <Button
