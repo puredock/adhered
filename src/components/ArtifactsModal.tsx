@@ -1,6 +1,7 @@
-import { CheckCircle2, Code2, Info, ListTodo, ScrollText, Terminal, XCircle } from 'lucide-react'
+import { CheckCircle2, Code2, Info, ListTodo, MessageSquare, Terminal, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
     Dialog,
     DialogContent,
@@ -43,6 +44,12 @@ interface BashCommand {
     output?: string
 }
 
+interface TimelineItem {
+    type: 'command' | 'message'
+    timestamp: string
+    data: BashCommand | LogEntry
+}
+
 interface ArtifactsModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
@@ -60,9 +67,10 @@ export function ArtifactsModal({
 }: ArtifactsModalProps) {
     // Extract TodoWrite and Bash tool uses from logs
     // Maintain a live, merged view of todos (not snapshots)
-    const { liveTodos, bashCommands } = useMemo(() => {
+    const { liveTodos, timeline } = useMemo(() => {
         const todoMap = new Map<string, TodoItem>()
         const bashCommandMap = new Map<string, BashCommand>()
+        const timelineItems: TimelineItem[] = []
 
         console.log('[ARTIFACTS] Processing logs, total count:', logs.length)
 
@@ -98,12 +106,13 @@ export function ArtifactsModal({
                     toolData.name === 'Bash' &&
                     (toolData.input?.cmd || toolData.input?.command)
                 ) {
-                    bashCommandMap.set(toolData.id, {
+                    const bashCommand: BashCommand = {
                         id: toolData.id,
                         timestamp: toolData.timestamp || log.timestamp,
                         command: toolData.input.cmd || toolData.input.command,
                         output: toolData.output || undefined,
-                    })
+                    }
+                    bashCommandMap.set(toolData.id, bashCommand)
                 }
             } else if ((log as any).type === 'tool_use_updated' && (log as any).data) {
                 // Handle tool output updates
@@ -115,30 +124,54 @@ export function ArtifactsModal({
                     const cmd = bashCommandMap.get(toolData.id)!
                     cmd.output = toolData.output
                 }
+            } else if (log.message && log.message.trim()) {
+                // This is a text message/commentary from the AI
+                timelineItems.push({
+                    type: 'message',
+                    timestamp: log.timestamp,
+                    data: log,
+                })
             }
         }
 
+        // Add bash commands to timeline
+        for (const cmd of bashCommandMap.values()) {
+            timelineItems.push({
+                type: 'command',
+                timestamp: cmd.timestamp,
+                data: cmd,
+            })
+        }
+
+        // Sort timeline by timestamp
+        timelineItems.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+
         // Convert maps to arrays
         const liveTodos = Array.from(todoMap.values()).sort((a, b) => (a.order || 0) - (b.order || 0))
-        const bashCommands = Array.from(bashCommandMap.values())
 
         console.log('[ARTIFACTS] Extracted data:', {
             liveTodosCount: liveTodos.length,
-            bashCommandsCount: bashCommands.length,
+            timelineItemsCount: timelineItems.length,
             liveTodos,
-            bashCommands,
+            timeline: timelineItems,
         })
 
-        return { liveTodos, bashCommands }
+        return { liveTodos, timeline: timelineItems }
     }, [logs])
 
     const [activeTab, setActiveTab] = useState<string>(() => {
         // Auto-select the first available view
         if (liveTodos.length > 0) return 'plan'
-        if (bashCommands.length > 0) return 'commands'
-        if (logs.length > 0) return 'logs'
+        if (timeline.length > 0) return 'commands'
         return 'plan'
     })
+
+    const [showContextInTimeline, setShowContextInTimeline] = useState(true)
+
+    const filteredTimeline = useMemo(() => {
+        if (showContextInTimeline) return timeline
+        return timeline.filter(item => item.type === 'command')
+    }, [timeline, showContextInTimeline])
 
     const getLevelIcon = (level: LogEntry['level']) => {
         switch (level) {
@@ -194,7 +227,7 @@ export function ArtifactsModal({
                                             </div>
                                         </button>
                                     )}
-                                    {bashCommands.length > 0 && (
+                                    {timeline.length > 0 && (
                                         <button
                                             type="button"
                                             onClick={() => setActiveTab('commands')}
@@ -210,35 +243,10 @@ export function ArtifactsModal({
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-medium truncate">
-                                                        Shell Commands
+                                                        Execution Timeline
                                                     </p>
                                                     <span className="text-xs text-muted-foreground">
-                                                        {bashCommands.length} commands
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </button>
-                                    )}
-                                    {logs.length > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveTab('logs')}
-                                            className={cn(
-                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                activeTab === 'logs' &&
-                                                    'bg-background shadow-sm ring-1 ring-primary/20',
-                                            )}
-                                        >
-                                            <div className="flex items-start gap-2">
-                                                <div className="mt-0.5">
-                                                    <ScrollText className="h-4 w-4" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        Execution Logs
-                                                    </p>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {logs.filter(log => log.message).length} entries
+                                                        {timeline.length} entries
                                                     </span>
                                                 </div>
                                             </div>
@@ -314,80 +322,98 @@ export function ArtifactsModal({
                                         </div>
                                     </ScrollArea>
                                 </>
-                            ) : activeTab === 'commands' && bashCommands.length > 0 ? (
+                            ) : activeTab === 'commands' && timeline.length > 0 ? (
                                 <>
-                                    <div className="px-6 py-4 border-b flex-shrink-0">
-                                        <h3 className="font-semibold">Shell Commands</h3>
-                                        <p className="text-sm text-muted-foreground">
-                                            Commands executed and their outputs
-                                        </p>
+                                    <div className="px-6 py-4 border-b flex-shrink-0 flex items-start justify-between">
+                                        <div>
+                                            <h3 className="font-semibold">Execution Timeline</h3>
+                                            <p className="text-sm text-muted-foreground">
+                                                Commands and commentary in chronological order
+                                            </p>
+                                        </div>
+                                        <Button
+                                            variant={showContextInTimeline ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() =>
+                                                setShowContextInTimeline(!showContextInTimeline)
+                                            }
+                                            className="flex-shrink-0"
+                                        >
+                                            <MessageSquare className="h-3.5 w-3.5 mr-1.5" />
+                                            {showContextInTimeline ? 'Hide Context' : 'Show Context'}
+                                        </Button>
                                     </div>
                                     <ScrollArea className="flex-1 p-6">
-                                        <div className="space-y-4">
-                                            {bashCommands.map(cmd => (
-                                                <div
-                                                    key={cmd.id}
-                                                    className="border rounded-lg overflow-hidden"
-                                                >
-                                                    <div className="bg-slate-950 p-3 border-b border-slate-800">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <Terminal className="h-4 w-4 text-green-400" />
-                                                            <span className="text-xs text-slate-400">
-                                                                {new Date(
-                                                                    cmd.timestamp,
-                                                                ).toLocaleTimeString()}
-                                                            </span>
-                                                        </div>
-                                                        <code className="text-sm text-slate-200 font-mono">
-                                                            $ {cmd.command}
-                                                        </code>
-                                                    </div>
-                                                    {cmd.output && (
-                                                        <div className="bg-slate-900 p-3">
-                                                            <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap">
-                                                                {cmd.output}
-                                                            </pre>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </ScrollArea>
-                                </>
-                            ) : activeTab === 'logs' && logs.length > 0 ? (
-                                <>
-                                    <div className="px-6 py-4 border-b flex-shrink-0">
-                                        <h3 className="font-semibold">Execution Logs</h3>
-                                        <p className="text-sm text-muted-foreground">
-                                            Complete step execution timeline
-                                        </p>
-                                    </div>
-                                    <div className="flex-1 overflow-auto p-6">
-                                        <div className="bg-slate-950 rounded-md p-4 overflow-x-auto">
-                                            <div className="font-mono text-xs space-y-1">
-                                                {logs
-                                                    .filter(log => log.message) // Filter out empty messages (tool_use events)
-                                                    .map((log, index) => (
-                                                        <div
-                                                            key={`${log.timestamp}-${index}`}
-                                                            className="flex items-start gap-2 text-slate-200 whitespace-nowrap"
-                                                        >
-                                                            <span className="text-slate-500 min-w-[100px] text-[10px] flex-shrink-0">
-                                                                {new Date(
-                                                                    log.timestamp,
-                                                                ).toLocaleTimeString()}
-                                                            </span>
-                                                            <span className="flex-shrink-0">
-                                                                {getLevelIcon(log.level)}
-                                                            </span>
-                                                            <span className="text-slate-200">
-                                                                {log.message}
-                                                            </span>
-                                                        </div>
-                                                    ))}
+                                        <div className="relative">
+                                            {filteredTimeline.length > 1 && (
+                                                <div className="absolute left-[30px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-blue-200 via-blue-300 to-blue-200" />
+                                            )}
+                                            <div className="relative space-y-6">
+                                                {filteredTimeline.map((item, index) => {
+                                                    if (item.type === 'command') {
+                                                        const cmd = item.data as BashCommand
+                                                        return (
+                                                            <div key={cmd.id} className="relative pl-14">
+                                                                <div className="absolute left-[22px] top-3 w-4 h-4 rounded-full bg-blue-500 border-4 border-background shadow-md z-10" />
+                                                                <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                                                    <div className="bg-slate-950 p-4">
+                                                                        <div className="flex items-center gap-2 mb-3">
+                                                                            <Terminal className="h-4 w-4 text-green-400" />
+                                                                            <span className="text-xs text-slate-400 font-mono">
+                                                                                {new Date(
+                                                                                    cmd.timestamp,
+                                                                                ).toLocaleTimeString()}
+                                                                            </span>
+                                                                        </div>
+                                                                        <code className="text-sm text-slate-100 font-mono block">
+                                                                            <span className="text-green-400">
+                                                                                $
+                                                                            </span>{' '}
+                                                                            {cmd.command}
+                                                                        </code>
+                                                                    </div>
+                                                                    {cmd.output && (
+                                                                        <div className="bg-slate-900 p-4 border-t border-slate-800">
+                                                                            <pre className="text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">
+                                                                                {cmd.output}
+                                                                            </pre>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    } else {
+                                                        const log = item.data as LogEntry
+                                                        return (
+                                                            <div
+                                                                key={`${log.timestamp}-${index}`}
+                                                                className="relative pl-14"
+                                                            >
+                                                                <div className="absolute left-[24px] top-2 w-3 h-3 rounded-full bg-blue-300 border-2 border-background z-10" />
+                                                                <div className="bg-gradient-to-r from-blue-50 to-transparent border-l-4 border-blue-400 p-4 rounded-r-lg">
+                                                                    <div className="flex items-start gap-3">
+                                                                        <div className="flex items-center gap-2 min-w-0">
+                                                                            <span className="text-slate-500 text-[11px] font-mono flex-shrink-0">
+                                                                                {new Date(
+                                                                                    log.timestamp,
+                                                                                ).toLocaleTimeString()}
+                                                                            </span>
+                                                                            <span className="flex-shrink-0">
+                                                                                {getLevelIcon(log.level)}
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                    <p className="text-sm text-slate-700 mt-2 leading-relaxed">
+                                                                        {log.message}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    }
+                                                })}
                                             </div>
                                         </div>
-                                    </div>
+                                    </ScrollArea>
                                 </>
                             ) : null}
                         </div>
