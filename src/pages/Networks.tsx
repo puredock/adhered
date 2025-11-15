@@ -448,30 +448,33 @@ const Networks = () => {
                             <AlertTriangle className="w-5 h-5 text-warning" />
                             Connect to Network
                         </DialogTitle>
-                        <DialogDescription className="space-y-3 pt-2">
-                            <p>
-                                You are about to connect to{' '}
-                                <span className="font-semibold text-foreground">
-                                    {selectedNetwork?.name}
-                                </span>{' '}
-                                ({selectedNetwork?.subnet}).
-                            </p>
-                            <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 space-y-2">
-                                <p className="font-medium text-warning flex items-center gap-2">
-                                    <AlertTriangle className="w-4 h-4" />
-                                    Important Security Notice
+                        <DialogDescription asChild className="space-y-3 pt-2">
+                            <div>
+                                <p>
+                                    You are about to connect to{' '}
+                                    <span className="font-semibold text-foreground">
+                                        {selectedNetwork?.name}
+                                    </span>{' '}
+                                    ({selectedNetwork?.subnet}).
                                 </p>
-                                <ul className="text-sm space-y-1 text-muted-foreground list-disc list-inside">
-                                    <li>Your device will connect to this network</li>
-                                    <li>
-                                        Only connect to networks you trust and have permission to access
-                                    </li>
-                                    <li>
-                                        Be aware of potential security risks when connecting to unknown
-                                        networks
-                                    </li>
-                                    <li>Ensure you comply with your organization's policies</li>
-                                </ul>
+                                <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 space-y-2">
+                                    <p className="font-medium text-warning flex items-center gap-2">
+                                        <AlertTriangle className="w-4 h-4" />
+                                        Important Security Notice
+                                    </p>
+                                    <ul className="text-sm space-y-1 text-muted-foreground list-disc list-inside">
+                                        <li>Your device will connect to this network</li>
+                                        <li>
+                                            Only connect to networks you trust and have permission to
+                                            access
+                                        </li>
+                                        <li>
+                                            Be aware of potential security risks when connecting to
+                                            unknown networks
+                                        </li>
+                                        <li>Ensure you comply with your organization's policies</li>
+                                    </ul>
+                                </div>
                             </div>
                         </DialogDescription>
                     </DialogHeader>
