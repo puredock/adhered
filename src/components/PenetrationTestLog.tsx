@@ -167,18 +167,19 @@ export function PenetrationTestLog({
                     prev.map(step => (step.index === stepIndex ? { ...step, status: 'error' } : step)),
                 )
             } else if (data.type === 'tool_use' || data.type === 'tool_use_updated') {
-                // Tool use events from Redis - pass through to logs for ArtifactsModal
+                // Tool use events - don't add to execution logs, they're shown in Plan/Commands tabs
+                // Just store in logs array for ArtifactsModal to consume
                 console.log('Received tool_use event:', data)
                 const logEntry: LogEntry = {
-                    timestamp: data.data?.timestamp || new Date().toISOString(),
+                    timestamp: data.data?.timestamp || data.timestamp || new Date().toISOString(),
                     level: 'info',
-                    message: `Tool: ${data.data?.name}`,
+                    message: '', // No message needed, used for Plan/Commands tabs only
                     type: data.type,
-                    ...data, // Include all data fields
+                    ...data, // Include all data fields for ArtifactsModal parsing
                 }
                 setLogs(prev => [...prev, logEntry])
 
-                // Also add to step logs if we have a current step
+                // Also add to current step's logs for per-step artifact viewing
                 const stepIndex = currentStepIndexRef.current
                 if (stepIndex !== null) {
                     setSteps(prev =>
@@ -192,10 +193,14 @@ export function PenetrationTestLog({
             } else if (data.type === 'log') {
                 // Structured log event from EventBus
                 const payload = data.payload || data
+
+                // Skip if no message
+                if (!payload.message) return
+
                 const logEntry: LogEntry = {
                     timestamp: data.timestamp || new Date().toISOString(),
                     level: data.level || 'info',
-                    message: payload.message || '',
+                    message: payload.message,
                     source: payload.source,
                     type: data.type,
                 }
