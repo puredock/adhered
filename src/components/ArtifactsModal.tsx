@@ -238,7 +238,7 @@ export function ArtifactsModal({
                                                         Execution Logs
                                                     </p>
                                                     <span className="text-xs text-muted-foreground">
-                                                        {logs.length} entries
+                                                        {logs.filter(log => log.message).length} entries
                                                     </span>
                                                 </div>
                                             </div>
@@ -365,24 +365,26 @@ export function ArtifactsModal({
                                     <div className="flex-1 overflow-auto p-6">
                                         <div className="bg-slate-950 rounded-md p-4 overflow-x-auto">
                                             <div className="font-mono text-xs space-y-1">
-                                                {logs.map(log => (
-                                                    <div
-                                                        key={`${log.timestamp}-${log.message.slice(0, 20)}`}
-                                                        className="flex items-start gap-2 text-slate-200 whitespace-nowrap"
-                                                    >
-                                                        <span className="text-slate-500 min-w-[100px] text-[10px] flex-shrink-0">
-                                                            {new Date(
-                                                                log.timestamp,
-                                                            ).toLocaleTimeString()}
-                                                        </span>
-                                                        <span className="flex-shrink-0">
-                                                            {getLevelIcon(log.level)}
-                                                        </span>
-                                                        <span className="text-slate-200">
-                                                            {log.message}
-                                                        </span>
-                                                    </div>
-                                                ))}
+                                                {logs
+                                                    .filter(log => log.message) // Filter out empty messages (tool_use events)
+                                                    .map((log, index) => (
+                                                        <div
+                                                            key={`${log.timestamp}-${index}`}
+                                                            className="flex items-start gap-2 text-slate-200 whitespace-nowrap"
+                                                        >
+                                                            <span className="text-slate-500 min-w-[100px] text-[10px] flex-shrink-0">
+                                                                {new Date(
+                                                                    log.timestamp,
+                                                                ).toLocaleTimeString()}
+                                                            </span>
+                                                            <span className="flex-shrink-0">
+                                                                {getLevelIcon(log.level)}
+                                                            </span>
+                                                            <span className="text-slate-200">
+                                                                {log.message}
+                                                            </span>
+                                                        </div>
+                                                    ))}
                                             </div>
                                         </div>
                                     </div>
