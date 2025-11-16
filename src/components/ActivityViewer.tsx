@@ -126,12 +126,6 @@ export function ActivityViewer({
     const renderActivityEntry = (activity: ActivityEntry) => {
         const isSelected = selectedActivityId === activity.id
 
-        // Check if logs are available (running or completed within last 60 mins)
-        const isLogsAvailable =
-            activity.status === 'running' ||
-            (activity.completedAt &&
-                new Date().getTime() - new Date(activity.completedAt).getTime() < 60 * 60 * 1000)
-
         return (
             <div key={activity.id} className="space-y-2">
                 <button
@@ -174,36 +168,25 @@ export function ActivityViewer({
 
                 {isSelected && (
                     <div className="mt-3 ml-8 pl-4 border-l-2 border-muted space-y-2">
-                        {isLogsAvailable ? (
-                            <PenetrationTestLog
-                                scanId={activity.id}
-                                initialStatus={activity.status}
-                                persistedState={scanStates[activity.id]}
-                                onStateChange={newState => {
-                                    setScanStates(prev => ({
-                                        ...prev,
-                                        [activity.id]: newState,
-                                    }))
-                                }}
-                                onComplete={status => {
-                                    console.log(
-                                        `Activity ${activity.id} completed with status: ${status}`,
-                                    )
-                                    onScanComplete?.(activity.id, status)
-                                }}
-                                onCancel={() => {
-                                    setSelectedActivityId(null)
-                                }}
-                                onClearStaleScan={onClearStaleScan}
-                            />
-                        ) : (
-                            <div className="p-6 rounded-lg border border-muted bg-muted/30">
-                                <p className="text-sm text-muted-foreground text-center">
-                                    Logs are only available for recent activities (within the last 60
-                                    minutes). Older logs will be available in the full scan report.
-                                </p>
-                            </div>
-                        )}
+                        <PenetrationTestLog
+                            scanId={activity.id}
+                            initialStatus={activity.status}
+                            persistedState={scanStates[activity.id]}
+                            onStateChange={newState => {
+                                setScanStates(prev => ({
+                                    ...prev,
+                                    [activity.id]: newState,
+                                }))
+                            }}
+                            onComplete={status => {
+                                console.log(`Activity ${activity.id} completed with status: ${status}`)
+                                onScanComplete?.(activity.id, status)
+                            }}
+                            onCancel={() => {
+                                setSelectedActivityId(null)
+                            }}
+                            onClearStaleScan={onClearStaleScan}
+                        />
                     </div>
                 )}
             </div>
