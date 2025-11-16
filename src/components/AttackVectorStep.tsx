@@ -5,9 +5,11 @@ import {
     ChevronRight,
     Copy,
     FileStack,
+    Info,
     Loader2,
     RotateCw,
     ShieldCheck,
+    XCircle,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { type Artifact, ArtifactsModal } from '@/components/ArtifactsModal'
@@ -246,70 +248,94 @@ export function AttackVectorStep({
                     </div>
                 </div>
 
-                {isExpanded && liveTodos.length > 0 && (
+                {isExpanded && (
                     <div className="mt-4 pt-4 border-t">
-                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                            {liveTodos.map(todo => (
-                                <div
-                                    key={todo.id}
-                                    className={cn(
-                                        'flex items-start gap-3 p-3 rounded-lg border transition-all relative',
-                                        todo.status === 'in-progress' || todo.status === 'in_progress'
-                                            ? 'bg-blue-50 border-blue-400 shadow-lg animate-pulse ring-2 ring-blue-300 ring-opacity-50'
-                                            : todo.status === 'completed'
-                                              ? 'bg-green-50 border-green-200'
-                                              : 'bg-card hover:bg-accent/50',
-                                    )}
-                                >
-                                    <div className="flex-shrink-0 mt-0.5 relative z-10">
-                                        {todo.status === 'completed' ? (
-                                            <CheckCircle2 className="h-4 w-4 text-green-500" />
-                                        ) : todo.status === 'in-progress' ||
-                                          todo.status === 'in_progress' ? (
-                                            <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
-                                        ) : (
-                                            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
+                        {liveTodos.length > 0 ? (
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                {liveTodos.map(todo => (
+                                    <div
+                                        key={todo.id}
+                                        className={cn(
+                                            'flex items-start gap-3 p-3 rounded-lg border transition-all relative',
+                                            todo.status === 'in-progress' ||
+                                                todo.status === 'in_progress'
+                                                ? 'bg-blue-50 border-blue-400 shadow-lg animate-pulse ring-2 ring-blue-300 ring-opacity-50'
+                                                : todo.status === 'completed'
+                                                  ? 'bg-green-50 border-green-200'
+                                                  : 'bg-card hover:bg-accent/50',
                                         )}
-                                    </div>
-                                    <div className="flex-1 min-w-0 relative z-10">
-                                        <p
-                                            className={cn(
-                                                'text-sm',
-                                                todo.status === 'completed' &&
-                                                    'line-through text-muted-foreground',
+                                    >
+                                        <div className="flex-shrink-0 mt-0.5 relative z-10">
+                                            {todo.status === 'completed' ? (
+                                                <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                            ) : todo.status === 'in-progress' ||
+                                              todo.status === 'in_progress' ? (
+                                                <div className="h-4 w-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                                            ) : (
+                                                <div className="h-4 w-4 rounded-full border-2 border-muted-foreground" />
                                             )}
-                                        >
-                                            {todo.content}
-                                        </p>
-                                        <Badge
-                                            variant="outline"
-                                            className={cn(
-                                                'text-xs mt-1',
-                                                todo.status === 'completed' &&
-                                                    'bg-green-100 text-green-700 border-green-200',
-                                                (todo.status === 'in-progress' ||
-                                                    todo.status === 'in_progress') &&
-                                                    'bg-blue-100 text-blue-700 border-blue-200',
-                                                todo.status === 'todo' &&
-                                                    'bg-gray-100 text-gray-700 border-gray-200',
-                                            )}
-                                        >
-                                            {todo.status.replace('_', '-')}
-                                        </Badge>
+                                        </div>
+                                        <div className="flex-1 min-w-0 relative z-10">
+                                            <p
+                                                className={cn(
+                                                    'text-sm',
+                                                    todo.status === 'completed' &&
+                                                        'line-through text-muted-foreground',
+                                                )}
+                                            >
+                                                {todo.content}
+                                            </p>
+                                            <Badge
+                                                variant="outline"
+                                                className={cn(
+                                                    'text-xs mt-1',
+                                                    todo.status === 'completed' &&
+                                                        'bg-green-100 text-green-700 border-green-200',
+                                                    (todo.status === 'in-progress' ||
+                                                        todo.status === 'in_progress') &&
+                                                        'bg-blue-100 text-blue-700 border-blue-200',
+                                                    todo.status === 'todo' &&
+                                                        'bg-gray-100 text-gray-700 border-gray-200',
+                                                )}
+                                            >
+                                                {todo.status.replace('_', '-')}
+                                            </Badge>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        ) : logs.length === 0 && artifacts.length === 0 ? (
+                            <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground bg-muted/30 rounded-lg">
+                                <Info className="h-4 w-4" />
+                                <p>No logs or artifacts available for this step.</p>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground bg-muted/30 rounded-lg">
+                                <Info className="h-4 w-4" />
+                                <p>
+                                    {logs.length > 0
+                                        ? `${logs.length} log ${logs.length === 1 ? 'entry' : 'entries'}`
+                                        : 'No logs'}
+                                    {logs.length > 0 && artifacts.length > 0 && ' and '}
+                                    {artifacts.length > 0
+                                        ? `${artifacts.length} ${artifacts.length === 1 ? 'artifact' : 'artifacts'}`
+                                        : ''}
+                                    {' available. Click "View Details" to see more.'}
+                                </p>
+                            </div>
+                        )}
                         <div className="flex justify-end gap-2 mt-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleCopyLogs}
-                                className="h-8 px-3"
-                            >
-                                <Copy className="h-3.5 w-3.5 mr-1.5" />
-                                {copied ? 'Copied!' : 'Copy'}
-                            </Button>
+                            {logs.length > 0 && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={handleCopyLogs}
+                                    className="h-8 px-3"
+                                >
+                                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                                    {copied ? 'Copied!' : 'Copy'}
+                                </Button>
+                            )}
                             <Button
                                 variant="outline"
                                 size="sm"
