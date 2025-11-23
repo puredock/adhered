@@ -156,6 +156,19 @@ const Scans = () => {
                 severity: 'high',
                 available: false, // Not yet implemented
             },
+            {
+                id: 'bureau-veritas-iot',
+                name: 'Bureau Veritas IoT',
+                fullName: 'Bureau Veritas IoT Cybersecurity Evaluation',
+                description:
+                    'Comprehensive cybersecurity certification and evaluation program for IoT devices and connected systems',
+                icon: Shield,
+                iconColor: 'text-emerald-600 bg-emerald-50',
+                tags: ['IoT', 'Certification', 'Compliance'],
+                status: 'active',
+                lastScan: '5 hours ago',
+                severity: 'medium',
+                available: true, // ✅ Implemented!
             },
         ],
         [],
