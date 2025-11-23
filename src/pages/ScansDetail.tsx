@@ -35,6 +35,7 @@ const ScansDetail = () => {
             status: 'active',
             lastScan: '1 day ago',
             severity: 'info',
+            available: false,
             completionRate: 85,
             overview:
                 'PTES provides a comprehensive methodology for conducting penetration tests. It covers seven main phases including pre-engagement interactions, intelligence gathering, threat modeling, vulnerability analysis, exploitation, post-exploitation, and reporting.',
@@ -66,6 +67,7 @@ const ScansDetail = () => {
             status: 'active',
             lastScan: '3 hours ago',
             severity: 'high',
+            available: false,
             completionRate: 92,
             overview:
                 'The OWASP Web Security Testing Guide provides a comprehensive framework for testing web application security. It includes testing for authentication, authorization, session management, input validation, and many other security controls.',
@@ -97,6 +99,7 @@ const ScansDetail = () => {
             status: 'pending',
             lastScan: '2 days ago',
             severity: 'medium',
+            available: false,
             completionRate: 45,
             overview:
                 'The OWASP Firmware Security Testing Guide focuses on security testing of firmware in embedded devices and IoT systems. It covers firmware extraction, analysis, reverse engineering, and vulnerability identification.',
@@ -117,6 +120,7 @@ const ScansDetail = () => {
         },
         'nist-800-115': {
             name: 'NIST SP 800-115',
+            available: false,
             fullName: 'NIST Technical Guide to Information Security Testing',
             description: 'Technical guide to information security testing and assessment methodologies',
             icon: FileSearch,
@@ -145,6 +149,7 @@ const ScansDetail = () => {
         },
         osstmm: {
             name: 'OSSTMM',
+            available: false,
             fullName: 'Open Source Security Testing Methodology Manual',
             description:
                 'Peer-reviewed methodology for security testing across networks, applications, and physical security',
@@ -175,6 +180,7 @@ const ScansDetail = () => {
         },
         'pci-dss': {
             name: 'PCI DSS Guidance',
+            available: false,
             fullName: 'Payment Card Industry Data Security Standard',
             description:
                 'Security standards for organizations handling credit card information with penetration testing requirements',
@@ -205,6 +211,7 @@ const ScansDetail = () => {
         },
         'iso-27001': {
             name: 'ISO 27001',
+            available: false,
             fullName: 'Information Security Management Systems',
             description:
                 'International standard for information security management systems with comprehensive security controls',
@@ -245,6 +252,7 @@ const ScansDetail = () => {
             status: 'pending',
             lastScan: '1 day ago',
             severity: 'high',
+            available: false,
             completionRate: 38,
             overview:
                 'IEC 62443 provides a flexible framework to address and mitigate current and future security vulnerabilities in industrial automation and control systems (IACS). Testing focuses on network segmentation, access control, data integrity, and secure remote access for critical infrastructure systems.',
