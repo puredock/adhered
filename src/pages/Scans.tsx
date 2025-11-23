@@ -56,6 +56,7 @@ const Scans = () => {
                 status: 'active',
                 lastScan: '1 day ago',
                 severity: 'info',
+                available: false,
             },
             {
                 id: 'owasp-wstg',
@@ -69,6 +70,7 @@ const Scans = () => {
                 status: 'active',
                 lastScan: '3 hours ago',
                 severity: 'high',
+                available: false,
             },
             {
                 id: 'owasp-fstg',
@@ -82,6 +84,7 @@ const Scans = () => {
                 status: 'pending',
                 lastScan: '2 days ago',
                 severity: 'medium',
+                available: false,
             },
             {
                 id: 'nist-800-115',
@@ -95,6 +98,7 @@ const Scans = () => {
                 status: 'active',
                 lastScan: '12 hours ago',
                 severity: 'info',
+                available: false,
             },
             {
                 id: 'osstmm',
@@ -108,6 +112,7 @@ const Scans = () => {
                 status: 'active',
                 lastScan: '6 hours ago',
                 severity: 'low',
+                available: false,
             },
             {
                 id: 'pci-dss',
@@ -121,6 +126,7 @@ const Scans = () => {
                 status: 'active',
                 lastScan: '8 hours ago',
                 severity: 'high',
+                available: false,
             },
             {
                 id: 'iso-27001',
@@ -134,6 +140,7 @@ const Scans = () => {
                 status: 'active',
                 lastScan: '4 hours ago',
                 severity: 'medium',
+                available: false,
             },
             {
                 id: 'iec-62443',
@@ -147,6 +154,8 @@ const Scans = () => {
                 status: 'pending',
                 lastScan: '1 day ago',
                 severity: 'high',
+                available: false, // Not yet implemented
+            },
             },
         ],
         [],
