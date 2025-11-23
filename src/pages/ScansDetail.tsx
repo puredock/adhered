@@ -10,7 +10,9 @@ import {
     Shield,
     XCircle,
 } from 'lucide-react'
+import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { SelectDeviceForScanDialog } from '@/components/SelectDeviceForScanDialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -22,6 +24,7 @@ const ScansDetail = () => {
     const { id } = useParams()
     const navigate = useNavigate()
     const { toast } = useToast()
+    const [showDeviceSelector, setShowDeviceSelector] = useState(false)
 
     const standardsData: Record<string, any> = {
         ptes: {
@@ -273,6 +276,39 @@ const ScansDetail = () => {
                 info: 5,
             },
         },
+        'bureau-veritas-iot': {
+            name: 'Bureau Veritas IoT',
+            fullName: 'Bureau Veritas IoT Cybersecurity Evaluation',
+            description:
+                'Comprehensive cybersecurity certification and evaluation program for IoT devices and connected systems',
+            icon: Shield,
+            iconColor: 'text-emerald-600 bg-emerald-50',
+            tags: ['IoT', 'Certification', 'Compliance'],
+            status: 'active',
+            lastScan: '5 hours ago',
+            severity: 'medium',
+            available: true, // ✅ Implemented!
+            completionRate: 68,
+            overview:
+                'Bureau Veritas has established a proprietary certification scheme designed to help IoT device manufacturers develop products aligned with cybersecurity best practices. The program evaluates 15 security categories representing "State of the Art in the matter of cybersecurity," addressing current and emerging regulations including European Radio Equipment Directive changes. The certification provides consumers with a recognizable label indicating verified security levels across three classes: Basic Essential (5 days, black box), Basic Advanced (10 days, grey box), and Substantial Essential (15 days, grey box with penetration testing).',
+            phases: [
+                { name: 'Class 1: Basic Essential', status: 'completed', progress: 100 },
+                { name: 'Vulnerability Scanning', status: 'completed', progress: 100 },
+                { name: 'Documentation Review', status: 'completed', progress: 100 },
+                { name: 'Class 2: Basic Advanced', status: 'in-progress', progress: 70 },
+                { name: 'Security Function Testing', status: 'in-progress', progress: 55 },
+                { name: 'Class 3: Substantial Essential', status: 'pending', progress: 0 },
+                { name: 'Penetration Testing', status: 'pending', progress: 0 },
+                { name: 'Certification & Surveillance', status: 'pending', progress: 0 },
+            ],
+            findings: {
+                critical: 0,
+                high: 3,
+                medium: 7,
+                low: 9,
+                info: 14,
+            },
+        },
     }
 
     const standard = standardsData[id || '']
@@ -299,10 +335,7 @@ const ScansDetail = () => {
     }
 
     const handleStartScan = () => {
-        toast({
-            title: 'Scan Initiated',
-            description: `Starting ${standard.name} security scan workflow...`,
-        })
+        setShowDeviceSelector(true)
     }
 
     const getPhaseIcon = (status: string) => {
@@ -346,9 +379,18 @@ const ScansDetail = () => {
     }
 
     return (
-        <div className="min-h-screen bg-background flex-1">
-            {/* Header */}
-            <header className="border-b border-border bg-card">
+        <>
+            <SelectDeviceForScanDialog
+                open={showDeviceSelector}
+                onOpenChange={setShowDeviceSelector}
+                scanType={id || ''}
+                scanName={standard.name}
+                scanIcon={standard.icon}
+                scanAvailable={standard.available ?? true}
+            />
+            <div className="min-h-screen bg-background flex-1">
+                {/* Header */}
+                <header className="border-b border-border bg-card">
                 <div className="w-full px-6 py-4">
                     <div className="flex items-center justify-between mb-4">
                         <Button variant="ghost" onClick={() => navigate('/scans')}>
@@ -547,7 +589,8 @@ const ScansDetail = () => {
                     </div>
                 </div>
             </main>
-        </div>
+            </div>
+        </>
     )
 }
 
