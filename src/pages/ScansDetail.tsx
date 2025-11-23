@@ -391,204 +391,212 @@ const ScansDetail = () => {
             <div className="min-h-screen bg-background flex-1">
                 {/* Header */}
                 <header className="border-b border-border bg-card">
-                <div className="w-full px-6 py-4">
-                    <div className="flex items-center justify-between mb-4">
-                        <Button variant="ghost" onClick={() => navigate('/scans')}>
-                            <ArrowLeft className="w-4 h-4 mr-2" />
-                            Back to Scans
-                        </Button>
-                        <Button onClick={handleStartScan} size="lg">
-                            <Play className="w-4 h-4 mr-2" />
-                            Start Scan Workflow
-                        </Button>
-                    </div>
-
-                    <div className="flex items-start gap-4">
-                        <div
-                            className={`w-16 h-16 rounded-lg flex items-center justify-center ${standard.iconColor}`}
-                        >
-                            <standard.icon className="w-8 h-8" />
+                    <div className="w-full px-6 py-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <Button variant="ghost" onClick={() => navigate('/scans')}>
+                                <ArrowLeft className="w-4 h-4 mr-2" />
+                                Back to Scans
+                            </Button>
+                            <Button onClick={handleStartScan} size="lg">
+                                <Play className="w-4 h-4 mr-2" />
+                                Start Scan Workflow
+                            </Button>
                         </div>
-                        <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                                <h1 className="text-3xl font-bold">{standard.name}</h1>
-                                {getSeverityBadge(standard.severity)}
-                                <Badge variant={standard.status === 'active' ? 'default' : 'secondary'}>
-                                    {standard.status === 'active' ? 'Active' : 'Pending'}
-                                </Badge>
+
+                        <div className="flex items-start gap-4">
+                            <div
+                                className={`w-16 h-16 rounded-lg flex items-center justify-center ${standard.iconColor}`}
+                            >
+                                <standard.icon className="w-8 h-8" />
                             </div>
-                            <p className="text-lg text-muted-foreground mb-3">{standard.fullName}</p>
-                            <div className="flex flex-wrap gap-2">
-                                {standard.tags.map((tag: string) => (
-                                    <Badge key={tag} variant="outline">
-                                        {tag}
+                            <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <h1 className="text-3xl font-bold">{standard.name}</h1>
+                                    {getSeverityBadge(standard.severity)}
+                                    <Badge
+                                        variant={standard.status === 'active' ? 'default' : 'secondary'}
+                                    >
+                                        {standard.status === 'active' ? 'Active' : 'Pending'}
                                     </Badge>
-                                ))}
+                                </div>
+                                <p className="text-lg text-muted-foreground mb-3">{standard.fullName}</p>
+                                <div className="flex flex-wrap gap-2">
+                                    {standard.tags.map((tag: string) => (
+                                        <Badge key={tag} variant="outline">
+                                            {tag}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </header>
+                </header>
 
-            <main className="w-full px-6 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Overview */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Overview</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-muted-foreground leading-relaxed">
-                                    {standard.overview}
-                                </p>
-                            </CardContent>
-                        </Card>
+                <main className="w-full px-6 py-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Main Content */}
+                        <div className="lg:col-span-2 space-y-6">
+                            {/* Overview */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Overview</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-muted-foreground leading-relaxed">
+                                        {standard.overview}
+                                    </p>
+                                </CardContent>
+                            </Card>
 
-                        {/* Testing Phases */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Testing Phases</CardTitle>
-                                <CardDescription>
-                                    Current progress across all testing phases
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {standard.phases.map((phase: any, index: number) => (
-                                    <div key={index} className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                {getPhaseIcon(phase.status)}
-                                                <span className="font-medium">{phase.name}</span>
+                            {/* Testing Phases */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Testing Phases</CardTitle>
+                                    <CardDescription>
+                                        Current progress across all testing phases
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {standard.phases.map((phase: any, index: number) => (
+                                        <div key={index} className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    {getPhaseIcon(phase.status)}
+                                                    <span className="font-medium">{phase.name}</span>
+                                                </div>
+                                                <span className="text-sm text-muted-foreground">
+                                                    {phase.progress}%
+                                                </span>
                                             </div>
-                                            <span className="text-sm text-muted-foreground">
-                                                {phase.progress}%
+                                            <Progress value={phase.progress} className="h-2" />
+                                        </div>
+                                    ))}
+                                </CardContent>
+                            </Card>
+
+                            {/* Findings Summary */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Findings Summary</CardTitle>
+                                    <CardDescription>
+                                        Security issues identified during testing
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-5 gap-4">
+                                        <div className="text-center p-4 rounded-lg bg-destructive/5 border border-destructive/20">
+                                            <div className="text-3xl font-bold text-destructive mb-1">
+                                                {standard.findings.critical}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground uppercase">
+                                                Critical
+                                            </div>
+                                        </div>
+                                        <div className="text-center p-4 rounded-lg bg-destructive/5 border border-destructive/10">
+                                            <div className="text-3xl font-bold text-destructive mb-1">
+                                                {standard.findings.high}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground uppercase">
+                                                High
+                                            </div>
+                                        </div>
+                                        <div className="text-center p-4 rounded-lg bg-warning/5 border border-warning/20">
+                                            <div className="text-3xl font-bold text-warning mb-1">
+                                                {standard.findings.medium}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground uppercase">
+                                                Medium
+                                            </div>
+                                        </div>
+                                        <div className="text-center p-4 rounded-lg bg-success/5 border border-success/20">
+                                            <div className="text-3xl font-bold text-success mb-1">
+                                                {standard.findings.low}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground uppercase">
+                                                Low
+                                            </div>
+                                        </div>
+                                        <div className="text-center p-4 rounded-lg bg-primary/5 border border-primary/20">
+                                            <div className="text-3xl font-bold text-primary mb-1">
+                                                {standard.findings.info}
+                                            </div>
+                                            <div className="text-xs text-muted-foreground uppercase">
+                                                Info
+                                            </div>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="space-y-6">
+                            {/* Status Card */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-lg">Scan Status</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div>
+                                        <div className="flex justify-between text-sm mb-2">
+                                            <span className="text-muted-foreground">Completion</span>
+                                            <span className="font-medium">
+                                                {standard.completionRate}%
                                             </span>
                                         </div>
-                                        <Progress value={phase.progress} className="h-2" />
+                                        <Progress value={standard.completionRate} className="h-3" />
                                     </div>
-                                ))}
-                            </CardContent>
-                        </Card>
+                                    <Separator />
+                                    <div className="space-y-2 text-sm">
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Last Scan</span>
+                                            <span className="font-medium">{standard.lastScan}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Total Findings</span>
+                                            <span className="font-medium">
+                                                {(Object.values(standard.findings) as number[]).reduce(
+                                                    (a, b) => a + b,
+                                                    0,
+                                                )}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-muted-foreground">Phases</span>
+                                            <span className="font-medium">{standard.phases.length}</span>
+                                        </div>
+                                    </div>
+                                </CardContent>
+                            </Card>
 
-                        {/* Findings Summary */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Findings Summary</CardTitle>
-                                <CardDescription>
-                                    Security issues identified during testing
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-5 gap-4">
-                                    <div className="text-center p-4 rounded-lg bg-destructive/5 border border-destructive/20">
-                                        <div className="text-3xl font-bold text-destructive mb-1">
-                                            {standard.findings.critical}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground uppercase">
-                                            Critical
-                                        </div>
-                                    </div>
-                                    <div className="text-center p-4 rounded-lg bg-destructive/5 border border-destructive/10">
-                                        <div className="text-3xl font-bold text-destructive mb-1">
-                                            {standard.findings.high}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground uppercase">
-                                            High
-                                        </div>
-                                    </div>
-                                    <div className="text-center p-4 rounded-lg bg-warning/5 border border-warning/20">
-                                        <div className="text-3xl font-bold text-warning mb-1">
-                                            {standard.findings.medium}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground uppercase">
-                                            Medium
-                                        </div>
-                                    </div>
-                                    <div className="text-center p-4 rounded-lg bg-success/5 border border-success/20">
-                                        <div className="text-3xl font-bold text-success mb-1">
-                                            {standard.findings.low}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground uppercase">
-                                            Low
-                                        </div>
-                                    </div>
-                                    <div className="text-center p-4 rounded-lg bg-primary/5 border border-primary/20">
-                                        <div className="text-3xl font-bold text-primary mb-1">
-                                            {standard.findings.info}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground uppercase">
-                                            Info
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
+                            {/* Actions Card */}
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-lg">Quick Actions</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-2">
+                                    <Button
+                                        className="w-full"
+                                        variant="default"
+                                        onClick={handleStartScan}
+                                    >
+                                        <Play className="w-4 h-4 mr-2" />
+                                        Start New Scan
+                                    </Button>
+                                    <Button className="w-full" variant="outline">
+                                        View Full Report
+                                    </Button>
+                                    <Button className="w-full" variant="outline">
+                                        Export Results
+                                    </Button>
+                                    <Button className="w-full" variant="outline">
+                                        Configure Settings
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        </div>
                     </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Status Card */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">Scan Status</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div>
-                                    <div className="flex justify-between text-sm mb-2">
-                                        <span className="text-muted-foreground">Completion</span>
-                                        <span className="font-medium">{standard.completionRate}%</span>
-                                    </div>
-                                    <Progress value={standard.completionRate} className="h-3" />
-                                </div>
-                                <Separator />
-                                <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Last Scan</span>
-                                        <span className="font-medium">{standard.lastScan}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Total Findings</span>
-                                        <span className="font-medium">
-                                            {(Object.values(standard.findings) as number[]).reduce(
-                                                (a, b) => a + b,
-                                                0,
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-muted-foreground">Phases</span>
-                                        <span className="font-medium">{standard.phases.length}</span>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Actions Card */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-lg">Quick Actions</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-2">
-                                <Button className="w-full" variant="default" onClick={handleStartScan}>
-                                    <Play className="w-4 h-4 mr-2" />
-                                    Start New Scan
-                                </Button>
-                                <Button className="w-full" variant="outline">
-                                    View Full Report
-                                </Button>
-                                <Button className="w-full" variant="outline">
-                                    Export Results
-                                </Button>
-                                <Button className="w-full" variant="outline">
-                                    Configure Settings
-                                </Button>
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </main>
+                </main>
             </div>
         </>
     )
