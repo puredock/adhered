@@ -320,7 +320,7 @@ export function AttackVectorStep({
                                     {artifacts.length > 0
                                         ? `${artifacts.length} ${artifacts.length === 1 ? 'artifact' : 'artifacts'}`
                                         : ''}
-                                    {' available. Click "View Details" to see more.'}
+                                    {' available. Expand to see more.'}
                                 </p>
                             </div>
                         )}
