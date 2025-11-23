@@ -184,7 +184,15 @@ export const api = {
             const query = queryParams.toString()
             return fetchAPI<DeviceList>(`/devices/network/${networkId}${query ? `?${query}` : ''}`)
         },
-        scan: (id: string) => fetchAPI(`/devices/${id}/scan`, { method: 'POST' }),
+        scan: (id: string, scanStandard?: string) => {
+            const params = new URLSearchParams()
+            if (scanStandard) {
+                params.append('scan_standard', scanStandard)
+            }
+            return fetchAPI(`/devices/${id}/scan${params.toString() ? `?${params.toString()}` : ''}`, {
+                method: 'POST',
+            })
+        },
         enrich: (id: string, force_rescan = false) =>
             fetchAPI(`/devices/${id}/enrich?force_rescan=${force_rescan}`, { method: 'POST' }),
         enrichNetwork: (
