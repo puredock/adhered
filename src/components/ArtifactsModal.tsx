@@ -1,4 +1,13 @@
-import { CheckCircle2, Code2, Info, ListTodo, MessageSquare, Terminal, XCircle } from 'lucide-react'
+import {
+    AlertCircle,
+    CheckCircle2,
+    Code2,
+    Info,
+    ListTodo,
+    MessageSquare,
+    Terminal,
+    XCircle,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,6 +30,20 @@ export interface Artifact {
     content?: string
     url?: string
     language?: 'bash' | 'python' | 'javascript' | 'other'
+}
+
+export interface Issue {
+    id: string
+    title: string
+    description: string
+    severity: 'critical' | 'high' | 'medium' | 'low' | 'info'
+    category?: string
+    impact?: string
+    reproduction_steps?: string[]
+    remediation?: string
+    affected_component?: string
+    cvss_score?: number
+    cve_id?: string
 }
 
 interface LogEntry {
@@ -56,6 +79,7 @@ interface ArtifactsModalProps {
     artifacts: Artifact[]
     stepName: string
     logs?: LogEntry[]
+    issues?: Issue[]
 }
 
 export function ArtifactsModal({
@@ -64,6 +88,7 @@ export function ArtifactsModal({
     artifacts,
     stepName,
     logs = [],
+    issues = [],
 }: ArtifactsModalProps) {
     // Extract TodoWrite and Bash tool uses from logs
     // Maintain a live, merged view of todos (not snapshots)
@@ -163,6 +188,7 @@ export function ArtifactsModal({
         // Auto-select the first available view
         if (liveTodos.length > 0) return 'plan'
         if (timeline.length > 0) return 'commands'
+        if (issues.length > 0) return 'issues'
         return 'plan'
     })
 
@@ -247,6 +273,31 @@ export function ArtifactsModal({
                                                     </p>
                                                     <span className="text-xs text-muted-foreground">
                                                         {timeline.length} entries
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    )}
+                                    {issues.length > 0 && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveTab('issues')}
+                                            className={cn(
+                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                                activeTab === 'issues' &&
+                                                    'bg-background shadow-sm ring-1 ring-primary/20',
+                                            )}
+                                        >
+                                            <div className="flex items-start gap-2">
+                                                <div className="mt-0.5">
+                                                    <AlertCircle className="h-4 w-4" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium truncate">
+                                                        Issues
+                                                    </p>
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {issues.length} found
                                                     </span>
                                                 </div>
                                             </div>
@@ -412,6 +463,138 @@ export function ArtifactsModal({
                                                     }
                                                 })}
                                             </div>
+                                        </div>
+                                    </ScrollArea>
+                                </>
+                            ) : activeTab === 'issues' && issues.length > 0 ? (
+                                <>
+                                    <div className="px-6 py-4 border-b flex-shrink-0">
+                                        <h3 className="font-semibold">Security Issues</h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            Detailed vulnerability findings and remediation guidance
+                                        </p>
+                                    </div>
+                                    <ScrollArea className="flex-1 p-6">
+                                        <div className="space-y-4">
+                                            {issues.map(issue => (
+                                                <div
+                                                    key={issue.id}
+                                                    className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                                                >
+                                                    <div className="bg-gradient-to-r from-slate-50 to-slate-100 p-4 border-b">
+                                                        <div className="flex items-start justify-between gap-4 mb-2">
+                                                            <h4 className="font-semibold text-base flex-1">
+                                                                {issue.title}
+                                                            </h4>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={cn(
+                                                                    'text-xs font-semibold flex-shrink-0',
+                                                                    issue.severity === 'critical' &&
+                                                                        'bg-red-100 text-red-800 border-red-300',
+                                                                    issue.severity === 'high' &&
+                                                                        'bg-orange-100 text-orange-800 border-orange-300',
+                                                                    issue.severity === 'medium' &&
+                                                                        'bg-yellow-100 text-yellow-800 border-yellow-300',
+                                                                    issue.severity === 'low' &&
+                                                                        'bg-blue-100 text-blue-800 border-blue-300',
+                                                                    issue.severity === 'info' &&
+                                                                        'bg-gray-100 text-gray-800 border-gray-300',
+                                                                )}
+                                                            >
+                                                                {issue.severity.toUpperCase()}
+                                                            </Badge>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                                            {issue.category && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <span className="font-medium">
+                                                                        Category:
+                                                                    </span>{' '}
+                                                                    {issue.category}
+                                                                </span>
+                                                            )}
+                                                            {issue.cvss_score && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <span className="font-medium">
+                                                                        CVSS:
+                                                                    </span>{' '}
+                                                                    {issue.cvss_score.toFixed(1)}
+                                                                </span>
+                                                            )}
+                                                            {issue.cve_id && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <span className="font-medium">
+                                                                        CVE:
+                                                                    </span>{' '}
+                                                                    {issue.cve_id}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4 space-y-4">
+                                                        <div>
+                                                            <h5 className="text-sm font-semibold mb-2 text-slate-700">
+                                                                Description
+                                                            </h5>
+                                                            <p className="text-sm text-slate-600 leading-relaxed">
+                                                                {issue.description}
+                                                            </p>
+                                                        </div>
+                                                        {issue.affected_component && (
+                                                            <div>
+                                                                <h5 className="text-sm font-semibold mb-2 text-slate-700">
+                                                                    Affected Component
+                                                                </h5>
+                                                                <p className="text-sm text-slate-600 font-mono bg-slate-100 px-2 py-1 rounded inline-block">
+                                                                    {issue.affected_component}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                        {issue.impact && (
+                                                            <div>
+                                                                <h5 className="text-sm font-semibold mb-2 text-slate-700">
+                                                                    Impact
+                                                                </h5>
+                                                                <p className="text-sm text-slate-600 leading-relaxed">
+                                                                    {issue.impact}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                        {issue.reproduction_steps &&
+                                                            issue.reproduction_steps.length > 0 && (
+                                                                <div>
+                                                                    <h5 className="text-sm font-semibold mb-2 text-slate-700">
+                                                                        Steps to Reproduce
+                                                                    </h5>
+                                                                    <ol className="list-decimal list-inside space-y-1 text-sm text-slate-600">
+                                                                        {issue.reproduction_steps.map(
+                                                                            (step, idx) => (
+                                                                                <li
+                                                                                    key={idx}
+                                                                                    className="leading-relaxed"
+                                                                                >
+                                                                                    {step}
+                                                                                </li>
+                                                                            ),
+                                                                        )}
+                                                                    </ol>
+                                                                </div>
+                                                            )}
+                                                        {issue.remediation && (
+                                                            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                                                                <h5 className="text-sm font-semibold mb-2 text-green-800 flex items-center gap-1">
+                                                                    <CheckCircle2 className="h-4 w-4" />
+                                                                    Remediation
+                                                                </h5>
+                                                                <p className="text-sm text-green-700 leading-relaxed">
+                                                                    {issue.remediation}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </ScrollArea>
                                 </>

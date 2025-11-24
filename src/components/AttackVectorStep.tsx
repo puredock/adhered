@@ -12,7 +12,7 @@ import {
     XCircle,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { type Artifact, ArtifactsModal } from '@/components/ArtifactsModal'
+import { type Artifact, ArtifactsModal, type Issue } from '@/components/ArtifactsModal'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -42,6 +42,7 @@ interface AttackVectorStepProps {
     scanId?: string
     onCancel?: () => void
     artifacts?: Artifact[]
+    issues?: Issue[]
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -55,6 +56,7 @@ export function AttackVectorStep({
     scanId,
     onCancel,
     artifacts = [],
+    issues = [],
 }: AttackVectorStepProps) {
     const [isExpanded, setIsExpanded] = useState(false)
     const [isRetrying, setIsRetrying] = useState(false)
@@ -165,7 +167,9 @@ export function AttackVectorStep({
         const logsText = logs
             .map(
                 log =>
-                    `${new Date(log.timestamp).toLocaleTimeString()} [${log.level.toUpperCase()}] ${log.message}`,
+                    `${new Date(
+                        log.timestamp,
+                    ).toLocaleTimeString()} [${log.level.toUpperCase()}] ${log.message}`,
             )
             .join('\n')
 
@@ -318,7 +322,9 @@ export function AttackVectorStep({
                                         : 'No logs'}
                                     {logs.length > 0 && artifacts.length > 0 && ' and '}
                                     {artifacts.length > 0
-                                        ? `${artifacts.length} ${artifacts.length === 1 ? 'artifact' : 'artifacts'}`
+                                        ? `${artifacts.length} ${
+                                              artifacts.length === 1 ? 'artifact' : 'artifacts'
+                                          }`
                                         : ''}
                                     {' available. Expand to see more.'}
                                 </p>
@@ -359,6 +365,7 @@ export function AttackVectorStep({
                 artifacts={artifacts}
                 stepName={formatStepName(stepName)}
                 logs={logs}
+                issues={issues}
             />
         </Card>
     )
