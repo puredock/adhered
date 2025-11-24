@@ -22,6 +22,7 @@ interface Step {
     logs: LogEntry[]
     severity: 'high' | 'medium' | 'critical' | 'low'
     artifacts?: any[]
+    issues?: any[]
 }
 
 interface PenetrationTestLogProps {
@@ -95,6 +96,27 @@ export function PenetrationTestLog({
                             : step,
                     ),
                 )
+
+                // Fetch scan results to get issues
+                fetch(`${API_BASE_URL}/scans/${scanId}`)
+                    .then(res => res.json())
+                    .then(scanData => {
+                        if (scanData.issues && scanData.issues.length > 0) {
+                            // Add all issues to the last step
+                            setSteps(prev => {
+                                const lastStepIndex = prev.length - 1
+                                if (lastStepIndex >= 0) {
+                                    return prev.map((step, idx) =>
+                                        idx === lastStepIndex
+                                            ? { ...step, issues: scanData.issues }
+                                            : step,
+                                    )
+                                }
+                                return prev
+                            })
+                        }
+                    })
+                    .catch(err => console.error('Failed to fetch scan issues:', err))
 
                 eventSourceRef.current?.close()
                 onCompleteRef.current?.(data.status)
@@ -238,6 +260,27 @@ export function PenetrationTestLog({
                             processEvent(event)
                         }
                     }, 0)
+
+                    // Also fetch scan results to get issues
+                    const scanResponse = await fetch(`${API_BASE_URL}/scans/${scanId}`)
+                    if (scanResponse.ok) {
+                        const scanData = await scanResponse.json()
+                        if (scanData.issues && scanData.issues.length > 0) {
+                            setTimeout(() => {
+                                setSteps(prev => {
+                                    const lastStepIndex = prev.length - 1
+                                    if (lastStepIndex >= 0) {
+                                        return prev.map((step, idx) =>
+                                            idx === lastStepIndex
+                                                ? { ...step, issues: scanData.issues }
+                                                : step,
+                                        )
+                                    }
+                                    return prev
+                                })
+                            }, 100)
+                        }
+                    }
                 } catch (error) {
                     console.error('Error loading historical events:', error)
                     setConnectionError(
@@ -399,6 +442,7 @@ export function PenetrationTestLog({
                                 scanId={scanId}
                                 onCancel={handleCancel}
                                 artifacts={step.artifacts || []}
+                                issues={step.issues || []}
                             />
                         ))
                     )}
