@@ -266,25 +266,6 @@ export function ActivityViewer({
                         Activity
                     </CardTitle>
                     <div className="flex items-center gap-2">
-                        {recentActivities.length > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={() => {
-                                    if (
-                                        confirm(
-                                            `Are you sure you want to clear all ${recentActivities.length} recent ${activityType}?`,
-                                        )
-                                    ) {
-                                        onClearAll?.()
-                                    }
-                                }}
-                            >
-                                <Trash2 className="h-4 w-4" />
-                                Clear All
-                            </Button>
-                        )}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="outline" size="sm" className="gap-2">
