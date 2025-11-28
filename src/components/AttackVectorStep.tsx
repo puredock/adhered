@@ -1,5 +1,4 @@
 import {
-    Ban,
     CheckCircle2,
     ChevronDown,
     ChevronRight,
@@ -140,11 +139,6 @@ export function AttackVectorStep({
             .join(' ')
     }
 
-    const handleCancel = async (e: React.MouseEvent) => {
-        e.stopPropagation()
-        onCancel?.()
-    }
-
     const handleRetry = async (e: React.MouseEvent) => {
         e.stopPropagation()
         if (!scanId) return
@@ -222,18 +216,6 @@ export function AttackVectorStep({
                         )}
 
                         {/* Action buttons */}
-                        {status === 'running' && scanId && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={handleCancel}
-                                className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            >
-                                <Ban className="h-3.5 w-3.5 mr-1" />
-                                Cancel
-                            </Button>
-                        )}
-
                         {status === 'error' && scanId && (
                             <Button
                                 variant="ghost"

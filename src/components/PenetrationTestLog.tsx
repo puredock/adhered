@@ -68,6 +68,19 @@ export function PenetrationTestLog({
 
     console.log('PenetrationTestLog render - scanId:', scanId, 'steps:', steps.length, 'status:', status)
 
+    // Initialize cancelled scans - mark running/pending steps as error
+    useEffect(() => {
+        if (initialStatus === 'cancelled') {
+            setSteps(prev =>
+                prev.map(step =>
+                    step.status === 'running' || step.status === 'pending'
+                        ? { ...step, status: 'error' as const }
+                        : step,
+                ),
+            )
+        }
+    }, [initialStatus])
+
     useEffect(() => {
         console.log(
             'PenetrationTestLog useEffect - mounting for scanId:',

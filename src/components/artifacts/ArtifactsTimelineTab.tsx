@@ -14,7 +14,7 @@ export function ArtifactsTimelineTab({
     showContext,
     onToggleContext,
 }: ArtifactsTimelineTabProps) {
-    if (!timeline.length) return null
+    if (!timeline || !timeline.length) return null
 
     const getLevelIcon = (level: LogEntry['level']) => {
         switch (level) {
