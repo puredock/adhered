@@ -355,6 +355,7 @@ export function AttackVectorStep({
                 stepName={formatStepName(stepName)}
                 logs={logs}
                 issues={issues}
+                scanStatus={status}
             />
         </Card>
     )
