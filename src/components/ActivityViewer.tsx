@@ -8,6 +8,8 @@ import {
     History,
     Loader2,
     ScanLine,
+    Trash2,
+    X,
 } from 'lucide-react'
 import { useState } from 'react'
 import { PenetrationTestLog } from '@/components/PenetrationTestLog'
@@ -30,7 +32,7 @@ interface ActivityEntry {
     id: string
     type: 'scan' | 'audit'
     name: string
-    status: 'running' | 'completed' | 'failed'
+    status: 'running' | 'completed' | 'failed' | 'cancelled'
     startedAt: string
     completedAt?: string
     vulnerabilitiesFound?: number
@@ -43,6 +45,8 @@ interface ActivityViewerProps {
     onActivityClick?: (activityId: string) => void
     onScanComplete?: (scanId: string, status: string) => void
     onClearStaleScan?: (scanId: string) => void
+    onDeleteScan?: (scanId: string) => void
+    onClearAll?: () => void
 }
 
 export function ActivityViewer({
@@ -51,6 +55,8 @@ export function ActivityViewer({
     audits = [],
     onScanComplete,
     onClearStaleScan,
+    onDeleteScan,
+    onClearAll,
 }: ActivityViewerProps) {
     const [activityType, setActivityType] = useState<ActivityType>('scans')
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
@@ -65,6 +71,8 @@ export function ActivityViewer({
                 return <CheckCircle2 className="w-4 h-4 text-green-500" />
             case 'failed':
                 return <AlertTriangle className="w-4 h-4 text-red-500" />
+            case 'cancelled':
+                return <X className="w-4 h-4 text-gray-500" />
         }
     }
 
@@ -73,6 +81,7 @@ export function ActivityViewer({
             running: 'default',
             completed: 'default',
             failed: 'destructive',
+            cancelled: 'secondary',
         }
 
         return (
@@ -123,48 +132,68 @@ export function ActivityViewer({
         return activityType === 'scans' ? 'Scans' : 'Audits'
     }
 
+    const handleDeleteScan = async (e: React.MouseEvent, scanId: string, isRunning: boolean) => {
+        e.stopPropagation()
+        const message = isRunning
+            ? 'This scan is currently running. Deleting it will terminate the scan and remove all data. Are you sure?'
+            : 'Are you sure you want to delete this scan?'
+        if (confirm(message)) {
+            onDeleteScan?.(scanId)
+        }
+    }
+
     const renderActivityEntry = (activity: ActivityEntry) => {
         const isSelected = selectedActivityId === activity.id
 
         return (
-            <div key={activity.id} className="space-y-2">
-                <button
-                    type="button"
-                    onClick={() => handleActivityClick(activity.id)}
-                    className={cn(
-                        'w-full flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-accent',
-                        isSelected ? 'bg-accent border-primary' : 'bg-card border-border',
-                    )}
-                >
-                    <div className="flex items-center gap-3 flex-1">
-                        {getStatusIcon(activity.status)}
-                        <div className="flex-1 text-left">
-                            <p className="font-medium">{activity.name}</p>
-                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Clock className="w-3 h-3" />
-                                <span>{formatTimeAgo(activity.startedAt)}</span>
-                                {activity.vulnerabilitiesFound !== undefined &&
-                                    activity.vulnerabilitiesFound > 0 && (
-                                        <>
-                                            <span>•</span>
-                                            <span className="text-orange-600">
-                                                {activity.vulnerabilitiesFound} vulnerabilities
-                                            </span>
-                                        </>
-                                    )}
+            <div key={activity.id} className="space-y-2 group">
+                <div className="relative">
+                    <button
+                        type="button"
+                        onClick={() => handleActivityClick(activity.id)}
+                        className={cn(
+                            'w-full flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-accent',
+                            isSelected ? 'bg-accent border-primary' : 'bg-card border-border',
+                        )}
+                    >
+                        <div className="flex items-center gap-3 flex-1">
+                            {getStatusIcon(activity.status)}
+                            <div className="flex-1 text-left">
+                                <p className="font-medium">{activity.name}</p>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{formatTimeAgo(activity.startedAt)}</span>
+                                    {activity.vulnerabilitiesFound !== undefined &&
+                                        activity.vulnerabilitiesFound > 0 && (
+                                            <>
+                                                <span>•</span>
+                                                <span className="text-orange-600">
+                                                    {activity.vulnerabilitiesFound} vulnerabilities
+                                                </span>
+                                            </>
+                                        )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {getStatusBadge(activity.status)}
-                        <ChevronRight
-                            className={cn(
-                                'w-4 h-4 transition-transform text-muted-foreground',
-                                isSelected && 'rotate-90',
-                            )}
-                        />
-                    </div>
-                </button>
+                        <div className="flex items-center gap-2">
+                            {getStatusBadge(activity.status)}
+                            <ChevronRight
+                                className={cn(
+                                    'w-4 h-4 transition-transform text-muted-foreground',
+                                    isSelected && 'rotate-90',
+                                )}
+                            />
+                        </div>
+                    </button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
+                        onClick={e => handleDeleteScan(e, activity.id, activity.status === 'running')}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
 
                 {isSelected && (
                     <div className="mt-3 ml-8 pl-4 border-l-2 border-muted space-y-2">
@@ -201,37 +230,58 @@ export function ActivityViewer({
                         <History className="w-5 h-5 text-primary" />
                         Activity
                     </CardTitle>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-2">
-                                {getActivityTypeIcon()}
-                                {getActivityTypeLabel()}
-                                <ChevronDown className="w-4 h-4 opacity-50" />
+                    <div className="flex items-center gap-2">
+                        {recentActivities.length > 0 && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => {
+                                    if (
+                                        confirm(
+                                            `Are you sure you want to clear all ${recentActivities.length} recent ${activityType}?`,
+                                        )
+                                    ) {
+                                        onClearAll?.()
+                                    }
+                                }}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                                Clear All
                             </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                            <DropdownMenuItem
-                                onClick={() => setActivityType('scans')}
-                                className={cn(
-                                    'gap-2 cursor-pointer',
-                                    activityType === 'scans' && 'bg-accent',
-                                )}
-                            >
-                                <ScanLine className="w-4 h-4" />
-                                Scans
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => setActivityType('audits')}
-                                className={cn(
-                                    'gap-2 cursor-pointer',
-                                    activityType === 'audits' && 'bg-accent',
-                                )}
-                            >
-                                <ClipboardCheck className="w-4 h-4" />
-                                Audits
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                        )}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="gap-2">
+                                    {getActivityTypeIcon()}
+                                    {getActivityTypeLabel()}
+                                    <ChevronDown className="w-4 h-4 opacity-50" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                    onClick={() => setActivityType('scans')}
+                                    className={cn(
+                                        'gap-2 cursor-pointer',
+                                        activityType === 'scans' && 'bg-accent',
+                                    )}
+                                >
+                                    <ScanLine className="w-4 h-4" />
+                                    Scans
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setActivityType('audits')}
+                                    className={cn(
+                                        'gap-2 cursor-pointer',
+                                        activityType === 'audits' && 'bg-accent',
+                                    )}
+                                >
+                                    <ClipboardCheck className="w-4 h-4" />
+                                    Audits
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 </div>
             </CardHeader>
             <CardContent>

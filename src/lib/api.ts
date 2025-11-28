@@ -287,7 +287,13 @@ export const api = {
                 body: JSON.stringify(data),
             }),
         retry: (id: string) => fetchAPI(`/scans/${id}/retry`, { method: 'POST' }),
+        cancel: (id: string) => fetchAPI(`/scans/${id}/cancel`, { method: 'POST' }),
         delete: (id: string) => fetchAPI(`/scans/${id}`, { method: 'DELETE' }),
+        bulkDelete: (params: { device_id?: string; scan_ids?: string[] }) =>
+            fetchAPI('/scans/bulk-delete', {
+                method: 'POST',
+                body: JSON.stringify(params),
+            }),
         clearDeviceIssues: (deviceId: string) =>
             fetchAPI(`/devices/${deviceId}/clear/issues`, { method: 'POST' }),
         streamUrl: (id: string) => `${API_BASE_URL}/scans/${id}/stream`,
