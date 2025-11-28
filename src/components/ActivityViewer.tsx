@@ -161,54 +161,43 @@ export function ActivityViewer({
         return (
             <div key={activity.id} className="space-y-2">
                 <div
-                    className="relative overflow-hidden"
+                    className="relative overflow-visible"
                     onMouseEnter={() => setHoveredActivityId(activity.id)}
                     onMouseLeave={() => setHoveredActivityId(null)}
                 >
-                    {/* Slide-in action panel from the left */}
-                    <div
-                        className={cn(
-                            'absolute left-0 top-0 bottom-0 w-28 bg-gradient-to-r from-destructive/10 to-transparent flex items-center gap-1 px-2 transition-transform duration-300 ease-out z-10',
-                            isHovered ? 'translate-x-0' : '-translate-x-full',
-                        )}
-                    >
+                    {/* Action buttons underneath - revealed on hover */}
+                    <div className="absolute left-0 top-0 bottom-0 flex items-center gap-1.5 pl-2">
                         {isRunning && (
                             <Button
                                 variant="ghost"
-                                size="sm"
-                                className="h-8 px-2 gap-1.5 hover:bg-orange-500/20 hover:text-orange-600 text-orange-600"
+                                size="icon"
+                                className="h-9 w-9 rounded-lg bg-orange-500/90 hover:bg-orange-600 text-white shadow-sm"
                                 onClick={e => handleStopScan(e, activity.id)}
                                 title="Stop scan"
                             >
-                                <StopCircle className="h-3.5 w-3.5" />
-                                <span className="text-xs font-medium">Stop</span>
+                                <StopCircle className="h-4 w-4" />
                             </Button>
                         )}
                         <Button
                             variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 gap-1.5 hover:bg-destructive/20 hover:text-destructive text-destructive"
+                            size="icon"
+                            className="h-9 w-9 rounded-lg bg-destructive/90 hover:bg-destructive text-white shadow-sm"
                             onClick={e => handleDeleteScan(e, activity.id, isRunning)}
                             title="Delete scan"
                         >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            <span className="text-xs font-medium">Clear</span>
+                            <Trash2 className="h-4 w-4" />
                         </Button>
                     </div>
 
-                    {/* Main scan entry button */}
+                    {/* Main scan entry button - slides right on hover to reveal actions underneath */}
                     <button
                         type="button"
                         onClick={() => handleActivityClick(activity.id)}
                         className={cn(
-                            'w-full flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-accent relative',
-                            isSelected ? 'bg-accent border-primary' : 'bg-card border-border',
-                            isHovered && 'pl-32', // Make space for action buttons
+                            'w-full flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:bg-accent relative z-10 bg-card transition-all duration-300 ease-out',
+                            isSelected ? 'bg-accent border-primary' : 'border-border',
+                            isHovered && (isRunning ? 'translate-x-[84px]' : 'translate-x-[52px]'),
                         )}
-                        style={{
-                            transition:
-                                'padding-left 300ms ease-out, background-color 200ms, border-color 200ms',
-                        }}
                     >
                         <div className="flex items-center gap-3 flex-1">
                             {getStatusIcon(activity.status)}
