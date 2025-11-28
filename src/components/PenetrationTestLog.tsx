@@ -110,26 +110,8 @@ export function PenetrationTestLog({
                     ),
                 )
 
-                // Fetch scan results to get issues
-                fetch(`${API_BASE_URL}/scans/${scanId}`)
-                    .then(res => res.json())
-                    .then(scanData => {
-                        if (scanData.issues && scanData.issues.length > 0) {
-                            // Add all issues to the last step
-                            setSteps(prev => {
-                                const lastStepIndex = prev.length - 1
-                                if (lastStepIndex >= 0) {
-                                    return prev.map((step, idx) =>
-                                        idx === lastStepIndex
-                                            ? { ...step, issues: scanData.issues }
-                                            : step,
-                                    )
-                                }
-                                return prev
-                            })
-                        }
-                    })
-                    .catch(err => console.error('Failed to fetch scan issues:', err))
+                // Issues are now emitted in real-time via step_success events
+                // No need to fetch separately for live scans
 
                 eventSourceRef.current?.close()
                 onCompleteRef.current?.(data.status)
@@ -165,9 +147,18 @@ export function PenetrationTestLog({
             } else if (data.type === 'step_success') {
                 const payload = data.payload || data
                 const stepIndex = payload.step_index || data.step_index
+                const issues = payload.issues || []
 
                 setSteps(prev =>
-                    prev.map(step => (step.index === stepIndex ? { ...step, status: 'success' } : step)),
+                    prev.map(step =>
+                        step.index === stepIndex
+                            ? {
+                                  ...step,
+                                  status: 'success',
+                                  issues: issues.length > 0 ? issues : step.issues,
+                              }
+                            : step,
+                    ),
                 )
             } else if (data.type === 'step_error') {
                 const payload = data.payload || data
@@ -274,7 +265,7 @@ export function PenetrationTestLog({
                         }
                     }, 0)
 
-                    // Also fetch scan results to get issues and status
+                    // Also fetch scan results to get status and fallback issues
                     const scanResponse = await fetch(`${API_BASE_URL}/scans/${scanId}`)
                     if (scanResponse.ok) {
                         const scanData = await scanResponse.json()
@@ -292,18 +283,27 @@ export function PenetrationTestLog({
                             }, 100)
                         }
 
+                        // Fallback: for old scans that don't have issues in step_success events
                         if (scanData.issues && scanData.issues.length > 0) {
                             setTimeout(() => {
                                 setSteps(prev => {
-                                    const lastStepIndex = prev.length - 1
-                                    if (lastStepIndex >= 0) {
-                                        return prev.map((step, idx) =>
-                                            idx === lastStepIndex
-                                                ? { ...step, issues: scanData.issues }
-                                                : step,
+                                    return prev.map(step => {
+                                        // Only assign if step doesn't already have issues from events
+                                        if (step.issues && step.issues.length > 0) {
+                                            return step
+                                        }
+                                        // Filter issues for this specific step
+                                        const stepIssues = scanData.issues.filter(
+                                            (issue: any) =>
+                                                issue.metadata?.step_name === step.name ||
+                                                // Fallback: if no metadata, assign to last step
+                                                (!issue.metadata?.step_name &&
+                                                    step === prev[prev.length - 1]),
                                         )
-                                    }
-                                    return prev
+                                        return stepIssues.length > 0
+                                            ? { ...step, issues: stepIssues }
+                                            : step
+                                    })
                                 })
                             }, 100)
                         }
