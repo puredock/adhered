@@ -554,7 +554,11 @@ const DeviceDetail = () => {
                                         status: (scan.status === 'in_progress' ||
                                         scan.status === 'pending'
                                             ? 'running'
-                                            : scan.status) as 'running' | 'completed' | 'failed' | 'cancelled',
+                                            : scan.status) as
+                                            | 'running'
+                                            | 'completed'
+                                            | 'failed'
+                                            | 'cancelled',
                                         startedAt: scan.started_at,
                                         completedAt: scan.completed_at,
                                         vulnerabilitiesFound: scan.vulnerabilities.length,
@@ -602,6 +606,34 @@ const DeviceDetail = () => {
                                                 'The scan has been removed from the activity list.',
                                         })
                                     }}
+                                    onStopScan={async scanId => {
+                                        try {
+                                            await api.scans.cancel(scanId)
+                                            setActivityScans(prev =>
+                                                prev.map(s =>
+                                                    s.id === scanId
+                                                        ? {
+                                                              ...s,
+                                                              status: 'cancelled',
+                                                              completedAt: new Date().toISOString(),
+                                                          }
+                                                        : s,
+                                                ),
+                                            )
+                                            queryClient.invalidateQueries({
+                                                queryKey: ['scans', deviceId],
+                                            })
+                                            toast.success('Scan stopped', {
+                                                description: 'The scan has been cancelled successfully.',
+                                            })
+                                        } catch (error: any) {
+                                            console.error('Failed to stop scan:', error)
+                                            toast.error('Failed to stop scan', {
+                                                description:
+                                                    'An error occurred while stopping the scan.',
+                                            })
+                                        }
+                                    }}
                                     onDeleteScan={async scanId => {
                                         try {
                                             await api.scans.delete(scanId)
@@ -615,12 +647,15 @@ const DeviceDetail = () => {
                                         } catch (error: any) {
                                             // 404 means scan already deleted/never persisted - treat as success
                                             if (error?.message?.includes('Not Found')) {
-                                                setActivityScans(prev => prev.filter(s => s.id !== scanId))
+                                                setActivityScans(prev =>
+                                                    prev.filter(s => s.id !== scanId),
+                                                )
                                                 queryClient.invalidateQueries({
                                                     queryKey: ['scans', deviceId],
                                                 })
                                                 toast.success('Scan removed', {
-                                                    description: 'The scan has been removed from the list.',
+                                                    description:
+                                                        'The scan has been removed from the list.',
                                                 })
                                             } else {
                                                 console.error('Failed to delete scan:', error)

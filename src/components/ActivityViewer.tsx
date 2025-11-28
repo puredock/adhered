@@ -8,6 +8,7 @@ import {
     History,
     Loader2,
     ScanLine,
+    StopCircle,
     Trash2,
     X,
 } from 'lucide-react'
@@ -46,6 +47,7 @@ interface ActivityViewerProps {
     onScanComplete?: (scanId: string, status: string) => void
     onClearStaleScan?: (scanId: string) => void
     onDeleteScan?: (scanId: string) => void
+    onStopScan?: (scanId: string) => void
     onClearAll?: () => void
 }
 
@@ -56,12 +58,14 @@ export function ActivityViewer({
     onScanComplete,
     onClearStaleScan,
     onDeleteScan,
+    onStopScan,
     onClearAll,
 }: ActivityViewerProps) {
     const [activityType, setActivityType] = useState<ActivityType>('scans')
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
     const [mountKey, setMountKey] = useState(0)
     const [scanStates, setScanStates] = useState<Record<string, { steps: any[]; logs: any[] }>>({})
+    const [hoveredActivityId, setHoveredActivityId] = useState<string | null>(null)
 
     const getStatusIcon = (status: ActivityEntry['status']) => {
         switch (status) {
@@ -142,19 +146,69 @@ export function ActivityViewer({
         }
     }
 
+    const handleStopScan = async (e: React.MouseEvent, scanId: string) => {
+        e.stopPropagation()
+        if (confirm('Are you sure you want to stop this scan? It will be marked as cancelled.')) {
+            onStopScan?.(scanId)
+        }
+    }
+
     const renderActivityEntry = (activity: ActivityEntry) => {
         const isSelected = selectedActivityId === activity.id
+        const isHovered = hoveredActivityId === activity.id
+        const isRunning = activity.status === 'running'
 
         return (
-            <div key={activity.id} className="space-y-2 group">
-                <div className="relative">
+            <div key={activity.id} className="space-y-2">
+                <div
+                    className="relative overflow-hidden"
+                    onMouseEnter={() => setHoveredActivityId(activity.id)}
+                    onMouseLeave={() => setHoveredActivityId(null)}
+                >
+                    {/* Slide-in action panel from the left */}
+                    <div
+                        className={cn(
+                            'absolute left-0 top-0 bottom-0 w-28 bg-gradient-to-r from-destructive/10 to-transparent flex items-center gap-1 px-2 transition-transform duration-300 ease-out z-10',
+                            isHovered ? 'translate-x-0' : '-translate-x-full',
+                        )}
+                    >
+                        {isRunning && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-2 gap-1.5 hover:bg-orange-500/20 hover:text-orange-600 text-orange-600"
+                                onClick={e => handleStopScan(e, activity.id)}
+                                title="Stop scan"
+                            >
+                                <StopCircle className="h-3.5 w-3.5" />
+                                <span className="text-xs font-medium">Stop</span>
+                            </Button>
+                        )}
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 gap-1.5 hover:bg-destructive/20 hover:text-destructive text-destructive"
+                            onClick={e => handleDeleteScan(e, activity.id, isRunning)}
+                            title="Delete scan"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span className="text-xs font-medium">Clear</span>
+                        </Button>
+                    </div>
+
+                    {/* Main scan entry button */}
                     <button
                         type="button"
                         onClick={() => handleActivityClick(activity.id)}
                         className={cn(
-                            'w-full flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-accent',
+                            'w-full flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer hover:bg-accent relative',
                             isSelected ? 'bg-accent border-primary' : 'bg-card border-border',
+                            isHovered && 'pl-32', // Make space for action buttons
                         )}
+                        style={{
+                            transition:
+                                'padding-left 300ms ease-out, background-color 200ms, border-color 200ms',
+                        }}
                     >
                         <div className="flex items-center gap-3 flex-1">
                             {getStatusIcon(activity.status)}
@@ -185,14 +239,6 @@ export function ActivityViewer({
                             />
                         </div>
                     </button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-2 top-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/10 hover:text-destructive"
-                        onClick={e => handleDeleteScan(e, activity.id, activity.status === 'running')}
-                    >
-                        <X className="h-4 w-4" />
-                    </Button>
                 </div>
 
                 {isSelected && (
