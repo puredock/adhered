@@ -21,6 +21,7 @@ interface ArtifactsModalProps {
     stepName: string
     logs?: LogEntry[]
     issues?: Issue[]
+    scanStatus?: 'pending' | 'running' | 'success' | 'error'
 }
 
 export function ArtifactsModal({
@@ -30,6 +31,7 @@ export function ArtifactsModal({
     stepName,
     logs = [],
     issues = [],
+    scanStatus = 'running',
 }: ArtifactsModalProps) {
     // Extract TodoWrite and Bash tool uses from logs
     const { liveTodos, timeline } = useMemo(() => {
@@ -72,7 +74,7 @@ export function ArtifactsModal({
                     const cmd = bashCommandMap.get(toolData.id)!
                     cmd.output = toolData.output
                 }
-            } else if (log.message && log.message.trim()) {
+            } else if (log.message?.trim()) {
                 timelineItems.push({
                     type: 'message',
                     timestamp: log.timestamp,
@@ -128,100 +130,150 @@ export function ArtifactsModal({
                         <div className="w-80 border-r bg-muted/30">
                             <ScrollArea className="h-full">
                                 <div className="p-2 space-y-1">
-                                    {liveTodos.length > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveTab('plan')}
-                                            className={cn(
-                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                activeTab === 'plan' &&
-                                                    'bg-background shadow-sm ring-1 ring-primary/20',
-                                            )}
-                                        >
-                                            <div className="flex items-start gap-2">
-                                                <div className="mt-0.5">
-                                                    <ListTodo className="h-4 w-4" />
-                                                </div>
-                                                <div className="flex-1 min-w-0 relative z-10">
-                                                    <p className="text-sm font-medium truncate">
-                                                        Task Plan
-                                                    </p>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {liveTodos.length} items
-                                                    </span>
-                                                </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('plan')}
+                                        className={cn(
+                                            'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                            activeTab === 'plan' &&
+                                                'bg-background shadow-sm ring-1 ring-primary/20',
+                                        )}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <div className="mt-0.5">
+                                                <ListTodo className="h-4 w-4" />
                                             </div>
-                                        </button>
-                                    )}
-                                    {timeline.length > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveTab('commands')}
-                                            className={cn(
-                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                activeTab === 'commands' &&
-                                                    'bg-background shadow-sm ring-1 ring-primary/20',
-                                            )}
-                                        >
-                                            <div className="flex items-start gap-2">
-                                                <div className="mt-0.5">
-                                                    <Code2 className="h-4 w-4" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        Execution Timeline
-                                                    </p>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {timeline.length} entries
-                                                    </span>
-                                                </div>
+                                            <div className="flex-1 min-w-0 relative z-10">
+                                                <p className="text-sm font-medium truncate">Task Plan</p>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {liveTodos.length > 0
+                                                        ? `${liveTodos.length} items`
+                                                        : 'No tasks'}
+                                                </span>
                                             </div>
-                                        </button>
-                                    )}
-                                    {issues.length > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setActiveTab('issues')}
-                                            className={cn(
-                                                'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
-                                                activeTab === 'issues' &&
-                                                    'bg-background shadow-sm ring-1 ring-primary/20',
-                                            )}
-                                        >
-                                            <div className="flex items-start gap-2">
-                                                <div className="mt-0.5">
-                                                    <AlertCircle className="h-4 w-4" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        Issues
-                                                    </p>
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {issues.length} found
-                                                    </span>
-                                                </div>
+                                        </div>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('commands')}
+                                        className={cn(
+                                            'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                            activeTab === 'commands' &&
+                                                'bg-background shadow-sm ring-1 ring-primary/20',
+                                        )}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <div className="mt-0.5">
+                                                <Code2 className="h-4 w-4" />
                                             </div>
-                                        </button>
-                                    )}
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">
+                                                    Execution Timeline
+                                                </p>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {timeline.length > 0
+                                                        ? `${timeline.length} entries`
+                                                        : 'No entries'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setActiveTab('issues')}
+                                        className={cn(
+                                            'w-full text-left p-3 rounded-lg transition-colors hover:bg-background',
+                                            activeTab === 'issues' &&
+                                                'bg-background shadow-sm ring-1 ring-primary/20',
+                                        )}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <div className="mt-0.5">
+                                                <AlertCircle className="h-4 w-4" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">Issues</p>
+                                                <span className="text-xs text-muted-foreground">
+                                                    {issues.length > 0
+                                                        ? `${issues.length} found`
+                                                        : 'No issues'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </button>
                                 </div>
                             </ScrollArea>
                         </div>
 
                         {/* Content Viewer */}
                         <div className="flex-1 min-w-0 flex flex-col">
-                            {activeTab === 'plan' && <ArtifactsPlanTab todos={liveTodos} />}
+                            {activeTab === 'plan' &&
+                                (liveTodos.length > 0 ? (
+                                    <ArtifactsPlanTab todos={liveTodos} />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                                        <ListTodo className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                                        <p className="text-sm text-muted-foreground max-w-md">
+                                            Task list for this step is not available. Please see the
+                                            Execution Timeline for current status.
+                                        </p>
+                                    </div>
+                                ))}
 
-                            {activeTab === 'commands' && (
-                                <ArtifactsTimelineTab
-                                    timeline={filteredTimeline}
-                                    showContext={showContextInTimeline}
-                                    onToggleContext={setShowContextInTimeline}
-                                />
-                            )}
+                            {activeTab === 'commands' &&
+                                (timeline.length > 0 ? (
+                                    <ArtifactsTimelineTab
+                                        timeline={filteredTimeline}
+                                        showContext={showContextInTimeline}
+                                        onToggleContext={setShowContextInTimeline}
+                                    />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                                        <Code2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                                        <p className="text-sm text-muted-foreground max-w-md">
+                                            No execution logs available for this step.
+                                        </p>
+                                    </div>
+                                ))}
 
-                            {activeTab === 'issues' && issues.length > 0 && (
-                                <ArtifactsIssuesTab issues={issues} />
-                            )}
+                            {activeTab === 'issues' &&
+                                (issues.length > 0 ? (
+                                    <ArtifactsIssuesTab issues={issues} />
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full p-8 text-center">
+                                        <AlertCircle className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                                        {scanStatus === 'running' || scanStatus === 'pending' ? (
+                                            <>
+                                                <p className="text-sm font-medium mb-2">
+                                                    Scan in Progress
+                                                </p>
+                                                <p className="text-sm text-muted-foreground max-w-md">
+                                                    Issues have not been populated yet. Please wait until
+                                                    the scan completes.
+                                                </p>
+                                            </>
+                                        ) : scanStatus === 'success' ? (
+                                            <>
+                                                <p className="text-sm font-medium mb-2">
+                                                    No Issues Found
+                                                </p>
+                                                <p className="text-sm text-muted-foreground max-w-md">
+                                                    The scan completed successfully with no security
+                                                    issues detected.
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p className="text-sm font-medium mb-2">Scan Failed</p>
+                                                <p className="text-sm text-muted-foreground max-w-md">
+                                                    The scan was interrupted or failed. Issues could not
+                                                    be generated. Please check the Execution Timeline for
+                                                    more details.
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
                         </div>
                     </div>
                 )}
