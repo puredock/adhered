@@ -542,9 +542,8 @@ const DeviceDetail = () => {
                         </Card>
 
                         {/* Activity Viewer */}
-                        <ActivityViewer
-                            deviceId={deviceId!}
-                            scans={[
+                        {(() => {
+                            const allActivityScans = [
                                 ...activityScans,
                                 ...scans
                                     .filter(scan => !activityScans.some(as => as.id === scan.id))
@@ -555,44 +554,110 @@ const DeviceDetail = () => {
                                         status: (scan.status === 'in_progress' ||
                                         scan.status === 'pending'
                                             ? 'running'
-                                            : scan.status) as 'running' | 'completed' | 'failed',
+                                            : scan.status) as 'running' | 'completed' | 'failed' | 'cancelled',
                                         startedAt: scan.started_at,
                                         completedAt: scan.completed_at,
                                         vulnerabilitiesFound: scan.vulnerabilities.length,
                                     })),
-                            ]}
-                            audits={[]}
-                            onScanComplete={(scanId, status) => {
-                                // Update the status in activity scans
-                                setActivityScans(prev =>
-                                    prev.map(s =>
-                                        s.id === scanId
-                                            ? {
-                                                  ...s,
-                                                  status:
-                                                      status === 'completed' ? 'completed' : 'failed',
-                                                  completedAt: new Date().toISOString(),
-                                              }
-                                            : s,
-                                    ),
-                                )
-                                // Invalidate and refetch the scans data
-                                queryClient.invalidateQueries({
-                                    queryKey: ['scans', deviceId],
-                                })
-                            }}
-                            onClearStaleScan={scanId => {
-                                // Remove the stale scan from activity scans
-                                setActivityScans(prev => prev.filter(s => s.id !== scanId))
-                                // Optionally refresh the scans list
-                                queryClient.invalidateQueries({
-                                    queryKey: ['scans', deviceId],
-                                })
-                                toast.success('Stale scan cleared', {
-                                    description: 'The scan has been removed from the activity list.',
-                                })
-                            }}
-                        />
+                            ]
+                            const recentScans = allActivityScans.filter(s => s.status !== 'running')
+
+                            return (
+                                <ActivityViewer
+                                    deviceId={deviceId!}
+                                    scans={allActivityScans}
+                                    audits={[]}
+                                    onScanComplete={(scanId, status) => {
+                                        // Update the status in activity scans
+                                        setActivityScans(prev =>
+                                            prev.map(s =>
+                                                s.id === scanId
+                                                    ? {
+                                                          ...s,
+                                                          status:
+                                                              status === 'completed'
+                                                                  ? 'completed'
+                                                                  : status === 'cancelled'
+                                                                    ? 'cancelled'
+                                                                    : 'failed',
+                                                          completedAt: new Date().toISOString(),
+                                                      }
+                                                    : s,
+                                            ),
+                                        )
+                                        // Invalidate and refetch the scans data
+                                        queryClient.invalidateQueries({
+                                            queryKey: ['scans', deviceId],
+                                        })
+                                    }}
+                                    onClearStaleScan={scanId => {
+                                        // Remove the stale scan from activity scans
+                                        setActivityScans(prev => prev.filter(s => s.id !== scanId))
+                                        // Optionally refresh the scans list
+                                        queryClient.invalidateQueries({
+                                            queryKey: ['scans', deviceId],
+                                        })
+                                        toast.success('Stale scan cleared', {
+                                            description:
+                                                'The scan has been removed from the activity list.',
+                                        })
+                                    }}
+                                    onDeleteScan={async scanId => {
+                                        try {
+                                            await api.scans.delete(scanId)
+                                            setActivityScans(prev => prev.filter(s => s.id !== scanId))
+                                            queryClient.invalidateQueries({
+                                                queryKey: ['scans', deviceId],
+                                            })
+                                            toast.success('Scan deleted', {
+                                                description: 'The scan has been removed successfully.',
+                                            })
+                                        } catch (error: any) {
+                                            // 404 means scan already deleted/never persisted - treat as success
+                                            if (error?.message?.includes('Not Found')) {
+                                                setActivityScans(prev => prev.filter(s => s.id !== scanId))
+                                                queryClient.invalidateQueries({
+                                                    queryKey: ['scans', deviceId],
+                                                })
+                                                toast.success('Scan removed', {
+                                                    description: 'The scan has been removed from the list.',
+                                                })
+                                            } else {
+                                                console.error('Failed to delete scan:', error)
+                                                toast.error('Failed to delete scan', {
+                                                    description:
+                                                        'An error occurred while deleting the scan.',
+                                                })
+                                            }
+                                        }
+                                    }}
+                                    onClearAll={async () => {
+                                        try {
+                                            const scanIds = recentScans.map(s => s.id)
+                                            if (scanIds.length === 0) {
+                                                toast.info('No scans to clear')
+                                                return
+                                            }
+                                            await api.scans.bulkDelete({ scan_ids: scanIds })
+                                            setActivityScans(prev =>
+                                                prev.filter(s => !scanIds.includes(s.id)),
+                                            )
+                                            queryClient.invalidateQueries({
+                                                queryKey: ['scans', deviceId],
+                                            })
+                                            toast.success('All scans cleared', {
+                                                description: `${scanIds.length} scan(s) have been removed.`,
+                                            })
+                                        } catch (error) {
+                                            console.error('Failed to clear all scans:', error)
+                                            toast.error('Failed to clear scans', {
+                                                description: 'An error occurred while clearing scans.',
+                                            })
+                                        }
+                                    }}
+                                />
+                            )
+                        })()}
                     </div>
 
                     {/* Actions Panel */}
@@ -677,7 +742,9 @@ const DeviceDetail = () => {
                                                     disabled={scansFetching}
                                                 >
                                                     <RefreshCw
-                                                        className={`h-4 w-4 ${scansFetching ? 'animate-spin' : ''}`}
+                                                        className={`h-4 w-4 ${
+                                                            scansFetching ? 'animate-spin' : ''
+                                                        }`}
                                                     />
                                                 </Button>
                                             </TooltipTrigger>

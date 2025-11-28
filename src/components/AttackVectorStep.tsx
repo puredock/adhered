@@ -151,12 +151,19 @@ export function AttackVectorStep({
 
         setIsRetrying(true)
         try {
-            await fetch(`${API_BASE_URL}/scans/${scanId}/retry`, {
+            const response = await fetch(`${API_BASE_URL}/scans/${scanId}/retry`, {
                 method: 'POST',
             })
-            // Refresh or redirect to new scan
+            const data = await response.json()
+
+            if (response.ok && data.scan_id) {
+                window.location.reload()
+            } else {
+                throw new Error(data.message || 'Failed to retry scan')
+            }
         } catch (error) {
             console.error('Failed to retry scan:', error)
+            alert('Failed to retry scan. Please try again.')
         } finally {
             setIsRetrying(false)
         }

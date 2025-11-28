@@ -261,10 +261,24 @@ export function PenetrationTestLog({
                         }
                     }, 0)
 
-                    // Also fetch scan results to get issues
+                    // Also fetch scan results to get issues and status
                     const scanResponse = await fetch(`${API_BASE_URL}/scans/${scanId}`)
                     if (scanResponse.ok) {
                         const scanData = await scanResponse.json()
+
+                        // If scan was cancelled, mark all running/pending steps as error
+                        if (scanData.status === 'cancelled') {
+                            setTimeout(() => {
+                                setSteps(prev =>
+                                    prev.map(step =>
+                                        step.status === 'running' || step.status === 'pending'
+                                            ? { ...step, status: 'error' }
+                                            : step,
+                                    ),
+                                )
+                            }, 100)
+                        }
+
                         if (scanData.issues && scanData.issues.length > 0) {
                             setTimeout(() => {
                                 setSteps(prev => {
@@ -286,6 +300,18 @@ export function PenetrationTestLog({
                     setConnectionError(
                         'Unable to load scan history. This scan may be too old or the data has expired.',
                     )
+
+                    // Fallback: if scan is cancelled but we can't load history,
+                    // make sure steps are not stuck in "Running"
+                    if (initialStatus === 'cancelled') {
+                        setSteps(prev =>
+                            prev.map(step =>
+                                step.status === 'running' || step.status === 'pending'
+                                    ? { ...step, status: 'error' as const }
+                                    : step,
+                            ),
+                        )
+                    }
                 }
             }
 
@@ -357,21 +383,28 @@ export function PenetrationTestLog({
                 method: 'DELETE',
             })
 
-            if (response.ok) {
-                await response.json()
+            // Handle both successful delete and 404 (scan already gone/never persisted)
+            if (response.ok || response.status === 404) {
                 setStatus('cancelled')
                 eventSourceRef.current?.close()
 
-                setSteps(prev =>
-                    prev.map(step =>
-                        step.status === 'running' || step.status === 'pending'
-                            ? { ...step, status: 'success' as const }
-                            : step,
-                    ),
+                const updatedSteps = steps.map(step =>
+                    step.status === 'running' || step.status === 'pending'
+                        ? { ...step, status: 'error' as const }
+                        : step,
                 )
 
-                onComplete?.('completed')
-                onCancel?.()
+                setSteps(updatedSteps)
+
+                // Immediately notify parent of the updated state
+                onStateChangeRef.current?.({ steps: updatedSteps, logs })
+
+                onComplete?.('cancelled')
+
+                // Defer onCancel to let React flush state
+                setTimeout(() => {
+                    onCancel?.()
+                }, 100)
             }
         } catch (error) {
             console.error('Failed to cancel scan:', error)
@@ -380,9 +413,13 @@ export function PenetrationTestLog({
 
     const handleClearStaleScan = async () => {
         try {
-            await fetch(`${API_BASE_URL}/scans/${scanId}`, {
+            const response = await fetch(`${API_BASE_URL}/scans/${scanId}`, {
                 method: 'DELETE',
             })
+            // 404 is OK - scan was already deleted or never persisted
+            if (!response.ok && response.status !== 404) {
+                console.error('Failed to delete stale scan:', response.statusText)
+            }
         } catch (error) {
             console.error('Failed to delete stale scan:', error)
         } finally {
