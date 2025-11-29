@@ -1,2 +1,3 @@
 export { ArtifactsModal } from './artifacts/ArtifactsModal'
-export type { Artifact, Issue } from './artifacts/types'
+export { IssueDetailView } from './artifacts/IssueDetailView'
+export type { Artifact, Issue, IssueVerificationStatus, ReproductionSession } from './artifacts/types'

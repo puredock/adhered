@@ -9,6 +9,26 @@ export interface Artifact {
     language?: 'bash' | 'python' | 'javascript' | 'other'
 }
 
+export type IssueVerificationStatus =
+    | 'pending'
+    | 'confirmed'
+    | 'dismissed'
+    | 'needs_info'
+    | 'reproducing'
+
+export interface ReproductionSession {
+    id: string
+    timestamp: string
+    status: 'running' | 'completed' | 'failed'
+    type: 'scriptreplay' | 'browser' | 'manual'
+    artifacts?: {
+        screenshots?: string[]
+        recording?: string
+        logs?: string
+    }
+    notes?: string
+}
+
 export interface Issue {
     id: string
     title: string
@@ -21,6 +41,11 @@ export interface Issue {
     affected_component?: string
     cvss_score?: number
     cve_id?: string
+    verification_status?: IssueVerificationStatus
+    reproduction_sessions?: ReproductionSession[]
+    reviewer_notes?: string
+    confirmed_at?: string
+    confirmed_by?: string
 }
 
 export interface LogEntry {
