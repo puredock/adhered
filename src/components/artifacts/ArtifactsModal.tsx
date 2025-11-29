@@ -24,6 +24,7 @@ interface ArtifactsModalProps {
     scanStatus?: 'pending' | 'running' | 'success' | 'error'
     onIssueUpdate?: (issueId: string, updates: Partial<Issue>) => void
     onStartReproduction?: (issueId: string, type: 'scriptreplay' | 'browser' | 'manual') => void
+    onStartRemediation?: (issueId: string, type: 'automated' | 'manual') => void
 }
 
 export function ArtifactsModal({
@@ -36,6 +37,7 @@ export function ArtifactsModal({
     scanStatus = 'running',
     onIssueUpdate,
     onStartReproduction,
+    onStartRemediation,
 }: ArtifactsModalProps) {
     // Extract TodoWrite and Bash tool uses from logs
     const { liveTodos, timeline } = useMemo(() => {
@@ -246,6 +248,7 @@ export function ArtifactsModal({
                                         issues={issues}
                                         onIssueUpdate={onIssueUpdate}
                                         onStartReproduction={onStartReproduction}
+                                        onStartRemediation={onStartRemediation}
                                     />
                                 ) : (
                                     <div className="flex flex-col items-center justify-center h-full p-8 text-center">
