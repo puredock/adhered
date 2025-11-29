@@ -14,6 +14,7 @@ import {
     Terminal,
     User,
     Video,
+    Wrench,
     X,
     XCircle,
 } from 'lucide-react'
@@ -25,14 +26,16 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
-import type { Issue, IssueVerificationStatus, ReproductionSession } from './types'
+import type { Issue, IssueVerificationStatus, RemediationStatus } from './types'
 
 export interface IssueDetailViewProps {
     issue: Issue
     onBack: () => void
     onStatusChange?: (issueId: string, status: IssueVerificationStatus, notes?: string) => void
     onStartReproduction?: (issueId: string, type: 'scriptreplay' | 'browser' | 'manual') => void
+    onStartRemediation?: (issueId: string, type: 'automated' | 'manual') => void
     isReproducing?: boolean
+    isRemediating?: boolean
 }
 
 export function IssueDetailView({
@@ -40,15 +43,19 @@ export function IssueDetailView({
     onBack,
     onStatusChange,
     onStartReproduction,
+    onStartRemediation,
     isReproducing = false,
+    isRemediating = false,
 }: IssueDetailViewProps) {
     const [reviewerNotes, setReviewerNotes] = useState(issue.reviewer_notes || '')
     const [showReproductionOptions, setShowReproductionOptions] = useState(false)
+    const [showRemediationOptions, setShowRemediationOptions] = useState(false)
     const [expandedSections, setExpandedSections] = useState({
         description: true,
         reproduction: true,
         remediation: true,
         sessions: false,
+        remediationSessions: false,
     })
 
     const toggleSection = (section: keyof typeof expandedSections) => {
@@ -111,6 +118,41 @@ export function IssueDetailView({
                 {severity.toUpperCase()}
             </Badge>
         )
+    }
+
+    const getRemediationStatusBadge = (status?: RemediationStatus) => {
+        switch (status) {
+            case 'applied':
+                return (
+                    <Badge className="bg-green-100 text-green-700 border-green-200 text-xs gap-1">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Applied
+                    </Badge>
+                )
+            case 'verified':
+                return (
+                    <Badge className="bg-emerald-500 text-white border-emerald-600 text-xs gap-1">
+                        <ShieldCheck className="h-3 w-3" />
+                        Verified
+                    </Badge>
+                )
+            case 'in_progress':
+                return (
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        In Progress
+                    </Badge>
+                )
+            case 'failed':
+                return (
+                    <Badge className="bg-red-100 text-red-700 border-red-200 text-xs gap-1">
+                        <XCircle className="h-3 w-3" />
+                        Failed
+                    </Badge>
+                )
+            default:
+                return null
+        }
     }
 
     const formatDate = (dateStr?: string) => {
@@ -354,35 +396,143 @@ export function IssueDetailView({
                         </Card>
 
                         {/* Remediation Section */}
-                        {issue.remediation && (
-                            <Card className="overflow-hidden border-green-200 bg-gradient-to-br from-green-50/50 to-emerald-50/50">
-                                <button
-                                    type="button"
-                                    onClick={() => toggleSection('remediation')}
-                                    className="w-full px-4 py-3 flex items-center justify-between bg-green-50 hover:bg-green-100 transition-colors"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <ShieldCheck className="h-4 w-4 text-green-600" />
-                                        <span className="font-semibold text-sm text-green-900">
-                                            Remediation
-                                        </span>
-                                    </div>
-                                    <ChevronDown
-                                        className={cn(
-                                            'h-4 w-4 text-green-600 transition-transform',
-                                            expandedSections.remediation && 'rotate-180',
-                                        )}
-                                    />
-                                </button>
-                                {expandedSections.remediation && (
-                                    <div className="px-4 py-4">
+                        <Card className="overflow-hidden border-green-200 bg-gradient-to-br from-green-50/50 to-emerald-50/50">
+                            <button
+                                type="button"
+                                onClick={() => toggleSection('remediation')}
+                                className="w-full px-4 py-3 flex items-center justify-between bg-green-50 hover:bg-green-100 transition-colors"
+                            >
+                                <div className="flex items-center gap-2">
+                                    <ShieldCheck className="h-4 w-4 text-green-600" />
+                                    <span className="font-semibold text-sm text-green-900">
+                                        Remediation
+                                    </span>
+                                    {getRemediationStatusBadge(issue.remediation_status)}
+                                </div>
+                                <ChevronDown
+                                    className={cn(
+                                        'h-4 w-4 text-green-600 transition-transform',
+                                        expandedSections.remediation && 'rotate-180',
+                                    )}
+                                />
+                            </button>
+                            {expandedSections.remediation && (
+                                <div className="px-4 py-4 space-y-4">
+                                    {/* Remediation description */}
+                                    {issue.remediation && (
                                         <p className="text-sm text-green-800 leading-relaxed">
                                             {issue.remediation}
                                         </p>
+                                    )}
+
+                                    {/* Remediation steps if available */}
+                                    {issue.remediation_steps && issue.remediation_steps.length > 0 && (
+                                        <div className="space-y-2">
+                                            <h5 className="text-xs font-medium text-green-700 uppercase tracking-wide">
+                                                Remediation Steps
+                                            </h5>
+                                            <ol className="space-y-2">
+                                                {issue.remediation_steps.map((step, idx) => (
+                                                    <li
+                                                        key={`rem-step-${idx}`}
+                                                        className="flex gap-3 text-sm"
+                                                    >
+                                                        <span className="flex-shrink-0 h-5 w-5 rounded-full bg-green-200 text-green-800 font-bold text-xs flex items-center justify-center">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <span className="flex-1 text-green-800 leading-relaxed">
+                                                            {step}
+                                                        </span>
+                                                    </li>
+                                                ))}
+                                            </ol>
+                                        </div>
+                                    )}
+
+                                    {/* Apply Fix button */}
+                                    <div className="pt-4 border-t border-green-200">
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-green-800">
+                                                    Apply Fix
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-green-700">
+                                                Automatically apply the remediation to patch this
+                                                vulnerability on the target.
+                                            </p>
+                                            {showRemediationOptions ? (
+                                                <div className="flex flex-wrap gap-2">
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            onStartRemediation?.(issue.id, 'automated')
+                                                        }
+                                                        disabled={isRemediating}
+                                                        className="gap-1.5 flex-1 bg-green-600 hover:bg-green-700"
+                                                    >
+                                                        <Wrench className="h-3.5 w-3.5" />
+                                                        Auto-patch
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            onStartRemediation?.(issue.id, 'manual')
+                                                        }
+                                                        disabled={isRemediating}
+                                                        className="gap-1.5 flex-1 border-green-300 text-green-700 hover:bg-green-100"
+                                                    >
+                                                        <Terminal className="h-3.5 w-3.5" />
+                                                        Guided Manual
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => setShowRemediationOptions(false)}
+                                                        className="w-full text-green-700"
+                                                    >
+                                                        Cancel
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <Button
+                                                    size="sm"
+                                                    onClick={() => setShowRemediationOptions(true)}
+                                                    disabled={
+                                                        isRemediating ||
+                                                        issue.remediation_status === 'verified'
+                                                    }
+                                                    className="gap-1.5 bg-green-600 hover:bg-green-700 w-full"
+                                                >
+                                                    {isRemediating ? (
+                                                        <>
+                                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                            Applying Fix...
+                                                        </>
+                                                    ) : issue.remediation_status === 'applied' ? (
+                                                        <>
+                                                            <ShieldCheck className="h-3.5 w-3.5" />
+                                                            Re-apply Fix
+                                                        </>
+                                                    ) : issue.remediation_status === 'verified' ? (
+                                                        <>
+                                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                                            Fix Verified
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Wrench className="h-3.5 w-3.5" />
+                                                            Apply Fix
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                            </Card>
-                        )}
+                                </div>
+                            )}
+                        </Card>
 
                         {/* Past Reproduction Sessions */}
                         {issue.reproduction_sessions && issue.reproduction_sessions.length > 0 && (

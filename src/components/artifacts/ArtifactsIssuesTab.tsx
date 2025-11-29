@@ -2,21 +2,24 @@ import { useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { IssueCard } from './IssueCard'
 import { IssueDetailView } from './IssueDetailView'
-import type { Issue, IssueVerificationStatus, ReproductionSession } from './types'
+import type { Issue, IssueVerificationStatus, RemediationSession, ReproductionSession } from './types'
 
 export interface ArtifactsIssuesTabProps {
     issues: Issue[]
     onIssueUpdate?: (issueId: string, updates: Partial<Issue>) => void
     onStartReproduction?: (issueId: string, type: 'scriptreplay' | 'browser' | 'manual') => void
+    onStartRemediation?: (issueId: string, type: 'automated' | 'manual') => void
 }
 
 export function ArtifactsIssuesTab({
     issues,
     onIssueUpdate,
     onStartReproduction,
+    onStartRemediation,
 }: ArtifactsIssuesTabProps) {
     const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null)
     const [isReproducing, setIsReproducing] = useState(false)
+    const [isRemediating, setIsRemediating] = useState(false)
 
     const handleSelectIssue = (id: string) => {
         setSelectedIssueId(id)
@@ -73,6 +76,41 @@ export function ArtifactsIssuesTab({
         }
     }
 
+    const handleStartRemediation = async (issueId: string, type: 'automated' | 'manual') => {
+        setIsRemediating(true)
+
+        onIssueUpdate?.(issueId, {
+            remediation_status: 'in_progress',
+        })
+
+        try {
+            await onStartRemediation?.(issueId, type)
+
+            const newSession: RemediationSession = {
+                id: `remediation-${Date.now()}`,
+                timestamp: new Date().toISOString(),
+                status: 'completed',
+                type,
+                notes: `Remediation applied using ${type} method`,
+            }
+
+            const issue = issues.find(i => i.id === issueId)
+            onIssueUpdate?.(issueId, {
+                remediation_status: 'applied',
+                remediation_sessions: [...(issue?.remediation_sessions || []), newSession],
+                remediated_at: new Date().toISOString(),
+                remediated_by: 'Current User',
+            })
+        } catch (error) {
+            console.error('Remediation failed:', error)
+            onIssueUpdate?.(issueId, {
+                remediation_status: 'failed',
+            })
+        } finally {
+            setIsRemediating(false)
+        }
+    }
+
     if (!issues.length) return null
 
     // Find selected issue, handling fallback IDs
@@ -91,7 +129,9 @@ export function ArtifactsIssuesTab({
                 onBack={handleBack}
                 onStatusChange={handleStatusChange}
                 onStartReproduction={handleStartReproduction}
+                onStartRemediation={handleStartRemediation}
                 isReproducing={isReproducing}
+                isRemediating={isRemediating}
             />
         )
     }

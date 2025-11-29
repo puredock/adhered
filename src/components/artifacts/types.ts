@@ -16,6 +16,8 @@ export type IssueVerificationStatus =
     | 'needs_info'
     | 'reproducing'
 
+export type RemediationStatus = 'not_started' | 'in_progress' | 'applied' | 'failed' | 'verified'
+
 export interface ReproductionSession {
     id: string
     timestamp: string
@@ -29,6 +31,21 @@ export interface ReproductionSession {
     notes?: string
 }
 
+export interface RemediationSession {
+    id: string
+    timestamp: string
+    status: 'running' | 'completed' | 'failed'
+    type: 'automated' | 'manual'
+    artifacts?: {
+        screenshots?: string[]
+        recording?: string
+        logs?: string
+        patch_file?: string
+    }
+    notes?: string
+    changes_made?: string[]
+}
+
 export interface Issue {
     id: string
     title: string
@@ -38,14 +55,19 @@ export interface Issue {
     impact?: string
     reproduction_steps?: string[]
     remediation?: string
+    remediation_steps?: string[]
     affected_component?: string
     cvss_score?: number
     cve_id?: string
     verification_status?: IssueVerificationStatus
+    remediation_status?: RemediationStatus
     reproduction_sessions?: ReproductionSession[]
+    remediation_sessions?: RemediationSession[]
     reviewer_notes?: string
     confirmed_at?: string
     confirmed_by?: string
+    remediated_at?: string
+    remediated_by?: string
 }
 
 export interface LogEntry {
