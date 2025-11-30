@@ -187,11 +187,11 @@ export const api = {
         scan: (id: string, scanStandard?: string) => {
             const params = new URLSearchParams()
             if (scanStandard) {
-                params.append('scan_standard', scanStandard)
+                params.append('standard', scanStandard)
             }
-            return fetchAPI(`/devices/${id}/scan${params.toString() ? `?${params.toString()}` : ''}`, {
-                method: 'POST',
-            })
+
+            const url = `/devices/${id}/scan${params.toString() ? `?${params.toString()}` : ''}`
+            return fetchAPI(url, { method: 'POST' })
         },
         enrich: (id: string, force_rescan = false) =>
             fetchAPI(`/devices/${id}/enrich?force_rescan=${force_rescan}`, { method: 'POST' }),
