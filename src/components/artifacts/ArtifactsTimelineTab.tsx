@@ -1,6 +1,5 @@
 import { CheckCircle2, Info, MessageSquare, Terminal, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import type { BashCommand, LogEntry, TimelineItem } from './types'
 
 export interface ArtifactsTimelineTabProps {
@@ -28,7 +27,7 @@ export function ArtifactsTimelineTab({
     }
 
     return (
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className="flex-1 min-h-0 flex flex-col w-full">
             <div className="px-6 py-4 border-b flex-shrink-0 flex items-start justify-between bg-white">
                 <div>
                     <h3 className="font-semibold">Execution Timeline</h3>
@@ -46,30 +45,32 @@ export function ArtifactsTimelineTab({
                     {showContext ? 'Hide Context' : 'Show Context'}
                 </Button>
             </div>
-            <ScrollArea className="flex-1 p-6 bg-white">
-                <div className="relative">
+            <div className="flex-1 bg-white overflow-y-auto">
+                <div className="relative p-6">
                     {timeline.length > 1 && (
                         <div className="absolute left-[30px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-blue-200 via-blue-300 to-blue-200" />
                     )}
-                    <div className="relative space-y-6">
+                    <div className="relative space-y-6 max-w-full">
                         {timeline.map((item, index) => {
                             if (item.type === 'command') {
                                 const cmd = item.data as BashCommand
                                 return (
-                                    <div key={cmd.id} className="relative pl-14">
+                                    <div key={cmd.id} className="relative pl-14 min-w-0 max-w-full">
                                         <div className="absolute left-[22px] top-3 w-4 h-4 rounded-full bg-blue-500 border-4 border-background shadow-md z-10" />
-                                        <div className="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                                        <div className="border rounded-lg shadow-sm hover:shadow-md transition-shadow">
                                             <div className="bg-slate-950 p-4">
                                                 <div className="flex items-center gap-2 mb-3">
-                                                    <Terminal className="h-4 w-4 text-green-400" />
+                                                    <Terminal className="h-4 w-4 text-green-400 flex-shrink-0" />
                                                     <span className="text-xs text-slate-400 font-mono">
                                                         {new Date(cmd.timestamp).toLocaleTimeString()}
                                                     </span>
                                                 </div>
-                                                <code className="text-sm text-slate-100 font-mono block">
-                                                    <span className="text-green-400">$</span>{' '}
-                                                    {cmd.command}
-                                                </code>
+                                                <div className="overflow-x-auto w-full">
+                                                    <code className="inline-block min-w-max text-sm text-slate-100 font-mono whitespace-pre">
+                                                        <span className="text-green-400">$</span>{' '}
+                                                        {cmd.command}
+                                                    </code>
+                                                </div>
                                             </div>
                                             {cmd.output && (
                                                 <div className="bg-slate-900 p-4 border-t border-slate-800">
@@ -84,7 +85,10 @@ export function ArtifactsTimelineTab({
                             } else {
                                 const log = item.data as LogEntry
                                 return (
-                                    <div key={`${log.timestamp}-${index}`} className="relative pl-14">
+                                    <div
+                                        key={`${log.timestamp}-${index}`}
+                                        className="relative pl-14 min-w-0 max-w-full"
+                                    >
                                         <div className="absolute left-[24px] top-2 w-3 h-3 rounded-full bg-blue-300 border-2 border-background z-10" />
                                         <div className="bg-gradient-to-r from-blue-50 to-transparent border-l-4 border-blue-400 p-4 rounded-r-lg">
                                             <div className="flex items-start gap-3">
@@ -97,9 +101,11 @@ export function ArtifactsTimelineTab({
                                                     </span>
                                                 </div>
                                             </div>
-                                            <p className="text-sm text-slate-700 mt-2 leading-relaxed">
-                                                {log.message}
-                                            </p>
+                                            <div className="overflow-x-auto w-full mt-2">
+                                                <p className="inline-block min-w-max text-sm text-slate-700 leading-relaxed whitespace-pre">
+                                                    {log.message}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 )
@@ -107,7 +113,7 @@ export function ArtifactsTimelineTab({
                         })}
                     </div>
                 </div>
-            </ScrollArea>
+            </div>
         </div>
     )
 }
