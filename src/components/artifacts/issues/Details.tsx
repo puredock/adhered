@@ -121,8 +121,11 @@ export function IssueDetailView({
                                     </a>
                                 )}
                                 {issue.cvss_score && (
-                                    <span className="font-medium">
-                                        CVSS: {issue.cvss_score.toFixed(1)}
+                                    <span className="inline-flex items-center gap-1 text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md border border-border/60">
+                                        <span className="font-semibold text-warning">CVSS</span>
+                                        <span className="font-mono font-bold">
+                                            {issue.cvss_score.toFixed(1)}
+                                        </span>
                                     </span>
                                 )}
                                 {issue.category && (
