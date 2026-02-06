@@ -75,7 +75,7 @@ export function IssueDetailView({
         (issue.reproduction_sessions?.length || 0) + (issue.remediation_sessions?.length || 0)
 
     const tabTriggerClass =
-        'rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-muted-foreground data-[state=active]:text-foreground'
+        'rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-muted-foreground/60 hover:text-muted-foreground data-[state=active]:text-foreground data-[state=active]:font-semibold'
     const sectionHeadingClass = 'text-xs font-semibold text-muted-foreground uppercase tracking-wider'
 
     return (
@@ -151,7 +151,7 @@ export function IssueDetailView({
 
             {/* ── Tabbed Content ── */}
             <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-shrink-0 border-b border-border px-6">
+                <div className="flex-shrink-0 border-b border-border px-6 bg-muted/30">
                     <TabsList className="bg-transparent h-11 p-0 gap-1">
                         <TabsTrigger value="overview" className={tabTriggerClass}>
                             <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
@@ -190,14 +190,14 @@ export function IssueDetailView({
                             <div className="flex items-center justify-between">
                                 <h3 className={cn(sectionHeadingClass)}>Description</h3>
                                 <TooltipProvider delayDuration={150}>
-                                    <div className="flex items-center gap-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+                                    <div className="flex items-center gap-0 rounded-lg border border-border bg-muted/50 p-0.5 shadow-sm">
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => onEditSection?.(issue.id, 'overview')}
-                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                    className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
@@ -210,7 +210,7 @@ export function IssueDetailView({
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => onGenerateOverview?.(issue.id)}
-                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                    className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                 >
                                                     <Sparkles className="h-3.5 w-3.5" />
                                                 </Button>
@@ -273,7 +273,7 @@ export function IssueDetailView({
                             <div className="flex items-center justify-between">
                                 <h3 className={cn(sectionHeadingClass)}>Steps to Reproduce</h3>
                                 <TooltipProvider delayDuration={150}>
-                                    <div className="flex items-center gap-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+                                    <div className="flex items-center gap-0 rounded-lg border border-border bg-muted/50 p-0.5 shadow-sm">
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button
@@ -282,7 +282,7 @@ export function IssueDetailView({
                                                     onClick={() =>
                                                         onEditSection?.(issue.id, 'reproduce')
                                                     }
-                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                    className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
@@ -295,7 +295,7 @@ export function IssueDetailView({
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => onGenerateReproduction?.(issue.id)}
-                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                    className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                 >
                                                     <Sparkles className="h-3.5 w-3.5" />
                                                 </Button>
@@ -313,7 +313,7 @@ export function IssueDetailView({
                                                             variant="ghost"
                                                             size="icon"
                                                             disabled={isReproducing}
-                                                            className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                            className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                         >
                                                             {isReproducing ? (
                                                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -414,7 +414,7 @@ export function IssueDetailView({
                                     <RemediationBadge status={issue.remediation_status} />
                                 </div>
                                 <TooltipProvider delayDuration={150}>
-                                    <div className="flex items-center gap-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+                                    <div className="flex items-center gap-0 rounded-lg border border-border bg-muted/50 p-0.5 shadow-sm">
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button
@@ -423,7 +423,7 @@ export function IssueDetailView({
                                                     onClick={() =>
                                                         onEditSection?.(issue.id, 'remediate')
                                                     }
-                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                    className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                 >
                                                     <Pencil className="h-3.5 w-3.5" />
                                                 </Button>
@@ -436,7 +436,7 @@ export function IssueDetailView({
                                                     variant="ghost"
                                                     size="icon"
                                                     onClick={() => onGenerateRemediation?.(issue.id)}
-                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                    className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                 >
                                                     <Sparkles className="h-3.5 w-3.5" />
                                                 </Button>
@@ -457,7 +457,7 @@ export function IssueDetailView({
                                                                 isRemediating ||
                                                                 issue.remediation_status === 'verified'
                                                             }
-                                                            className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                            className="h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary"
                                                         >
                                                             {isRemediating ? (
                                                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
