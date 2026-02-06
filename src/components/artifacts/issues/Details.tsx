@@ -72,19 +72,16 @@ export function IssueDetailView({
             {/* ── Header ── */}
             <div className="flex-shrink-0 border-b border-border bg-gradient-subtle">
                 <div className="px-6 py-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={onBack}
-                        className="mb-3 -ml-2 text-muted-foreground hover:text-foreground"
-                    >
-                        <ArrowLeft className="h-4 w-4 mr-1" />
-                        Back to Issues
-                    </Button>
-
                     <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-3 mb-2">
+                            <div className="flex items-center gap-2 mb-2">
+                                <button
+                                    onClick={onBack}
+                                    className="flex-shrink-0 p-1 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                                    aria-label="Back to Issues"
+                                >
+                                    <ArrowLeft className="h-5 w-5" />
+                                </button>
                                 <h2 className="font-bold text-xl text-foreground leading-tight">
                                     {issue.title}
                                 </h2>
