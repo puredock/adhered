@@ -172,7 +172,7 @@ export function IssueDetailView({
                 </div>
 
                 <ScrollArea className="flex-1">
-                    <div className="px-6 py-5 max-w-3xl min-h-[360px]">
+                    <div className="px-6 py-5 min-h-[360px]">
                         {/* ── Overview Tab ── */}
                         <TabsContent value="overview" className="mt-0 space-y-6">
                             {/* Description */}
