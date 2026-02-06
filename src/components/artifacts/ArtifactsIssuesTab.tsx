@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { IssueCard } from './IssueCard'
-import { IssueDetailView } from './IssueDetailView'
+import { IssueCard } from './issues/Card'
+import { IssueDetailView } from './issues/Details'
 import type { Issue, IssueVerificationStatus, RemediationSession, ReproductionSession } from './types'
 
 export interface ArtifactsIssuesTabProps {
@@ -27,6 +27,10 @@ export function ArtifactsIssuesTab({
 
     const handleBack = () => {
         setSelectedIssueId(null)
+    }
+
+    const handleSaveNotes = (issueId: string, notes: string) => {
+        onIssueUpdate?.(issueId, { reviewer_notes: notes })
     }
 
     const handleStatusChange = (issueId: string, status: IssueVerificationStatus, notes?: string) => {
@@ -113,21 +117,20 @@ export function ArtifactsIssuesTab({
 
     if (!issues.length) return null
 
-    // Find selected issue, handling fallback IDs
-    const selectedIssue = selectedIssueId
-        ? issues.find((i, idx) => (i.id || `issue-${idx}`) === selectedIssueId)
-        : null
+    const normalizedIssues = issues.map((issue, index) => ({
+        ...issue,
+        id: issue.id || `issue-${index}`,
+    }))
 
-    // Ensure the issue has an id for the detail view
-    const selectedIssueWithId = selectedIssue ? { ...selectedIssue, id: selectedIssueId! } : null
+    const selectedIssue = selectedIssueId ? normalizedIssues.find(i => i.id === selectedIssueId) : null
 
-    // Show detail view if an issue is selected
-    if (selectedIssueWithId) {
+    if (selectedIssue) {
         return (
             <IssueDetailView
-                issue={selectedIssueWithId}
+                issue={selectedIssue}
                 onBack={handleBack}
                 onStatusChange={handleStatusChange}
+                onSaveNotes={handleSaveNotes}
                 onStartReproduction={handleStartReproduction}
                 onStartRemediation={handleStartRemediation}
                 isReproducing={isReproducing}
@@ -140,7 +143,7 @@ export function ArtifactsIssuesTab({
     return (
         <div className="flex-1 min-h-0 flex flex-col">
             {/* Header */}
-            <div className="px-6 py-5 border-b flex-shrink-0 bg-gradient-to-r from-slate-50 via-white to-slate-50">
+            <div className="px-6 py-5 border-b flex-shrink-0 bg-gradient-subtle">
                 <div className="flex items-center gap-2 mb-1">
                     <h3 className="font-bold text-lg">Security Issues</h3>
                 </div>
@@ -151,18 +154,15 @@ export function ArtifactsIssuesTab({
             </div>
 
             {/* Issues list */}
-            <ScrollArea className="flex-1 p-6 bg-gradient-to-b from-slate-50/30 to-transparent">
+            <ScrollArea className="flex-1 p-6 bg-background">
                 <div className="space-y-5">
-                    {issues.map((issue, index) => {
-                        const issueId = issue.id || `issue-${index}`
-                        return (
-                            <IssueCard
-                                key={issueId}
-                                issue={{ ...issue, id: issueId }}
-                                onClick={() => handleSelectIssue(issueId)}
-                            />
-                        )
-                    })}
+                    {normalizedIssues.map(issue => (
+                        <IssueCard
+                            key={issue.id}
+                            issue={issue}
+                            onClick={() => handleSelectIssue(issue.id)}
+                        />
+                    ))}
                 </div>
             </ScrollArea>
         </div>
