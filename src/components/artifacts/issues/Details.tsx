@@ -7,9 +7,11 @@ import {
     HelpCircle,
     Loader2,
     MessageSquareText,
+    Pencil,
     Play,
     Save,
     ShieldCheck,
+    Sparkles,
     Terminal,
     TestTubeDiagonal,
     User,
@@ -39,6 +41,10 @@ export interface IssueDetailViewProps {
     onSaveNotes?: (issueId: string, notes: string) => void
     onStartReproduction?: (issueId: string, type: 'scriptreplay' | 'browser' | 'manual') => void
     onStartRemediation?: (issueId: string, type: 'automated' | 'manual') => void
+    onGenerateOverview?: (issueId: string) => void
+    onGenerateReproduction?: (issueId: string) => void
+    onGenerateRemediation?: (issueId: string) => void
+    onEditSection?: (issueId: string, section: 'overview' | 'reproduce' | 'remediate') => void
     isReproducing?: boolean
     isRemediating?: boolean
 }
@@ -50,6 +56,10 @@ export function IssueDetailView({
     onSaveNotes,
     onStartReproduction,
     onStartRemediation,
+    onGenerateOverview,
+    onGenerateReproduction,
+    onGenerateRemediation,
+    onEditSection,
     isReproducing = false,
     isRemediating = false,
 }: IssueDetailViewProps) {
@@ -175,9 +185,43 @@ export function IssueDetailView({
                     <div className="px-6 py-5 min-h-[360px]">
                         {/* ── Overview Tab ── */}
                         <TabsContent value="overview" className="mt-0 space-y-6">
-                            {/* Description */}
+                            {/* Header with action group */}
+                            <div className="flex items-center justify-between">
+                                <h3 className={cn(sectionHeadingClass)}>Description</h3>
+                                <TooltipProvider delayDuration={150}>
+                                    <div className="flex items-center gap-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => onEditSection?.(issue.id, 'overview')}
+                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom">Edit</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => onGenerateOverview?.(issue.id)}
+                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                >
+                                                    <Sparkles className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom">Generate</TooltipContent>
+                                        </Tooltip>
+                                    </div>
+                                </TooltipProvider>
+                            </div>
+
+                            {/* Description content */}
                             <section>
-                                <h3 className={cn(sectionHeadingClass, 'mb-2')}>Description</h3>
                                 <p className="text-sm text-foreground/85 leading-relaxed">
                                     {issue.description}
                                 </p>
@@ -224,63 +268,100 @@ export function IssueDetailView({
 
                         {/* ── Reproduce Tab ── */}
                         <TabsContent value="reproduce" className="mt-0 space-y-6">
-                            {/* Header with action */}
+                            {/* Header with action group */}
                             <div className="flex items-center justify-between">
                                 <h3 className={cn(sectionHeadingClass)}>Steps to Reproduce</h3>
-                                <Popover
-                                    open={showReproductionOptions}
-                                    onOpenChange={setShowReproductionOptions}
-                                >
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            size="sm"
-                                            disabled={isReproducing}
-                                            className="gap-1.5 h-7 text-xs bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-none"
+                                <TooltipProvider delayDuration={150}>
+                                    <div className="flex items-center gap-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        onEditSection?.(issue.id, 'reproduce')
+                                                    }
+                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom">Edit</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => onGenerateReproduction?.(issue.id)}
+                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                >
+                                                    <Sparkles className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom">Generate</TooltipContent>
+                                        </Tooltip>
+                                        <Popover
+                                            open={showReproductionOptions}
+                                            onOpenChange={setShowReproductionOptions}
                                         >
-                                            {isReproducing ? (
-                                                <>
-                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                    Re-creating...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Play className="h-3 w-3" />
-                                                    Re-create
-                                                </>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent align="end" className="w-52 p-2">
-                                        <div className="space-y-1">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => {
-                                                    onStartReproduction?.(issue.id, 'scriptreplay')
-                                                    setShowReproductionOptions(false)
-                                                }}
-                                                disabled={isReproducing}
-                                                className="w-full justify-start gap-2 h-8 text-xs"
-                                            >
-                                                <Terminal className="h-3.5 w-3.5" />
-                                                Terminal (scriptreplay)
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => {
-                                                    onStartReproduction?.(issue.id, 'browser')
-                                                    setShowReproductionOptions(false)
-                                                }}
-                                                disabled={isReproducing}
-                                                className="w-full justify-start gap-2 h-8 text-xs"
-                                            >
-                                                <Video className="h-3.5 w-3.5" />
-                                                Browser (playwright)
-                                            </Button>
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            disabled={isReproducing}
+                                                            className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                        >
+                                                            {isReproducing ? (
+                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                            ) : (
+                                                                <Play className="h-3.5 w-3.5" />
+                                                            )}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">
+                                                    Re-create issue
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <PopoverContent align="end" className="w-52 p-2">
+                                                <div className="space-y-1">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            onStartReproduction?.(
+                                                                issue.id,
+                                                                'scriptreplay',
+                                                            )
+                                                            setShowReproductionOptions(false)
+                                                        }}
+                                                        disabled={isReproducing}
+                                                        className="w-full justify-start gap-2 h-8 text-xs"
+                                                    >
+                                                        <Terminal className="h-3.5 w-3.5" />
+                                                        Terminal (scriptreplay)
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            onStartReproduction?.(issue.id, 'browser')
+                                                            setShowReproductionOptions(false)
+                                                        }}
+                                                        disabled={isReproducing}
+                                                        className="w-full justify-start gap-2 h-8 text-xs"
+                                                    >
+                                                        <Video className="h-3.5 w-3.5" />
+                                                        Browser (playwright)
+                                                    </Button>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </TooltipProvider>
                             </div>
 
                             {/* Steps content */}
@@ -325,78 +406,110 @@ export function IssueDetailView({
 
                         {/* ── Remediate Tab ── */}
                         <TabsContent value="remediate" className="mt-0 space-y-6">
-                            {/* Header with action */}
+                            {/* Header with action group */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
                                     <h3 className={cn(sectionHeadingClass)}>Remediation</h3>
                                     <RemediationBadge status={issue.remediation_status} />
                                 </div>
-                                <Popover
-                                    open={showRemediationOptions}
-                                    onOpenChange={setShowRemediationOptions}
-                                >
-                                    <PopoverTrigger asChild>
-                                        <Button
-                                            size="sm"
-                                            disabled={
-                                                isRemediating || issue.remediation_status === 'verified'
-                                            }
-                                            className="gap-1.5 h-7 text-xs bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-none"
+                                <TooltipProvider delayDuration={150}>
+                                    <div className="flex items-center gap-0 rounded-lg border border-border/50 bg-muted/40 p-0.5">
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() =>
+                                                        onEditSection?.(issue.id, 'remediate')
+                                                    }
+                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom">Edit</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => onGenerateRemediation?.(issue.id)}
+                                                    className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                >
+                                                    <Sparkles className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent side="bottom">Generate</TooltipContent>
+                                        </Tooltip>
+                                        <Popover
+                                            open={showRemediationOptions}
+                                            onOpenChange={setShowRemediationOptions}
                                         >
-                                            {isRemediating ? (
-                                                <>
-                                                    <Loader2 className="h-3 w-3 animate-spin" />
-                                                    Applying...
-                                                </>
-                                            ) : issue.remediation_status === 'applied' ? (
-                                                <>
-                                                    <ShieldCheck className="h-3 w-3" />
-                                                    Re-apply Fix
-                                                </>
-                                            ) : issue.remediation_status === 'verified' ? (
-                                                <>
-                                                    <CheckCircle2 className="h-3 w-3" />
-                                                    Verified
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Wrench className="h-3 w-3" />
-                                                    Apply Fix
-                                                </>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent align="end" className="w-48 p-2">
-                                        <div className="space-y-1">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => {
-                                                    onStartRemediation?.(issue.id, 'automated')
-                                                    setShowRemediationOptions(false)
-                                                }}
-                                                disabled={isRemediating}
-                                                className="w-full justify-start gap-2 h-8 text-xs"
-                                            >
-                                                <Wrench className="h-3.5 w-3.5" />
-                                                Auto-patch
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => {
-                                                    onStartRemediation?.(issue.id, 'manual')
-                                                    setShowRemediationOptions(false)
-                                                }}
-                                                disabled={isRemediating}
-                                                className="w-full justify-start gap-2 h-8 text-xs"
-                                            >
-                                                <Terminal className="h-3.5 w-3.5" />
-                                                Guided Manual
-                                            </Button>
-                                        </div>
-                                    </PopoverContent>
-                                </Popover>
+                                            <Tooltip>
+                                                <TooltipTrigger asChild>
+                                                    <PopoverTrigger asChild>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            disabled={
+                                                                isRemediating ||
+                                                                issue.remediation_status === 'verified'
+                                                            }
+                                                            className="h-7 w-7 rounded-md hover:bg-background hover:text-primary"
+                                                        >
+                                                            {isRemediating ? (
+                                                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                            ) : issue.remediation_status ===
+                                                              'verified' ? (
+                                                                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                                                            ) : (
+                                                                <Wrench className="h-3.5 w-3.5" />
+                                                            )}
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                </TooltipTrigger>
+                                                <TooltipContent side="bottom">
+                                                    {issue.remediation_status === 'verified'
+                                                        ? 'Fix verified'
+                                                        : issue.remediation_status === 'applied'
+                                                          ? 'Re-apply fix'
+                                                          : 'Apply fix'}
+                                                </TooltipContent>
+                                            </Tooltip>
+                                            <PopoverContent align="end" className="w-48 p-2">
+                                                <div className="space-y-1">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            onStartRemediation?.(issue.id, 'automated')
+                                                            setShowRemediationOptions(false)
+                                                        }}
+                                                        disabled={isRemediating}
+                                                        className="w-full justify-start gap-2 h-8 text-xs"
+                                                    >
+                                                        <Wrench className="h-3.5 w-3.5" />
+                                                        Auto-patch
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="ghost"
+                                                        onClick={() => {
+                                                            onStartRemediation?.(issue.id, 'manual')
+                                                            setShowRemediationOptions(false)
+                                                        }}
+                                                        disabled={isRemediating}
+                                                        className="w-full justify-start gap-2 h-8 text-xs"
+                                                    >
+                                                        <Terminal className="h-3.5 w-3.5" />
+                                                        Guided Manual
+                                                    </Button>
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </TooltipProvider>
                             </div>
 
                             {/* Remediation info */}
