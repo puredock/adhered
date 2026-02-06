@@ -21,6 +21,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -102,7 +103,7 @@ export function IssueDetailView({
                                         href={`https://nvd.nist.gov/vuln/detail/${issue.cve_id}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-1 text-primary hover:text-primary/80 hover:underline font-mono"
+                                        className="flex items-center gap-1 text-blue-700 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 hover:underline font-mono"
                                     >
                                         {issue.cve_id}
                                         <ExternalLink className="h-3 w-3" />
@@ -223,9 +224,67 @@ export function IssueDetailView({
 
                         {/* ── Reproduce Tab ── */}
                         <TabsContent value="reproduce" className="mt-0 space-y-6">
-                            {/* Steps */}
+                            {/* Header with action */}
+                            <div className="flex items-center justify-between">
+                                <h3 className={cn(sectionHeadingClass)}>Steps to Reproduce</h3>
+                                <Popover
+                                    open={showReproductionOptions}
+                                    onOpenChange={setShowReproductionOptions}
+                                >
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            size="sm"
+                                            disabled={isReproducing}
+                                            className="gap-1.5 h-7 text-xs bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-none"
+                                        >
+                                            {isReproducing ? (
+                                                <>
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                    Re-creating...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Play className="h-3 w-3" />
+                                                    Re-create
+                                                </>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="end" className="w-52 p-2">
+                                        <div className="space-y-1">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    onStartReproduction?.(issue.id, 'scriptreplay')
+                                                    setShowReproductionOptions(false)
+                                                }}
+                                                disabled={isReproducing}
+                                                className="w-full justify-start gap-2 h-8 text-xs"
+                                            >
+                                                <Terminal className="h-3.5 w-3.5" />
+                                                Terminal (scriptreplay)
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    onStartReproduction?.(issue.id, 'browser')
+                                                    setShowReproductionOptions(false)
+                                                }}
+                                                disabled={isReproducing}
+                                                className="w-full justify-start gap-2 h-8 text-xs"
+                                            >
+                                                <Video className="h-3.5 w-3.5" />
+                                                Browser (playwright)
+                                            </Button>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
+                            {/* Steps content */}
                             <section>
-                                <h3 className={cn(sectionHeadingClass, 'mb-3')}>Steps to Reproduce</h3>
                                 {issue.reproduction_steps && issue.reproduction_steps.length > 0 ? (
                                     <ol className="space-y-3">
                                         {issue.reproduction_steps.map((step, idx) => (
@@ -244,82 +303,10 @@ export function IssueDetailView({
                                     </ol>
                                 ) : (
                                     <p className="text-sm text-muted-foreground">
-                                        No specific reproduction steps documented. Use the button below
-                                        to attempt automatic reproduction.
+                                        No specific reproduction steps documented.
                                     </p>
                                 )}
                             </section>
-
-                            {/* Reproduce action */}
-                            <Card className="shadow-card overflow-hidden">
-                                <div className="px-5 py-4 space-y-3">
-                                    <div>
-                                        <h4 className="text-sm font-medium text-foreground">
-                                            Recreate Issue
-                                        </h4>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            Automatically attempt to reproduce this issue and record the
-                                            session for verification.
-                                        </p>
-                                    </div>
-
-                                    {showReproductionOptions ? (
-                                        <div className="flex flex-wrap gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() =>
-                                                    onStartReproduction?.(issue.id, 'scriptreplay')
-                                                }
-                                                disabled={isReproducing}
-                                                className="gap-1.5 flex-1"
-                                            >
-                                                <Terminal className="h-3.5 w-3.5" />
-                                                Terminal (scriptreplay)
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() =>
-                                                    onStartReproduction?.(issue.id, 'browser')
-                                                }
-                                                disabled={isReproducing}
-                                                className="gap-1.5 flex-1"
-                                            >
-                                                <Video className="h-3.5 w-3.5" />
-                                                Browser (playwright)
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => setShowReproductionOptions(false)}
-                                                className="w-full"
-                                            >
-                                                Cancel
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <Button
-                                            size="sm"
-                                            onClick={() => setShowReproductionOptions(true)}
-                                            disabled={isReproducing}
-                                            className="gap-1.5 bg-accent-foreground text-accent hover:bg-accent-foreground/90"
-                                        >
-                                            {isReproducing ? (
-                                                <>
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                    Reproducing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Play className="h-3.5 w-3.5" />
-                                                    Reproduce Issue
-                                                </>
-                                            )}
-                                        </Button>
-                                    )}
-                                </div>
-                            </Card>
 
                             {/* Inline reproduction sessions for context */}
                             {hasReproductionSessions && (
@@ -338,9 +325,82 @@ export function IssueDetailView({
 
                         {/* ── Remediate Tab ── */}
                         <TabsContent value="remediate" className="mt-0 space-y-6">
+                            {/* Header with action */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <h3 className={cn(sectionHeadingClass)}>Remediation</h3>
+                                    <RemediationBadge status={issue.remediation_status} />
+                                </div>
+                                <Popover
+                                    open={showRemediationOptions}
+                                    onOpenChange={setShowRemediationOptions}
+                                >
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            size="sm"
+                                            disabled={
+                                                isRemediating || issue.remediation_status === 'verified'
+                                            }
+                                            className="gap-1.5 h-7 text-xs bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-none"
+                                        >
+                                            {isRemediating ? (
+                                                <>
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                    Applying...
+                                                </>
+                                            ) : issue.remediation_status === 'applied' ? (
+                                                <>
+                                                    <ShieldCheck className="h-3 w-3" />
+                                                    Re-apply Fix
+                                                </>
+                                            ) : issue.remediation_status === 'verified' ? (
+                                                <>
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                    Verified
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Wrench className="h-3 w-3" />
+                                                    Apply Fix
+                                                </>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent align="end" className="w-48 p-2">
+                                        <div className="space-y-1">
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    onStartRemediation?.(issue.id, 'automated')
+                                                    setShowRemediationOptions(false)
+                                                }}
+                                                disabled={isRemediating}
+                                                className="w-full justify-start gap-2 h-8 text-xs"
+                                            >
+                                                <Wrench className="h-3.5 w-3.5" />
+                                                Auto-patch
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => {
+                                                    onStartRemediation?.(issue.id, 'manual')
+                                                    setShowRemediationOptions(false)
+                                                }}
+                                                disabled={isRemediating}
+                                                className="w-full justify-start gap-2 h-8 text-xs"
+                                            >
+                                                <Terminal className="h-3.5 w-3.5" />
+                                                Guided Manual
+                                            </Button>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+
                             {/* Remediation info */}
                             <section>
-                                <h3 className={cn(sectionHeadingClass, 'mb-2')}>Remediation</h3>
                                 {issue.remediation ? (
                                     <p className="text-sm text-foreground/85 leading-relaxed">
                                         {issue.remediation}
@@ -374,89 +434,6 @@ export function IssueDetailView({
                                     </ol>
                                 </section>
                             )}
-
-                            {/* Apply Fix action */}
-                            <Card className="shadow-card overflow-hidden">
-                                <div className="px-5 py-4 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div>
-                                            <h4 className="text-sm font-medium text-foreground">
-                                                Apply Fix
-                                            </h4>
-                                            <p className="text-xs text-muted-foreground mt-1">
-                                                Automatically apply the remediation to patch this
-                                                vulnerability on the target.
-                                            </p>
-                                        </div>
-                                        <RemediationBadge status={issue.remediation_status} />
-                                    </div>
-
-                                    {showRemediationOptions ? (
-                                        <div className="flex flex-wrap gap-2">
-                                            <Button
-                                                size="sm"
-                                                onClick={() =>
-                                                    onStartRemediation?.(issue.id, 'automated')
-                                                }
-                                                disabled={isRemediating}
-                                                className="gap-1.5 flex-1 bg-accent-foreground text-accent hover:bg-accent-foreground/90"
-                                            >
-                                                <Wrench className="h-3.5 w-3.5" />
-                                                Auto-patch
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => onStartRemediation?.(issue.id, 'manual')}
-                                                disabled={isRemediating}
-                                                className="gap-1.5 flex-1"
-                                            >
-                                                <Terminal className="h-3.5 w-3.5" />
-                                                Guided Manual
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => setShowRemediationOptions(false)}
-                                                className="w-full"
-                                            >
-                                                Cancel
-                                            </Button>
-                                        </div>
-                                    ) : (
-                                        <Button
-                                            size="sm"
-                                            onClick={() => setShowRemediationOptions(true)}
-                                            disabled={
-                                                isRemediating || issue.remediation_status === 'verified'
-                                            }
-                                            className="gap-1.5 bg-accent-foreground text-accent hover:bg-accent-foreground/90"
-                                        >
-                                            {isRemediating ? (
-                                                <>
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                    Applying Fix...
-                                                </>
-                                            ) : issue.remediation_status === 'applied' ? (
-                                                <>
-                                                    <ShieldCheck className="h-3.5 w-3.5" />
-                                                    Re-apply Fix
-                                                </>
-                                            ) : issue.remediation_status === 'verified' ? (
-                                                <>
-                                                    <CheckCircle2 className="h-3.5 w-3.5" />
-                                                    Fix Verified
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Wrench className="h-3.5 w-3.5" />
-                                                    Apply Fix
-                                                </>
-                                            )}
-                                        </Button>
-                                    )}
-                                </div>
-                            </Card>
 
                             {/* Inline remediation sessions */}
                             {hasRemediationSessions && (
@@ -573,7 +550,7 @@ export function IssueDetailView({
                                         onClick={() =>
                                             onStatusChange?.(issue.id, 'dismissed', reviewerNotes)
                                         }
-                                        className="gap-1.5"
+                                        className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                                     >
                                         <X className="h-3.5 w-3.5" />
                                         Dismiss
