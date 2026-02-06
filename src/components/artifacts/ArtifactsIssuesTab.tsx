@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { Search } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { cn } from '@/lib/utils'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { IssueCard } from './issues/Card'
 import { IssueDetailView } from './issues/Details'
-import { severityBadgeStyles } from './issues/Ui'
 import type { Issue, IssueVerificationStatus, RemediationSession, ReproductionSession } from './types'
 
 export interface ArtifactsIssuesTabProps {
@@ -23,6 +24,8 @@ export function ArtifactsIssuesTab({
     const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null)
     const [isReproducing, setIsReproducing] = useState(false)
     const [isRemediating, setIsRemediating] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
+    const [severityFilter, setSeverityFilter] = useState<string>('all')
 
     const handleSelectIssue = (id: string) => {
         setSelectedIssueId(id)
@@ -118,14 +121,30 @@ export function ArtifactsIssuesTab({
         }
     }
 
-    if (!issues.length) return null
+    const normalizedIssues = useMemo(
+        () =>
+            issues.map((issue, index) => ({
+                ...issue,
+                id: issue.id || `issue-${index}`,
+            })),
+        [issues],
+    )
 
-    const normalizedIssues = issues.map((issue, index) => ({
-        ...issue,
-        id: issue.id || `issue-${index}`,
-    }))
+    const filteredIssues = useMemo(() => {
+        return normalizedIssues.filter(issue => {
+            const matchesSearch =
+                searchQuery === '' ||
+                issue.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                issue.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                issue.id?.toLowerCase().includes(searchQuery.toLowerCase())
+            const matchesSeverity = severityFilter === 'all' || issue.severity === severityFilter
+            return matchesSearch && matchesSeverity
+        })
+    }, [normalizedIssues, searchQuery, severityFilter])
 
     const selectedIssue = selectedIssueId ? normalizedIssues.find(i => i.id === selectedIssueId) : null
+
+    if (!issues.length) return null
 
     if (selectedIssue) {
         return (
@@ -151,25 +170,32 @@ export function ArtifactsIssuesTab({
                     <div className="flex items-center gap-3">
                         <h3 className="font-bold text-base text-foreground">Issues</h3>
                         <Badge variant="secondary" className="text-xs font-mono px-2 py-0 h-5">
-                            {normalizedIssues.length}
+                            {filteredIssues.length}
                         </Badge>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                        {(['critical', 'high', 'medium', 'low'] as const).map(sev => {
-                            const count = normalizedIssues.filter(i => i.severity === sev).length
-                            if (!count) return null
-                            return (
-                                <Badge
-                                    key={sev}
-                                    className={cn(
-                                        'text-[10px] font-bold px-1.5 py-0 h-5',
-                                        severityBadgeStyles[sev],
-                                    )}
-                                >
-                                    {count} {sev.charAt(0).toUpperCase()}
-                                </Badge>
-                            )
-                        })}
+                    <div className="flex items-center gap-2">
+                        <div className="relative">
+                            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Search..."
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                className="h-7 w-36 pl-7 pr-2 text-xs"
+                            />
+                        </div>
+                        <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                            <SelectTrigger className="h-7 w-24 text-xs">
+                                <SelectValue placeholder="Severity" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="critical">Critical</SelectItem>
+                                <SelectItem value="high">High</SelectItem>
+                                <SelectItem value="medium">Medium</SelectItem>
+                                <SelectItem value="low">Low</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </div>
@@ -177,7 +203,7 @@ export function ArtifactsIssuesTab({
             {/* Issues list */}
             <ScrollArea className="flex-1">
                 <div className="px-6 py-4 pb-10 space-y-3">
-                    {normalizedIssues.map(issue => (
+                    {filteredIssues.map(issue => (
                         <IssueCard
                             key={issue.id}
                             issue={issue}
