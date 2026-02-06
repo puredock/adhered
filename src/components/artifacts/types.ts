@@ -73,7 +73,26 @@ export interface Issue {
 export interface LogEntry {
     timestamp: string
     level: 'info' | 'error' | 'success'
-    message: string
+    message?: string
+    type?: 'tool_use' | 'tool_use_updated'
+    data?: ToolUseData
+}
+
+export interface ToolUseData {
+    id: string
+    name: string
+    timestamp?: string
+    input?: {
+        todos?: Array<{
+            content?: string
+            activeForm?: string
+            status: string
+            priority?: string
+        }>
+        cmd?: string
+        command?: string
+    }
+    output?: string
 }
 
 export interface TodoItem {

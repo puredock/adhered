@@ -599,7 +599,7 @@ export function IssueDetailView({
 
             {/* ── Reviewer Notes — persistent across all tabs ── */}
             <div className="flex-shrink-0 border-t border-border bg-muted/30 px-6 py-3">
-                <div className="max-w-3xl">
+                <div>
                     <div className="flex items-center gap-2 mb-2">
                         <MessageSquareText className="h-3.5 w-3.5 text-muted-foreground" />
                         <h3 className={sectionHeadingClass}>Reviewer Notes</h3>
@@ -627,7 +627,7 @@ export function IssueDetailView({
 
             {/* ── Sticky Action Bar ── */}
             <div className="flex-shrink-0 border-t border-border bg-card px-6 py-3">
-                <div className="flex items-center gap-3 max-w-3xl">
+                <div className="flex items-center gap-3">
                     {/* Status banner (if already actioned) */}
                     {issue.verification_status === 'confirmed' && (
                         <div className="flex items-center gap-2 text-sm text-success bg-success/10 border border-success/20 rounded-lg px-3 py-2 mr-auto">
