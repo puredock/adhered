@@ -1,7 +1,10 @@
 import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 import { IssueCard } from './issues/Card'
 import { IssueDetailView } from './issues/Details'
+import { severityBadgeStyles } from './issues/Ui'
 import type { Issue, IssueVerificationStatus, RemediationSession, ReproductionSession } from './types'
 
 export interface ArtifactsIssuesTabProps {
@@ -141,21 +144,39 @@ export function ArtifactsIssuesTab({
 
     // Default: show list of issue cards
     return (
-        <div className="flex-1 min-h-0 flex flex-col">
-            {/* Header */}
-            <div className="px-6 py-5 border-b flex-shrink-0 bg-gradient-subtle">
-                <div className="flex items-center gap-2 mb-1">
-                    <h3 className="font-bold text-lg">Security Issues</h3>
+        <div className="flex flex-col h-full min-h-0 bg-background text-foreground">
+            {/* Compact header — matches details panel header density */}
+            <div className="flex-shrink-0 border-b border-border bg-gradient-subtle px-6 py-3">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <h3 className="font-bold text-base text-foreground">Issues</h3>
+                        <Badge variant="secondary" className="text-xs font-mono px-2 py-0 h-5">
+                            {normalizedIssues.length}
+                        </Badge>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                        {(['critical', 'high', 'medium', 'low'] as const).map(sev => {
+                            const count = normalizedIssues.filter(i => i.severity === sev).length
+                            if (!count) return null
+                            return (
+                                <Badge
+                                    key={sev}
+                                    className={cn(
+                                        'text-[10px] font-bold px-1.5 py-0 h-5',
+                                        severityBadgeStyles[sev],
+                                    )}
+                                >
+                                    {count} {sev.charAt(0).toUpperCase()}
+                                </Badge>
+                            )
+                        })}
+                    </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                    Detailed vulnerability findings and remediation guidance. Click on an issue to view
-                    details.
-                </p>
             </div>
 
             {/* Issues list */}
-            <ScrollArea className="flex-1 p-6 bg-background">
-                <div className="space-y-5">
+            <ScrollArea className="flex-1">
+                <div className="px-6 py-4 pb-10 space-y-3">
                     {normalizedIssues.map(issue => (
                         <IssueCard
                             key={issue.id}
