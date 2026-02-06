@@ -87,6 +87,7 @@ export function IssueDetailView({
                         <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-2">
                                 <button
+                                    type="button"
                                     onClick={onBack}
                                     className="flex-shrink-0 p-1 -ml-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                     aria-label="Back to Issues"
