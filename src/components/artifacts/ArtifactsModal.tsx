@@ -7,6 +7,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from '@/components/ui/resizable'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { ArtifactsIssuesTab } from './ArtifactsIssuesTab'
@@ -46,8 +47,8 @@ export function ArtifactsModal({
         const timelineItems: TimelineItem[] = []
 
         for (const log of logs) {
-            if ((log as any).type === 'tool_use' && (log as any).data) {
-                const toolData = (log as any).data
+            if (log.type === 'tool_use' && log.data) {
+                const toolData = log.data
 
                 if (toolData.name === 'TodoWrite' && toolData.input?.todos) {
                     todoMap.clear()
@@ -56,9 +57,9 @@ export function ArtifactsModal({
                         const todoKey = todo.content || todo.activeForm || JSON.stringify(todo)
                         todoMap.set(todoKey, {
                             id: todoKey,
-                            content: todo.content || todo.activeForm,
-                            status: todo.status,
-                            priority: todo.priority || 'medium',
+                            content: todo.content || todo.activeForm || '',
+                            status: todo.status as TodoItem['status'],
+                            priority: (todo.priority || 'medium') as TodoItem['priority'],
                             order: i,
                         })
                     }
@@ -69,13 +70,13 @@ export function ArtifactsModal({
                     const bashCommand: BashCommand = {
                         id: toolData.id,
                         timestamp: toolData.timestamp || log.timestamp,
-                        command: toolData.input.cmd || toolData.input.command,
+                        command: toolData.input.cmd || toolData.input.command || '',
                         output: toolData.output || undefined,
                     }
                     bashCommandMap.set(toolData.id, bashCommand)
                 }
-            } else if ((log as any).type === 'tool_use_updated' && (log as any).data) {
-                const toolData = (log as any).data
+            } else if (log.type === 'tool_use_updated' && log.data) {
+                const toolData = log.data
                 if (bashCommandMap.has(toolData.id)) {
                     const cmd = bashCommandMap.get(toolData.id)!
                     cmd.output = toolData.output
@@ -131,9 +132,14 @@ export function ArtifactsModal({
                         <p>No data available for this step</p>
                     </div>
                 ) : (
-                    <div className="flex flex-1 min-h-0">
+                    <ResizablePanelGroup direction="horizontal" className="flex-1 min-h-0">
                         {/* Sidebar */}
-                        <div className="w-80 border-r bg-muted/30">
+                        <ResizablePanel
+                            defaultSize={25}
+                            minSize={15}
+                            maxSize={40}
+                            className="bg-muted/30"
+                        >
                             <ScrollArea className="h-full">
                                 <div className="p-2 space-y-1">
                                     <button
@@ -209,10 +215,12 @@ export function ArtifactsModal({
                                     </button>
                                 </div>
                             </ScrollArea>
-                        </div>
+                        </ResizablePanel>
+
+                        <ResizableHandle withHandle />
 
                         {/* Content Viewer */}
-                        <div className="flex-1 min-w-0 flex flex-col">
+                        <ResizablePanel defaultSize={75} minSize={50} className="flex flex-col">
                             {activeTab === 'plan' &&
                                 (liveTodos.length > 0 ? (
                                     <ArtifactsPlanTab todos={liveTodos} />
@@ -285,8 +293,8 @@ export function ArtifactsModal({
                                         )}
                                     </div>
                                 ))}
-                        </div>
-                    </div>
+                        </ResizablePanel>
+                    </ResizablePanelGroup>
                 )}
             </DialogContent>
         </Dialog>
