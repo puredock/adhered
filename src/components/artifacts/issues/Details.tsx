@@ -3,7 +3,6 @@ import {
     ArrowLeft,
     Camera,
     CheckCircle2,
-    Clock,
     ExternalLink,
     HelpCircle,
     Loader2,
@@ -17,7 +16,6 @@ import {
     Video,
     Wrench,
     X,
-    XCircle,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +27,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
-import type { Issue, IssueVerificationStatus, RemediationStatus } from './types'
+import type { Issue, IssueVerificationStatus } from '../types'
+import { SessionRow } from './Rows'
+import { formatIssueDate, RemediationBadge, severityBadgeStyles, VerificationBadge } from './Ui'
 
 export interface IssueDetailViewProps {
     issue: Issue
@@ -40,38 +40,6 @@ export interface IssueDetailViewProps {
     onStartRemediation?: (issueId: string, type: 'automated' | 'manual') => void
     isReproducing?: boolean
     isRemediating?: boolean
-}
-
-const severityStyles: Record<Issue['severity'], string> = {
-    critical: 'bg-destructive text-destructive-foreground border-destructive/30',
-    high: 'bg-destructive/85 text-destructive-foreground border-destructive/25',
-    medium: 'bg-warning text-warning-foreground border-warning/30',
-    low: 'bg-info text-info-foreground border-info/30',
-    info: 'bg-secondary text-secondary-foreground border-border',
-}
-
-const verificationStyles: Record<string, string> = {
-    confirmed: 'bg-success/15 text-success border-success/25',
-    dismissed: 'bg-muted text-muted-foreground border-border',
-    needs_info: 'bg-warning/15 text-warning border-warning/25',
-    reproducing: 'bg-info/15 text-info border-info/25',
-    pending: 'bg-secondary text-muted-foreground border-border',
-}
-
-const verificationIcons: Record<string, React.ReactNode> = {
-    confirmed: <CheckCircle2 className="h-3.5 w-3.5" />,
-    dismissed: <X className="h-3.5 w-3.5" />,
-    needs_info: <HelpCircle className="h-3.5 w-3.5" />,
-    reproducing: <Loader2 className="h-3.5 w-3.5 animate-spin" />,
-    pending: <Clock className="h-3.5 w-3.5" />,
-}
-
-const verificationLabels: Record<string, string> = {
-    confirmed: 'Confirmed',
-    dismissed: 'Dismissed',
-    needs_info: 'Needs Info',
-    reproducing: 'Reproducing',
-    pending: 'Pending Review',
 }
 
 export function IssueDetailView({
@@ -88,11 +56,6 @@ export function IssueDetailView({
     const [showReproductionOptions, setShowReproductionOptions] = useState(false)
     const [showRemediationOptions, setShowRemediationOptions] = useState(false)
 
-    const statusKey =
-        issue.verification_status && issue.verification_status in verificationStyles
-            ? issue.verification_status
-            : 'pending'
-
     const notesDirty = reviewerNotes !== (issue.reviewer_notes || '')
 
     const hasReproductionSessions = issue.reproduction_sessions && issue.reproduction_sessions.length > 0
@@ -100,49 +63,9 @@ export function IssueDetailView({
     const sessionCount =
         (issue.reproduction_sessions?.length || 0) + (issue.remediation_sessions?.length || 0)
 
-    const formatDate = (dateStr?: string) => {
-        if (!dateStr) return null
-        return new Date(dateStr).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-        })
-    }
-
-    const getRemediationStatusBadge = (status?: RemediationStatus) => {
-        const config: Record<string, { style: string; icon: React.ReactNode; label: string }> = {
-            applied: {
-                style: 'bg-success/15 text-success border-success/25',
-                icon: <CheckCircle2 className="h-3 w-3" />,
-                label: 'Applied',
-            },
-            verified: {
-                style: 'bg-success text-success-foreground border-success/30',
-                icon: <ShieldCheck className="h-3 w-3" />,
-                label: 'Verified',
-            },
-            in_progress: {
-                style: 'bg-info/15 text-info border-info/25',
-                icon: <Loader2 className="h-3 w-3 animate-spin" />,
-                label: 'In Progress',
-            },
-            failed: {
-                style: 'bg-destructive/15 text-destructive border-destructive/25',
-                icon: <XCircle className="h-3 w-3" />,
-                label: 'Failed',
-            },
-        }
-        if (!status || !config[status]) return null
-        const c = config[status]
-        return (
-            <Badge className={cn('text-xs gap-1', c.style)}>
-                {c.icon}
-                {c.label}
-            </Badge>
-        )
-    }
+    const tabTriggerClass =
+        'rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-muted-foreground data-[state=active]:text-foreground'
+    const sectionHeadingClass = 'text-xs font-semibold text-muted-foreground uppercase tracking-wider'
 
     return (
         <div className="flex flex-col h-full bg-background text-foreground">
@@ -168,7 +91,7 @@ export function IssueDetailView({
                                 <Badge
                                     className={cn(
                                         'text-xs font-bold px-3 py-1',
-                                        severityStyles[issue.severity],
+                                        severityBadgeStyles[issue.severity],
                                     )}
                                 >
                                     {issue.severity.toUpperCase()}
@@ -201,13 +124,9 @@ export function IssueDetailView({
 
                                 <Separator orientation="vertical" className="h-4 bg-border" />
 
-                                <Badge className={cn('gap-1.5', verificationStyles[statusKey])}>
-                                    {verificationIcons[statusKey]}
-                                    {verificationLabels[statusKey]}
-                                </Badge>
+                                <VerificationBadge status={issue.verification_status} />
 
-                                {issue.remediation_status &&
-                                    getRemediationStatusBadge(issue.remediation_status)}
+                                <RemediationBadge status={issue.remediation_status} />
 
                                 {issue.confirmed_by && (
                                     <span className="flex items-center gap-1 text-xs">
@@ -225,17 +144,11 @@ export function IssueDetailView({
             <Tabs defaultValue="overview" className="flex-1 flex flex-col overflow-hidden">
                 <div className="flex-shrink-0 border-b border-border px-6">
                     <TabsList className="bg-transparent h-11 p-0 gap-1">
-                        <TabsTrigger
-                            value="overview"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-muted-foreground data-[state=active]:text-foreground"
-                        >
+                        <TabsTrigger value="overview" className={tabTriggerClass}>
                             <AlertCircle className="h-3.5 w-3.5 mr-1.5" />
                             Overview
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="reproduce"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-muted-foreground data-[state=active]:text-foreground"
-                        >
+                        <TabsTrigger value="reproduce" className={tabTriggerClass}>
                             <TestTubeDiagonal className="h-3.5 w-3.5 mr-1.5" />
                             Reproduce
                             {issue.reproduction_steps && issue.reproduction_steps.length > 0 && (
@@ -244,18 +157,12 @@ export function IssueDetailView({
                                 </Badge>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger
-                            value="remediate"
-                            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-muted-foreground data-[state=active]:text-foreground"
-                        >
+                        <TabsTrigger value="remediate" className={tabTriggerClass}>
                             <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
                             Remediate
                         </TabsTrigger>
                         {sessionCount > 0 && (
-                            <TabsTrigger
-                                value="sessions"
-                                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-muted-foreground data-[state=active]:text-foreground"
-                            >
+                            <TabsTrigger value="sessions" className={tabTriggerClass}>
                                 <Camera className="h-3.5 w-3.5 mr-1.5" />
                                 Sessions
                                 <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">
@@ -272,9 +179,7 @@ export function IssueDetailView({
                         <TabsContent value="overview" className="mt-0 space-y-6">
                             {/* Description */}
                             <section>
-                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                                    Description
-                                </h3>
+                                <h3 className={cn(sectionHeadingClass, 'mb-2')}>Description</h3>
                                 <p className="text-sm text-foreground/85 leading-relaxed">
                                     {issue.description}
                                 </p>
@@ -310,7 +215,7 @@ export function IssueDetailView({
                                                     Confirmed
                                                 </span>
                                                 <span className="text-sm text-foreground">
-                                                    {formatDate(issue.confirmed_at)}
+                                                    {formatIssueDate(issue.confirmed_at)}
                                                 </span>
                                             </div>
                                         )}
@@ -323,9 +228,7 @@ export function IssueDetailView({
                         <TabsContent value="reproduce" className="mt-0 space-y-6">
                             {/* Steps */}
                             <section>
-                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                                    Steps to Reproduce
-                                </h3>
+                                <h3 className={cn(sectionHeadingClass, 'mb-3')}>Steps to Reproduce</h3>
                                 {issue.reproduction_steps && issue.reproduction_steps.length > 0 ? (
                                     <ol className="space-y-3">
                                         {issue.reproduction_steps.map((step, idx) => (
@@ -424,16 +327,12 @@ export function IssueDetailView({
                             {/* Inline reproduction sessions for context */}
                             {hasReproductionSessions && (
                                 <section>
-                                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                    <h3 className={cn(sectionHeadingClass, 'mb-3')}>
                                         Past Reproduction Sessions
                                     </h3>
                                     <div className="space-y-2">
                                         {issue.reproduction_sessions!.map(session => (
-                                            <SessionRow
-                                                key={session.id}
-                                                session={session}
-                                                formatDate={formatDate}
-                                            />
+                                            <SessionRow key={session.id} session={session} />
                                         ))}
                                     </div>
                                 </section>
@@ -444,9 +343,7 @@ export function IssueDetailView({
                         <TabsContent value="remediate" className="mt-0 space-y-6">
                             {/* Remediation info */}
                             <section>
-                                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                                    Remediation
-                                </h3>
+                                <h3 className={cn(sectionHeadingClass, 'mb-2')}>Remediation</h3>
                                 {issue.remediation ? (
                                     <p className="text-sm text-foreground/85 leading-relaxed">
                                         {issue.remediation}
@@ -460,7 +357,7 @@ export function IssueDetailView({
 
                             {issue.remediation_steps && issue.remediation_steps.length > 0 && (
                                 <section>
-                                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                    <h3 className={cn(sectionHeadingClass, 'mb-3')}>
                                         Remediation Steps
                                     </h3>
                                     <ol className="space-y-2">
@@ -494,7 +391,7 @@ export function IssueDetailView({
                                                 vulnerability on the target.
                                             </p>
                                         </div>
-                                        {getRemediationStatusBadge(issue.remediation_status)}
+                                        <RemediationBadge status={issue.remediation_status} />
                                     </div>
 
                                     {showRemediationOptions ? (
@@ -567,16 +464,12 @@ export function IssueDetailView({
                             {/* Inline remediation sessions */}
                             {hasRemediationSessions && (
                                 <section>
-                                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                    <h3 className={cn(sectionHeadingClass, 'mb-3')}>
                                         Past Remediation Sessions
                                     </h3>
                                     <div className="space-y-2">
                                         {issue.remediation_sessions!.map(session => (
-                                            <SessionRow
-                                                key={session.id}
-                                                session={session}
-                                                formatDate={formatDate}
-                                            />
+                                            <SessionRow key={session.id} session={session} />
                                         ))}
                                     </div>
                                 </section>
@@ -588,32 +481,24 @@ export function IssueDetailView({
                             <TabsContent value="sessions" className="mt-0 space-y-6">
                                 {hasReproductionSessions && (
                                     <section>
-                                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                        <h3 className={cn(sectionHeadingClass, 'mb-3')}>
                                             Reproduction Sessions
                                         </h3>
                                         <div className="space-y-2">
                                             {issue.reproduction_sessions!.map(session => (
-                                                <SessionRow
-                                                    key={session.id}
-                                                    session={session}
-                                                    formatDate={formatDate}
-                                                />
+                                                <SessionRow key={session.id} session={session} />
                                             ))}
                                         </div>
                                     </section>
                                 )}
                                 {hasRemediationSessions && (
                                     <section>
-                                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+                                        <h3 className={cn(sectionHeadingClass, 'mb-3')}>
                                             Remediation Sessions
                                         </h3>
                                         <div className="space-y-2">
                                             {issue.remediation_sessions!.map(session => (
-                                                <SessionRow
-                                                    key={session.id}
-                                                    session={session}
-                                                    formatDate={formatDate}
-                                                />
+                                                <SessionRow key={session.id} session={session} />
                                             ))}
                                         </div>
                                     </section>
@@ -629,9 +514,7 @@ export function IssueDetailView({
                 <div className="max-w-3xl">
                     <div className="flex items-center gap-2 mb-2">
                         <MessageSquareText className="h-3.5 w-3.5 text-muted-foreground" />
-                        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Reviewer Notes
-                        </h3>
+                        <h3 className={sectionHeadingClass}>Reviewer Notes</h3>
                     </div>
                     <div className="relative">
                         <Textarea
@@ -740,69 +623,6 @@ export function IssueDetailView({
                     </TooltipProvider>
                 </div>
             </div>
-        </div>
-    )
-}
-
-/* ── Session Row (shared between tabs) ── */
-interface SessionRowProps {
-    session: {
-        id: string
-        timestamp: string
-        status: 'running' | 'completed' | 'failed'
-        type: string
-        artifacts?: {
-            screenshots?: string[]
-            recording?: string
-            logs?: string
-        }
-        notes?: string
-        changes_made?: string[]
-    }
-    formatDate: (d?: string) => string | null
-}
-
-function SessionRow({ session, formatDate }: SessionRowProps) {
-    return (
-        <div className="p-3 rounded-lg border border-border bg-muted/40 space-y-2">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <Badge
-                        variant="outline"
-                        className={cn(
-                            'text-xs',
-                            session.status === 'completed' &&
-                                'bg-success/15 text-success border-success/25',
-                            session.status === 'failed' &&
-                                'bg-destructive/15 text-destructive border-destructive/25',
-                            session.status === 'running' && 'bg-info/15 text-info border-info/25',
-                        )}
-                    >
-                        {session.status}
-                    </Badge>
-                    <Badge variant="secondary" className="text-xs">
-                        {session.type}
-                    </Badge>
-                </div>
-                <span className="text-xs text-muted-foreground">{formatDate(session.timestamp)}</span>
-            </div>
-            {session.notes && <p className="text-sm text-foreground/70">{session.notes}</p>}
-            {session.artifacts?.screenshots && session.artifacts.screenshots.length > 0 && (
-                <div className="flex gap-2 mt-1">
-                    {session.artifacts.screenshots.map((url, idx) => (
-                        <a
-                            key={`${session.id}-screenshot-${url}`}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-primary hover:underline flex items-center gap-1"
-                        >
-                            <Camera className="h-3 w-3" />
-                            Screenshot {idx + 1}
-                        </a>
-                    ))}
-                </div>
-            )}
         </div>
     )
 }
