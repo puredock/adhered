@@ -79,6 +79,38 @@ function getStatusColorClass(status: string | undefined): string {
 	return colors[status || ""] || "text-muted-foreground";
 }
 
+/** Get icon for status */
+function getStatusIcon(status: string | undefined) {
+	switch (status) {
+		case "confirmed":
+			return <CheckCircle2 className="h-3.5 w-3.5 text-success" />;
+		case "dismissed":
+			return <X className="h-3.5 w-3.5 text-muted-foreground" />;
+		case "needs_info":
+			return <HelpCircle className="h-3.5 w-3.5 text-warning" />;
+		case "pending":
+		case "pending_review":
+		default:
+			return <Clock className="h-3.5 w-3.5 text-muted-foreground" />;
+	}
+}
+
+/** Get background class for status icon container */
+function getStatusBgClass(status: string | undefined): string {
+	switch (status) {
+		case "confirmed":
+			return "bg-success/15";
+		case "dismissed":
+			return "bg-muted";
+		case "needs_info":
+			return "bg-warning/15";
+		case "pending":
+		case "pending_review":
+		default:
+			return "bg-secondary";
+	}
+}
+
 /** Review Timeline Item Component */
 function ReviewTimelineItem({ entry }: { entry: ReviewHistoryEntry }) {
 	const isStatusChange = entry.type === "status_change";
@@ -91,26 +123,10 @@ function ReviewTimelineItem({ entry }: { entry: ReviewHistoryEntry }) {
 					<div
 						className={cn(
 							"h-6 w-6 rounded-full flex items-center justify-center",
-							entry.status === "confirmed" && "bg-success/15",
-							entry.status === "dismissed" && "bg-muted",
-							entry.status === "needs_info" && "bg-warning/15",
-							entry.status === "pending" && "bg-secondary",
-							entry.status === "pending_review" && "bg-secondary",
+							getStatusBgClass(entry.status),
 						)}
 					>
-						{entry.status === "confirmed" && (
-							<CheckCircle2 className="h-3.5 w-3.5 text-success" />
-						)}
-						{entry.status === "dismissed" && (
-							<X className="h-3.5 w-3.5 text-muted-foreground" />
-						)}
-						{entry.status === "needs_info" && (
-							<HelpCircle className="h-3.5 w-3.5 text-warning" />
-						)}
-						{(entry.status === "pending" ||
-							entry.status === "pending_review") && (
-							<Clock className="h-3.5 w-3.5 text-muted-foreground" />
-						)}
+						{getStatusIcon(entry.status)}
 					</div>
 				</div>
 				<div className="flex-1 min-w-0">
