@@ -19,6 +19,7 @@ import type {
 	IssueVerificationStatus,
 	RemediationSession,
 	ReproductionSession,
+	ReviewHistoryEntry,
 } from "./types";
 
 export interface ArtifactsIssuesTabProps {
@@ -88,8 +89,33 @@ export function ArtifactsIssuesTab({
 	};
 
 	const handleSaveNotes = (issueId: string, notes: string) => {
-		updateLocalIssue(issueId, { reviewer_notes: notes });
-		onIssueUpdate?.(issueId, { reviewer_notes: notes });
+		// Create a new history entry for the note
+		const issue = localIssues.find((i) => i.id === issueId);
+		const newHistoryEntry: ReviewHistoryEntry = {
+			id: `note-${Date.now()}`,
+			timestamp: new Date().toISOString(),
+			type: "note",
+			note: notes,
+			reviewer: "Current User",
+		};
+
+		const updates: Partial<Issue> = {
+			reviewer_notes: notes,
+			review_history: [...(issue?.review_history || []), newHistoryEntry],
+		};
+
+		updateLocalIssue(issueId, updates);
+		onIssueUpdate?.(issueId, updates);
+
+		// Persist to backend
+		if (scanId) {
+			reviewMutation.mutate({
+				issueId,
+				status: issue?.verification_status || "pending",
+				notes,
+				reviewer: "Current User",
+			});
+		}
 	};
 
 	const handleStatusChange = (
@@ -97,10 +123,23 @@ export function ArtifactsIssuesTab({
 		status: IssueVerificationStatus,
 		notes?: string,
 	) => {
+		const issue = localIssues.find((i) => i.id === issueId);
+		const previousStatus = issue?.verification_status || "pending";
+
+		// Create a new history entry for the status change
+		const newHistoryEntry: ReviewHistoryEntry = {
+			id: `status-${Date.now()}`,
+			timestamp: new Date().toISOString(),
+			type: "status_change",
+			status: status,
+			previous_status: previousStatus,
+			reviewer: "Current User",
+		};
+
 		// Optimistic update for immediate UI feedback
 		const updates: Partial<Issue> = {
 			verification_status: status,
-			reviewer_notes: notes,
+			review_history: [...(issue?.review_history || []), newHistoryEntry],
 			...(status === "confirmed" && {
 				confirmed_at: new Date().toISOString(),
 				confirmed_by: "Current User",

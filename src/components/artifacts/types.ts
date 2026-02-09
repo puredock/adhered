@@ -51,6 +51,21 @@ export interface RemediationSession {
 	changes_made?: string[];
 }
 
+/** A single entry in the review history timeline */
+export interface ReviewHistoryEntry {
+	id: string;
+	timestamp: string;
+	type: "status_change" | "note";
+	/** For status_change: the new status */
+	status?: IssueVerificationStatus;
+	/** For status_change: the previous status */
+	previous_status?: IssueVerificationStatus;
+	/** For note: the note content */
+	note?: string;
+	/** Who made this change */
+	reviewer?: string;
+}
+
 export interface Issue {
 	id: string;
 	title: string;
@@ -77,6 +92,8 @@ export interface Issue {
 	remediated_by?: string;
 	/** Timestamp of last review action (from backend 'reviewed_at') */
 	reviewed_at?: string;
+	/** History of review actions and notes */
+	review_history?: ReviewHistoryEntry[];
 }
 
 export interface LogEntry {
