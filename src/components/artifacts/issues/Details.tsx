@@ -47,6 +47,7 @@ export interface IssueDetailViewProps {
     onEditSection?: (issueId: string, section: 'overview' | 'reproduce' | 'remediate') => void
     isReproducing?: boolean
     isRemediating?: boolean
+    isReviewPending?: boolean
 }
 
 export function IssueDetailView({
@@ -62,6 +63,7 @@ export function IssueDetailView({
     onEditSection,
     isReproducing = false,
     isRemediating = false,
+    isReviewPending = false,
 }: IssueDetailViewProps) {
     const [reviewerNotes, setReviewerNotes] = useState(issue.reviewer_notes || '')
     const [showReproductionOptions, setShowReproductionOptions] = useState(false)
@@ -664,12 +666,17 @@ export function IssueDetailView({
                                     <Button
                                         variant="outline"
                                         size="sm"
+                                        disabled={isReviewPending}
                                         onClick={() =>
                                             onStatusChange?.(issue.id, 'dismissed', reviewerNotes)
                                         }
                                         className="gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
                                     >
-                                        <X className="h-3.5 w-3.5" />
+                                        {isReviewPending ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                            <X className="h-3.5 w-3.5" />
+                                        )}
                                         Dismiss
                                     </Button>
                                 </TooltipTrigger>
@@ -682,12 +689,17 @@ export function IssueDetailView({
                                     <Button
                                         variant="outline"
                                         size="sm"
+                                        disabled={isReviewPending}
                                         onClick={() =>
                                             onStatusChange?.(issue.id, 'needs_info', reviewerNotes)
                                         }
                                         className="gap-1.5 text-warning border-warning/30 hover:bg-warning/10 hover:text-warning"
                                     >
-                                        <HelpCircle className="h-3.5 w-3.5" />
+                                        {isReviewPending ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                            <HelpCircle className="h-3.5 w-3.5" />
+                                        )}
                                         Needs Info
                                     </Button>
                                 </TooltipTrigger>
@@ -699,12 +711,17 @@ export function IssueDetailView({
                                 <TooltipTrigger asChild>
                                     <Button
                                         size="sm"
+                                        disabled={isReviewPending}
                                         onClick={() =>
                                             onStatusChange?.(issue.id, 'confirmed', reviewerNotes)
                                         }
                                         className="gap-1.5 bg-accent-foreground text-accent hover:bg-accent-foreground/90"
                                     >
-                                        <CheckCircle2 className="h-3.5 w-3.5" />
+                                        {isReviewPending ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                        )}
                                         Confirm
                                     </Button>
                                 </TooltipTrigger>

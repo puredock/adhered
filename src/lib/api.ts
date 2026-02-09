@@ -236,6 +236,25 @@ export const api = {
             }),
     },
 
+    issues: {
+        get: (scanId: string, issueId: string) =>
+            fetchAPI<any>(`/issues/${scanId}/${issueId}`),
+
+        update: (
+            scanId: string,
+            issueId: string,
+            data: {
+                status?: string
+                comments?: string
+                reviewer?: string
+            },
+        ) =>
+            fetchAPI<any>(`/issues/${scanId}/${issueId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data),
+            }),
+    },
+
     scans: {
         list: (params?: {
             device_id?: string
@@ -264,6 +283,7 @@ export const api = {
             const scans = await fetchAPI<any[]>(`/scans/device/${deviceId}${query ? `?${query}` : ''}`)
 
             // Transform response to match expected format
+            // Backend returns issues_data (with computed fields) or vulnerabilities
             return {
                 scans: scans.map(scan => ({
                     id: scan.id || scan.pk,
@@ -272,8 +292,8 @@ export const api = {
                     status: scan.status,
                     started_at: scan.started_at,
                     completed_at: scan.completed_at,
-                    vulnerabilities: scan.issues || scan.vulnerabilities || [],
-                    issues: scan.issues || [],
+                    vulnerabilities: scan.issues_data || scan.issues || scan.vulnerabilities || [],
+                    issues: scan.issues_data || scan.issues || scan.vulnerabilities || [],
                     attack_surface: scan.attack_surface || null,
                     report_url: scan.report_url || null,
                     metadata: scan.metadata || null,
