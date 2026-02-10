@@ -33,7 +33,11 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import type { Issue, IssueVerificationStatus, ReviewHistoryEntry } from '../types'
-import { InlineEditableList, InlineEditableRemediation, InlineEditableText } from './InlineEditable'
+import {
+    InlineEditableRemediation,
+    InlineEditableReproduction,
+    InlineEditableText,
+} from './InlineEditable'
 import { SessionRow } from './Rows'
 import { formatIssueDate, RemediationBadge, severityBadgeStyles, VerificationBadge } from './Ui'
 
@@ -168,10 +172,11 @@ function ReviewTimelineItem({ entry }: { entry: ReviewHistoryEntry }) {
     )
 }
 
-export type EditableSection = 'description' | 'reproduction_steps' | 'remediation'
+export type EditableSection = 'description' | 'reproduction' | 'remediation'
 
 export interface SectionUpdate {
     description?: string
+    reproduction_summary?: string
     reproduction_steps?: string[]
     remediation?: string
     remediation_steps?: string[]
@@ -443,7 +448,7 @@ export function IssueDetailView({
                         <TabsContent value="reproduce" className="mt-0 space-y-6">
                             {/* Header with action group */}
                             <div className="flex items-center justify-between">
-                                <h3 className={cn(sectionHeadingClass)}>Steps to Reproduce</h3>
+                                <h3 className={cn(sectionHeadingClass)}>Reproduction</h3>
                                 <TooltipProvider delayDuration={150}>
                                     <div className="flex items-center gap-0 rounded-lg border border-border bg-muted/50 p-0.5 shadow-sm">
                                         <Tooltip>
@@ -453,14 +458,14 @@ export function IssueDetailView({
                                                     size="icon"
                                                     onClick={() =>
                                                         setEditingSection(
-                                                            editingSection === 'reproduction_steps'
+                                                            editingSection === 'reproduction'
                                                                 ? null
-                                                                : 'reproduction_steps',
+                                                                : 'reproduction',
                                                         )
                                                     }
                                                     className={cn(
                                                         'h-7 w-7 rounded-md text-muted-foreground hover:bg-background hover:text-primary',
-                                                        editingSection === 'reproduction_steps' &&
+                                                        editingSection === 'reproduction' &&
                                                             'bg-primary/10 text-primary',
                                                     )}
                                                 >
@@ -468,7 +473,7 @@ export function IssueDetailView({
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent side="bottom">
-                                                {editingSection === 'reproduction_steps'
+                                                {editingSection === 'reproduction'
                                                     ? 'Cancel Edit'
                                                     : 'Edit'}
                                             </TooltipContent>
@@ -549,18 +554,21 @@ export function IssueDetailView({
                                 </TooltipProvider>
                             </div>
 
-                            {/* Steps content - inline editable */}
+                            {/* Combined reproduction content - summary + steps */}
                             <section>
-                                <InlineEditableList
-                                    items={issue.reproduction_steps || []}
-                                    onSave={items => {
-                                        onSaveSection?.(issue.id, { reproduction_steps: items })
+                                <InlineEditableReproduction
+                                    summary={issue.reproduction_summary || ''}
+                                    steps={issue.reproduction_steps || []}
+                                    onSave={(summary, steps) => {
+                                        onSaveSection?.(issue.id, {
+                                            reproduction_summary: summary,
+                                            reproduction_steps: steps,
+                                        })
                                         setEditingSection(null)
                                     }}
-                                    isEditing={editingSection === 'reproduction_steps'}
-                                    onEditStart={() => setEditingSection('reproduction_steps')}
+                                    isEditing={editingSection === 'reproduction'}
+                                    onEditStart={() => setEditingSection('reproduction')}
                                     onEditEnd={() => setEditingSection(null)}
-                                    placeholder="No specific reproduction steps documented. Click to add."
                                 />
                             </section>
 

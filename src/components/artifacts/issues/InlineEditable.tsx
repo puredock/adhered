@@ -276,30 +276,47 @@ export function InlineEditableList({
     )
 }
 
-/** Combined remediation component - shows summary text followed by steps */
-interface InlineEditableRemediationProps {
+/** Combined summary + steps component - used for both reproduction and remediation */
+interface InlineEditableSummaryStepsProps {
     summary: string
     steps: string[]
     onSave: (summary: string, steps: string[]) => void
     isEditing: boolean
     onEditStart: () => void
     onEditEnd: () => void
+    /** Labels for the UI */
+    labels?: {
+        summaryLabel?: string
+        summaryPlaceholder?: string
+        stepsLabel?: string
+        stepsPlaceholder?: string
+        emptyPlaceholder?: string
+    }
     className?: string
 }
 
-export function InlineEditableRemediation({
+const defaultLabels = {
+    summaryLabel: 'Summary',
+    summaryPlaceholder: 'Brief description...',
+    stepsLabel: 'Steps',
+    stepsPlaceholder: 'Enter each step on a new line...',
+    emptyPlaceholder: 'No content documented yet. Click to add.',
+}
+
+export function InlineEditableSummarySteps({
     summary,
     steps,
     onSave,
     isEditing,
     onEditStart,
     onEditEnd,
+    labels: customLabels,
     className,
-}: InlineEditableRemediationProps) {
+}: InlineEditableSummaryStepsProps) {
+    const labels = { ...defaultLabels, ...customLabels }
     const [editSummary, setEditSummary] = useState(summary)
     const [editSteps, setEditSteps] = useState(steps.join('\n'))
     const summaryRef = useRef<HTMLTextAreaElement>(null)
-    const stepsRef = useRef<HTMLTextAreaElement>(null)
 
     useEffect(() => {
         if (isEditing) {
@@ -345,7 +362,7 @@ export function InlineEditableRemediation({
                 {/* Summary input */}
                 <div className="space-y-2">
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-                        Summary
+                        {labels.summaryLabel}
                     </span>
                     <Textarea
                         ref={summaryRef}
@@ -353,24 +370,23 @@ export function InlineEditableRemediation({
                         onChange={e => setEditSummary(e.target.value)}
                         onKeyDown={handleKeyDown}
                         className="min-h-[60px] text-sm resize-y bg-background border-primary/50 focus:border-primary shadow-sm transition-colors"
-                        placeholder="Brief description of the remediation approach..."
-                        aria-label="Remediation summary"
+                        placeholder={labels.summaryPlaceholder}
+                        aria-label={labels.summaryLabel}
                     />
                 </div>
 
                 {/* Steps input */}
                 <div className="space-y-2">
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider block">
-                        Steps to Fix
+                        {labels.stepsLabel}
                     </span>
                     <Textarea
-                        ref={stepsRef}
                         value={editSteps}
                         onChange={e => setEditSteps(e.target.value)}
                         onKeyDown={handleKeyDown}
                         className="min-h-[100px] text-sm resize-y bg-background border-primary/50 focus:border-primary shadow-sm transition-colors"
-                        placeholder="Enter each step on a new line..."
-                        aria-label="Remediation steps"
+                        placeholder={labels.stepsPlaceholder}
+                        aria-label={labels.stepsLabel}
                     />
                     <p className="text-xs text-muted-foreground">Each line becomes a numbered step</p>
                 </div>
@@ -416,7 +432,7 @@ export function InlineEditableRemediation({
                 )}
                 onClick={onEditStart}
             >
-                No remediation guidance documented yet. Click to add.
+                {labels.emptyPlaceholder}
             </button>
         )
     }
@@ -442,10 +458,7 @@ export function InlineEditableRemediation({
                 {steps.length > 0 && (
                     <ol className="space-y-3">
                         {steps.map((step, idx) => (
-                            <li
-                                key={`rem-step-${step.slice(0, 20)}-${idx}`}
-                                className="flex gap-3 text-sm"
-                            >
+                            <li key={`step-${step.slice(0, 20)}-${idx}`} className="flex gap-3 text-sm">
                                 <span className="flex-shrink-0 h-6 w-6 rounded-full bg-secondary text-secondary-foreground font-bold text-xs flex items-center justify-center">
                                     {idx + 1}
                                 </span>
@@ -458,5 +471,37 @@ export function InlineEditableRemediation({
                 )}
             </div>
         </button>
+    )
+}
+
+/** Convenience wrapper for remediation - pre-configured labels */
+export function InlineEditableRemediation(props: Omit<InlineEditableSummaryStepsProps, 'labels'>) {
+    return (
+        <InlineEditableSummarySteps
+            {...props}
+            labels={{
+                summaryLabel: 'Summary',
+                summaryPlaceholder: 'Brief description of the remediation approach...',
+                stepsLabel: 'Steps to Fix',
+                stepsPlaceholder: 'Enter each step on a new line...',
+                emptyPlaceholder: 'No remediation guidance documented yet. Click to add.',
+            }}
+        />
+    )
+}
+
+/** Convenience wrapper for reproduction - pre-configured labels */
+export function InlineEditableReproduction(props: Omit<InlineEditableSummaryStepsProps, 'labels'>) {
+    return (
+        <InlineEditableSummarySteps
+            {...props}
+            labels={{
+                summaryLabel: 'Summary',
+                summaryPlaceholder: 'Brief description of how to reproduce the issue...',
+                stepsLabel: 'Steps to Reproduce',
+                stepsPlaceholder: 'Enter each step on a new line...',
+                emptyPlaceholder: 'No reproduction steps documented yet. Click to add.',
+            }}
+        />
     )
 }
