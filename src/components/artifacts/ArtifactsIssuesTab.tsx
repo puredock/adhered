@@ -13,7 +13,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useIssueReview } from "@/hooks/useIssueReview";
 import { IssueCard } from "./issues/Card";
-import { IssueDetailView } from "./issues/Details";
+import { IssueDetailView, type SectionUpdate } from "./issues/Details";
 import type {
 	Issue,
 	IssueVerificationStatus,
@@ -243,6 +243,25 @@ export function ArtifactsIssuesTab({
 		}
 	};
 
+	const handleSaveSection = (issueId: string, updates: SectionUpdate) => {
+		// Update local state immediately (optimistic update)
+		updateLocalIssue(issueId, updates);
+
+		// Notify parent if callback provided
+		onIssueUpdate?.(issueId, updates);
+
+		// Show success toast
+		toast({
+			title: "Changes saved",
+			description: "The section has been updated.",
+		});
+
+		// TODO: Persist to backend when API endpoint is available
+		// if (scanId) {
+		//   updateIssueMutation.mutate({ issueId, ...updates });
+		// }
+	};
+
 	const normalizedIssues = useMemo(
 		() =>
 			localIssues.map((issue, index) => ({
@@ -280,6 +299,7 @@ export function ArtifactsIssuesTab({
 				onSaveNotes={handleSaveNotes}
 				onStartReproduction={handleStartReproduction}
 				onStartRemediation={handleStartRemediation}
+				onSaveSection={handleSaveSection}
 				isReproducing={isReproducing}
 				isRemediating={isRemediating}
 				isReviewPending={reviewMutation.isPending}
