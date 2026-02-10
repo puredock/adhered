@@ -17,6 +17,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { AddDeviceDialog } from '@/components/AddDeviceDialog'
+import { DeviceActivityCell } from '@/components/DeviceActivityCell'
 import { ErrorState } from '@/components/ErrorState'
 import { NetworkDiagram } from '@/components/NetworkDiagram'
 import {
@@ -39,8 +40,7 @@ import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { api } from '@/lib/api'
 import { getDeviceIcon, getInfrastructureRole } from '@/lib/devices'
-import { getDeviceOnlineBadge, getDeviceStatus, getNetworkStatusBadge } from '@/lib/status'
-import { formatTimeAgo } from '@/lib/time'
+import { getDeviceStatus, getNetworkStatusBadge } from '@/lib/status'
 import { getCycleColor } from '@/lib/ui'
 
 const NetworkDetail = () => {
@@ -556,8 +556,7 @@ const NetworkDetail = () => {
                                     <div className="col-span-2">Manufacturer</div>
                                     <div className="col-span-2">MAC Address</div>
                                     <div className="col-span-2">IP Address</div>
-                                    <div className="col-span-2">Status</div>
-                                    <div className="col-span-1">Last Seen</div>
+                                    <div className="col-span-2">Activity</div>
                                 </div>
 
                                 {/* Table Rows */}
@@ -676,10 +675,11 @@ const NetworkDetail = () => {
                                                         </button>
                                                     </div>
                                                     <div className="col-span-2 flex items-center">
-                                                        {getDeviceOnlineBadge(device.last_seen)}
-                                                    </div>
-                                                    <div className="col-span-1 flex items-center text-sm text-muted-foreground">
-                                                        {formatTimeAgo(device.last_seen)}
+                                                        <DeviceActivityCell
+                                                            lastSeen={device.last_seen}
+                                                            discoveredAt={device.discovered_at}
+                                                            scanCount={device.scan_count}
+                                                        />
                                                     </div>
                                                 </div>
                                             )
