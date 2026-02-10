@@ -198,124 +198,128 @@ const Catalog = () => {
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="flex items-center gap-4 animate-fade-in">
-                    <div className="flex-1" />
-
-                    {/* Search Bar with Integrated Filters */}
-                    <div className="relative w-96 flex items-center">
-                        {/* Filters Button */}
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="absolute left-2 z-10 h-7 gap-1.5"
-                                >
-                                    <Filter className="w-4 h-4" />
-                                    {selectedCategories.length + selectedSources.length > 0 && (
-                                        <Badge
-                                            variant="secondary"
-                                            className="h-5 w-5 p-0 flex items-center justify-center text-xs"
-                                        >
-                                            {selectedCategories.length + selectedSources.length}
-                                        </Badge>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80" align="start">
-                                <div className="space-y-4">
-                                    <div>
-                                        <h4 className="font-medium mb-3">Device Categories</h4>
-                                        <div className="space-y-2">
-                                            {availableCategories.map(category => (
-                                                <label
-                                                    key={category}
-                                                    className="flex items-center gap-2 cursor-pointer"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedCategories.includes(category)}
-                                                        onChange={e => {
-                                                            setSelectedCategories(prev =>
-                                                                e.target.checked
-                                                                    ? [...prev, category]
-                                                                    : prev.filter(c => c !== category),
-                                                            )
-                                                        }}
-                                                        className="rounded border-input"
-                                                    />
-                                                    <span className="text-sm">
-                                                        {category
-                                                            .replace(/_/g, ' ')
-                                                            .replace(/\b\w/g, l => l.toUpperCase())}
-                                                    </span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <Separator />
-                                    <div>
-                                        <h4 className="font-medium mb-3">Network Sources</h4>
-                                        <div className="space-y-2">
-                                            {availableSources.map(network => (
-                                                <label
-                                                    key={network.id}
-                                                    className="flex items-center gap-2 cursor-pointer"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedSources.includes(network.id)}
-                                                        onChange={e => {
-                                                            setSelectedSources(prev =>
-                                                                e.target.checked
-                                                                    ? [...prev, network.id]
-                                                                    : prev.filter(
-                                                                          id => id !== network.id,
-                                                                      ),
-                                                            )
-                                                        }}
-                                                        className="rounded border-input"
-                                                    />
-                                                    <span className="text-sm">{network.name}</span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    {(selectedCategories.length > 0 || selectedSources.length > 0) && (
-                                        <>
-                                            <Separator />
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full"
-                                                onClick={() => {
-                                                    setSelectedCategories([])
-                                                    setSelectedSources([])
-                                                }}
-                                            >
-                                                Clear All Filters
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-
-                        {/* Search Input */}
-                        <Search className="absolute left-16 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                        <Input
-                            placeholder="Search devices..."
-                            className="pl-24 pr-4"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                </div>
-
                 {/* Your Devices Section - Purple Gradient */}
                 <div className="animate-fade-in">
-                    <h2 className="text-lg font-semibold mb-4">Your Devices</h2>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold">Your Devices</h2>
+
+                        {/* Search Bar with Integrated Filters */}
+                        <div className="relative w-72 flex items-center">
+                            {/* Filters Button */}
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute left-2 z-10 h-7 gap-1.5"
+                                    >
+                                        <Filter className="w-4 h-4" />
+                                        {selectedCategories.length + selectedSources.length > 0 && (
+                                            <Badge
+                                                variant="secondary"
+                                                className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+                                            >
+                                                {selectedCategories.length + selectedSources.length}
+                                            </Badge>
+                                        )}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-80" align="end">
+                                    <div className="space-y-4">
+                                        <div>
+                                            <h4 className="font-medium mb-3">Device Categories</h4>
+                                            <div className="space-y-2">
+                                                {availableCategories.map(category => (
+                                                    <label
+                                                        key={category}
+                                                        className="flex items-center gap-2 cursor-pointer"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedCategories.includes(
+                                                                category,
+                                                            )}
+                                                            onChange={e => {
+                                                                setSelectedCategories(prev =>
+                                                                    e.target.checked
+                                                                        ? [...prev, category]
+                                                                        : prev.filter(
+                                                                              c => c !== category,
+                                                                          ),
+                                                                )
+                                                            }}
+                                                            className="rounded border-input"
+                                                        />
+                                                        <span className="text-sm">
+                                                            {category
+                                                                .replace(/_/g, ' ')
+                                                                .replace(/\b\w/g, l => l.toUpperCase())}
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <Separator />
+                                        <div>
+                                            <h4 className="font-medium mb-3">Network Sources</h4>
+                                            <div className="space-y-2">
+                                                {availableSources.map(network => (
+                                                    <label
+                                                        key={network.id}
+                                                        className="flex items-center gap-2 cursor-pointer"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedSources.includes(
+                                                                network.id,
+                                                            )}
+                                                            onChange={e => {
+                                                                setSelectedSources(prev =>
+                                                                    e.target.checked
+                                                                        ? [...prev, network.id]
+                                                                        : prev.filter(
+                                                                              id => id !== network.id,
+                                                                          ),
+                                                                )
+                                                            }}
+                                                            className="rounded border-input"
+                                                        />
+                                                        <span className="text-sm">{network.name}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        {(selectedCategories.length > 0 ||
+                                            selectedSources.length > 0) && (
+                                            <>
+                                                <Separator />
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full"
+                                                    onClick={() => {
+                                                        setSelectedCategories([])
+                                                        setSelectedSources([])
+                                                    }}
+                                                >
+                                                    Clear All Filters
+                                                </Button>
+                                            </>
+                                        )}
+                                    </div>
+                                </PopoverContent>
+                            </Popover>
+
+                            {/* Search Input */}
+                            <Search className="absolute left-16 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                            <Input
+                                placeholder="Search devices..."
+                                className="pl-24 pr-4"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                    </div>
                     <Card className="shadow-card border-border overflow-hidden">
                         <div className="bg-gradient-purple p-6 border-b border-border">
                             <CardTitle className="text-base">Network Devices</CardTitle>

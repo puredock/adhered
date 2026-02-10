@@ -320,7 +320,7 @@ const NetworkDetail = () => {
                     </div>
                 </div>
 
-                {/* View Controls and Search with Filters */}
+                {/* View Controls */}
                 <div className="mb-6 flex items-center gap-4">
                     {/* View Mode Toggle - Prominent on Left */}
                     <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
@@ -366,117 +366,6 @@ const NetworkDetail = () => {
                             </TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
-
-                    {/* Search Bar with Integrated Filters */}
-                    <div className="relative w-96 flex items-center">
-                        {/* Filters Button */}
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="absolute left-2 z-10 h-7 gap-1.5"
-                                >
-                                    <Filter className="w-4 h-4" />
-                                    {selectedDeviceTypes.length + selectedStatuses.length > 0 && (
-                                        <Badge
-                                            variant="secondary"
-                                            className="h-5 w-5 p-0 flex items-center justify-center text-xs"
-                                        >
-                                            {selectedDeviceTypes.length + selectedStatuses.length}
-                                        </Badge>
-                                    )}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-80" align="start">
-                                <div className="space-y-4">
-                                    <div>
-                                        <h4 className="font-medium mb-3">Device Types</h4>
-                                        <div className="space-y-2">
-                                            {availableDeviceTypes.map(type => (
-                                                <label
-                                                    key={type}
-                                                    className="flex items-center gap-2 cursor-pointer"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedDeviceTypes.includes(type)}
-                                                        onChange={e => {
-                                                            setSelectedDeviceTypes(prev =>
-                                                                e.target.checked
-                                                                    ? [...prev, type]
-                                                                    : prev.filter(t => t !== type),
-                                                            )
-                                                        }}
-                                                        className="rounded border-input"
-                                                    />
-                                                    <span className="text-sm">
-                                                        {type
-                                                            .replace(/_/g, ' ')
-                                                            .replace(/\b\w/g, l => l.toUpperCase())}
-                                                    </span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <Separator />
-                                    <div>
-                                        <h4 className="font-medium mb-3">Status</h4>
-                                        <div className="space-y-2">
-                                            {availableStatuses.map(status => (
-                                                <label
-                                                    key={status}
-                                                    className="flex items-center gap-2 cursor-pointer"
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedStatuses.includes(status)}
-                                                        onChange={e => {
-                                                            setSelectedStatuses(prev =>
-                                                                e.target.checked
-                                                                    ? [...prev, status]
-                                                                    : prev.filter(s => s !== status),
-                                                            )
-                                                        }}
-                                                        className="rounded border-input"
-                                                    />
-                                                    <span className="text-sm">
-                                                        {status.charAt(0).toUpperCase() +
-                                                            status.slice(1)}
-                                                    </span>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    {(selectedDeviceTypes.length > 0 || selectedStatuses.length > 0) && (
-                                        <>
-                                            <Separator />
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="w-full"
-                                                onClick={() => {
-                                                    setSelectedDeviceTypes([])
-                                                    setSelectedStatuses([])
-                                                }}
-                                            >
-                                                Clear All Filters
-                                            </Button>
-                                        </>
-                                    )}
-                                </div>
-                            </PopoverContent>
-                        </Popover>
-
-                        {/* Search Input */}
-                        <Search className="absolute left-16 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                        <Input
-                            placeholder="Search devices..."
-                            className="pl-24 pr-4"
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                        />
-                    </div>
                 </div>
 
                 {/* Content Views */}
@@ -497,7 +386,138 @@ const NetworkDetail = () => {
                                         )}
                                     </CardDescription>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex items-center gap-2">
+                                    {/* Search Bar with Integrated Filters */}
+                                    <div className="relative w-72 flex items-center">
+                                        {/* Filters Button */}
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="absolute left-2 z-10 h-7 gap-1.5"
+                                                >
+                                                    <Filter className="w-4 h-4" />
+                                                    {selectedDeviceTypes.length +
+                                                        selectedStatuses.length >
+                                                        0 && (
+                                                        <Badge
+                                                            variant="secondary"
+                                                            className="h-5 w-5 p-0 flex items-center justify-center text-xs"
+                                                        >
+                                                            {selectedDeviceTypes.length +
+                                                                selectedStatuses.length}
+                                                        </Badge>
+                                                    )}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-80" align="end">
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <h4 className="font-medium mb-3">
+                                                            Device Types
+                                                        </h4>
+                                                        <div className="space-y-2">
+                                                            {availableDeviceTypes.map(type => (
+                                                                <label
+                                                                    key={type}
+                                                                    className="flex items-center gap-2 cursor-pointer"
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedDeviceTypes.includes(
+                                                                            type,
+                                                                        )}
+                                                                        onChange={e => {
+                                                                            setSelectedDeviceTypes(
+                                                                                prev =>
+                                                                                    e.target.checked
+                                                                                        ? [...prev, type]
+                                                                                        : prev.filter(
+                                                                                              t =>
+                                                                                                  t !==
+                                                                                                  type,
+                                                                                          ),
+                                                                            )
+                                                                        }}
+                                                                        className="rounded border-input"
+                                                                    />
+                                                                    <span className="text-sm">
+                                                                        {type
+                                                                            .replace(/_/g, ' ')
+                                                                            .replace(/\b\w/g, l =>
+                                                                                l.toUpperCase(),
+                                                                            )}
+                                                                    </span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    <Separator />
+                                                    <div>
+                                                        <h4 className="font-medium mb-3">Status</h4>
+                                                        <div className="space-y-2">
+                                                            {availableStatuses.map(status => (
+                                                                <label
+                                                                    key={status}
+                                                                    className="flex items-center gap-2 cursor-pointer"
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedStatuses.includes(
+                                                                            status,
+                                                                        )}
+                                                                        onChange={e => {
+                                                                            setSelectedStatuses(prev =>
+                                                                                e.target.checked
+                                                                                    ? [...prev, status]
+                                                                                    : prev.filter(
+                                                                                          s =>
+                                                                                              s !==
+                                                                                              status,
+                                                                                      ),
+                                                                            )
+                                                                        }}
+                                                                        className="rounded border-input"
+                                                                    />
+                                                                    <span className="text-sm">
+                                                                        {status.charAt(0).toUpperCase() +
+                                                                            status.slice(1)}
+                                                                    </span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                    {(selectedDeviceTypes.length > 0 ||
+                                                        selectedStatuses.length > 0) && (
+                                                        <>
+                                                            <Separator />
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                className="w-full"
+                                                                onClick={() => {
+                                                                    setSelectedDeviceTypes([])
+                                                                    setSelectedStatuses([])
+                                                                }}
+                                                            >
+                                                                Clear All Filters
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </PopoverContent>
+                                        </Popover>
+
+                                        {/* Search Input */}
+                                        <Search className="absolute left-16 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                                        <Input
+                                            placeholder="Search devices..."
+                                            className="pl-24 pr-4"
+                                            value={searchQuery}
+                                            onChange={e => setSearchQuery(e.target.value)}
+                                        />
+                                    </div>
                                     {selectedDevices.size > 0 && (
                                         <Button
                                             size="sm"
