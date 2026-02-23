@@ -52,6 +52,7 @@ export interface Device {
     discovered_at: string
     last_seen: string
     scan_count: number
+    pentest_scan_count: number
     fingerprint_confidence: Record<string, number>
     fingerprint_metadata: Record<string, any>
     role?: string[]

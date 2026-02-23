@@ -678,7 +678,7 @@ const NetworkDetail = () => {
                                                         <DeviceActivityCell
                                                             lastSeen={device.last_seen}
                                                             discoveredAt={device.discovered_at}
-                                                            scanCount={device.scan_count}
+                                                            scanCount={device.pentest_scan_count}
                                                         />
                                                     </div>
                                                 </div>
