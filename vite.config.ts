@@ -8,11 +8,20 @@ export default defineConfig(({ mode }) => ({
     server: {
         host: '::',
         port: 8080,
+        // Security: Restrict file system access
+        fs: {
+            strict: true,
+            allow: [path.resolve(__dirname, '.')],
+            deny: ['**/.git/**', '**/.env*', '**/node_modules/**/.git/**'],
+        },
     },
     plugins: [react(), mode === 'development' && componentTagger()].filter(Boolean),
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
         },
+    },
+    build: {
+        sourcemap: mode === 'development',
     },
 }))

@@ -1,0 +1,13 @@
+# Vite should not serve these files
+.git/
+.env*
+*.config.js
+*.config.ts
+package.json
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+tsconfig.json
+.gitignore
+.DS_Store
+*.log
