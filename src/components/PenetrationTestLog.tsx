@@ -2,6 +2,7 @@ import { AlertCircle, Loader2, RefreshCw, XCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { AttackVectorStep } from '@/components/AttackVectorStep'
 import { Button } from '@/components/ui/button'
+import { API_BASE_URL } from '@/lib/api'
 
 interface LogEntry {
     timestamp: string
@@ -34,8 +35,6 @@ interface PenetrationTestLogProps {
     onClearStaleScan?: (scanId: string) => void
     initialStatus?: 'running' | 'completed' | 'failed' | 'cancelled'
 }
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export function PenetrationTestLog({
     scanId,
