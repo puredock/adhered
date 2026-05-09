@@ -32,6 +32,12 @@ interface TodoItem {
     order?: number
 }
 
+function normalizeTodoStatus(value: unknown): TodoItem['status'] {
+    if (value === 'completed') return 'completed'
+    if (value === 'in-progress' || value === 'in_progress') return value
+    return 'todo'
+}
+
 interface AttackVectorStepProps {
     stepIndex: number
     stepName: string
@@ -75,11 +81,12 @@ export function AttackVectorStep({
 
                     for (let i = 0; i < toolData.input.todos.length; i++) {
                         const todo = toolData.input.todos[i]
-                        const todoKey = todo.content || todo.activeForm || JSON.stringify(todo)
+                        const todoContent = todo.content || todo.activeForm || 'Untitled task'
+                        const todoKey = todoContent || JSON.stringify(todo)
                         todoMap.set(todoKey, {
                             id: todoKey,
-                            content: todo.content || todo.activeForm,
-                            status: todo.status,
+                            content: todoContent,
+                            status: normalizeTodoStatus(todo.status),
                             priority: todo.priority || 'medium',
                             order: i,
                         })
