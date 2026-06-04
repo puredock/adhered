@@ -191,7 +191,8 @@ const DeviceDetail = () => {
 
     const handlePenTest = async () => {
         try {
-            const data = await api.devices.scan(deviceId!)
+            // const data = await api.devices.scan(deviceId!)
+            const data = await api.devices.scan(deviceId!, 'owasp-sqli')
             setActiveScanId((data as any).scan_id)
 
             toast.success('Penetration test initiated', {
