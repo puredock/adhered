@@ -81,7 +81,7 @@ export function ArtifactsModal({
 						});
 					}
 				} else if (
-					toolData.name === "Bash" &&
+					(toolData.name === "Bash" || toolData.name === "shell") &&
 					(toolData.input?.cmd || toolData.input?.command)
 				) {
 					const bashCommand: BashCommand = {
