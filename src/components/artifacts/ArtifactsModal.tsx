@@ -1,4 +1,4 @@
-import { AlertCircle, Code2, ListTodo } from "lucide-react";
+import { AlertCircle, Code2, Files, ListTodo } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
 	Dialog,
@@ -15,6 +15,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { ArtifactsIssuesTab } from "./ArtifactsIssuesTab";
+import { ArtifactsFilesTab } from "./ArtifactsFilesTab";
 import { ArtifactsPlanTab } from "./ArtifactsPlanTab";
 import { ArtifactsTimelineTab } from "./ArtifactsTimelineTab";
 import type {
@@ -129,6 +130,7 @@ export function ArtifactsModal({
 
 	const [activeTab, setActiveTab] = useState<string>(() => {
 		if (liveTodos.length > 0) return "plan";
+		if (artifacts.length > 0) return "files";
 		if (timeline.length > 0) return "commands";
 		if (issues.length > 0) return "issues";
 		return "plan";
@@ -169,6 +171,25 @@ export function ArtifactsModal({
 						>
 							<ScrollArea className="h-full">
 								<div className="p-2 space-y-1">
+									<button
+										type="button"
+										onClick={() => setActiveTab("files")}
+										className={cn(
+											"w-full text-left p-3 rounded-lg transition-colors hover:bg-background",
+											activeTab === "files" &&
+												"bg-background shadow-sm ring-1 ring-primary/20",
+										)}
+									>
+										<div className="flex items-start gap-2">
+											<Files className="h-4 w-4 mt-0.5" />
+											<div className="flex-1 min-w-0">
+												<p className="text-sm font-medium truncate">Files</p>
+												<span className="text-xs text-muted-foreground">
+													{artifacts.length} {artifacts.length === 1 ? "artifact" : "artifacts"}
+												</span>
+											</div>
+										</div>
+									</button>
 									<button
 										type="button"
 										onClick={() => setActiveTab("plan")}
@@ -264,6 +285,15 @@ export function ArtifactsModal({
 											Task list for this step is not available. Please see the
 											Execution Timeline for current status.
 										</p>
+									</div>
+								))}
+
+							{activeTab === "files" &&
+								(artifacts.length > 0 ? (
+									<ArtifactsFilesTab artifacts={artifacts} />
+								) : (
+									<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+										No generated files are available.
 									</div>
 								))}
 

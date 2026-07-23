@@ -135,11 +135,21 @@ export interface RiskAssessment {
     access_mode: string
     controlled_auth_tests: boolean
     answers_data: AssessmentAnswer[]
+    artifacts_data: AssessmentArtifact[]
     error: string | null
     created_at: string
     completed_at: string | null
     approved_at: string | null
     approved_by: string | null
+}
+
+export interface AssessmentArtifact {
+    id: string
+    name: string
+    path: string
+    type: 'report' | 'image' | 'script'
+    size: number
+    timestamp: string
 }
 
 export interface AssessmentEvent {
@@ -389,6 +399,13 @@ export const api = {
             fetchAPI<{ events: AssessmentEvent[]; total: number }>(
                 `/risk-assessments/${id}/events`,
             ),
+        reprocess: (id: string) =>
+            fetchAPI<{ assessment: RiskAssessment; imported: number; ignored_ids: string[] }>(
+                `/risk-assessments/${id}/reprocess`,
+                { method: 'POST' },
+            ),
+        artifactUrl: (id: string, artifactId: string) =>
+            `${API_BASE_URL}/risk-assessments/${id}/artifacts/${artifactId}`,
         start: (deviceId: string) =>
             fetchAPI<RiskAssessment>('/risk-assessments', {
                 method: 'POST',
