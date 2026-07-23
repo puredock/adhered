@@ -11,6 +11,7 @@ import Catalog from './pages/Catalog'
 import DeviceDetail from './pages/DeviceDetail'
 import Index from './pages/Index'
 import NetworkDetail from './pages/NetworkDetail'
+import RiskAssessmentDetail from './pages/RiskAssessmentDetail'
 import Networks from './pages/Networks'
 import NotFound from './pages/NotFound'
 import Scans from './pages/Scans'
@@ -39,6 +40,10 @@ const AppContent = () => {
                         <Route path="/scans/:id" element={<ScansDetail />} />
                         <Route path="/networks" element={<Networks />} />
                         <Route path="/networks/:id" element={<NetworkDetail />} />
+                        <Route
+                            path="/risk-assessments/:id"
+                            element={<RiskAssessmentDetail />}
+                        />
                         <Route
                             path="/networks/:networkId/devices/:deviceId"
                             element={<DeviceDetail />}

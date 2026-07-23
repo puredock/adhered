@@ -105,6 +105,59 @@ export interface ScanResultList {
     total: number
 }
 
+export interface ChecklistItem {
+    id: string
+    source: string
+    section: string
+    title: string
+    requirement: string
+    automation: 'automated' | 'assisted' | 'human'
+    evidence_expected: string[]
+}
+
+export interface AssessmentAnswer {
+    question_id: string
+    answer: string | null
+    compliance: 'compliant' | 'partial' | 'non_compliant' | 'not_applicable' | 'unknown' | null
+    confidence: number | null
+    evidence: { summary: string; source: string; reference?: string | null }[]
+    status: 'not_assessed' | 'needs_review' | 'approved'
+    operator_comment: string | null
+    reviewer: string | null
+    reviewed_at: string | null
+}
+
+export interface RiskAssessment {
+    id: string
+    device_id: string
+    checklist_version: string
+    status: 'pending' | 'active' | 'needs_review' | 'approved' | 'failed'
+    access_mode: string
+    controlled_auth_tests: boolean
+    answers_data: AssessmentAnswer[]
+    error: string | null
+    created_at: string
+    completed_at: string | null
+    approved_at: string | null
+    approved_by: string | null
+}
+
+export interface AssessmentEvent {
+    id?: number
+    type: string
+    level?: 'info' | 'warning' | 'error' | 'success'
+    timestamp?: string
+    payload?: Record<string, unknown>
+    data?: {
+        id?: string
+        name?: string
+        input?: Record<string, unknown>
+        output?: unknown
+        step_name?: string
+        timestamp?: string
+    }
+}
+
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
@@ -318,5 +371,48 @@ export const api = {
         clearDeviceIssues: (deviceId: string) =>
             fetchAPI(`/devices/${deviceId}/clear/issues`, { method: 'POST' }),
         streamUrl: (id: string) => `${API_BASE_URL}/scans/${id}/stream`,
+    },
+
+    riskAssessments: {
+        checklist: () =>
+            fetchAPI<{ version: string; items: ChecklistItem[] }>('/risk-assessments/checklist'),
+        configuration: () =>
+            fetchAPI<{ access_mode: string; controlled_auth_tests: boolean }>(
+                '/risk-assessments/configuration',
+            ),
+        list: (deviceId?: string) =>
+            fetchAPI<RiskAssessment[]>(
+                `/risk-assessments${deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : ''}`,
+            ),
+        get: (id: string) => fetchAPI<RiskAssessment>(`/risk-assessments/${id}`),
+        events: (id: string) =>
+            fetchAPI<{ events: AssessmentEvent[]; total: number }>(
+                `/risk-assessments/${id}/events`,
+            ),
+        start: (deviceId: string) =>
+            fetchAPI<RiskAssessment>('/risk-assessments', {
+                method: 'POST',
+                body: JSON.stringify({ device_id: deviceId }),
+            }),
+        reviewAnswer: (
+            id: string,
+            questionId: string,
+            data: {
+                answer?: string
+                compliance?: string
+                operator_comment?: string
+                reviewer: string
+                approve?: boolean
+            },
+        ) =>
+            fetchAPI<RiskAssessment>(`/risk-assessments/${id}/answers/${questionId}`, {
+                method: 'PATCH',
+                body: JSON.stringify(data),
+            }),
+        approve: (id: string, reviewer: string) =>
+            fetchAPI<RiskAssessment>(`/risk-assessments/${id}/approve`, {
+                method: 'POST',
+                body: JSON.stringify({ reviewer }),
+            }),
     },
 }

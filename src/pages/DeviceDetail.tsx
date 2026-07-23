@@ -17,7 +17,7 @@ import {
     X,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ActivityViewer } from '@/components/ActivityViewer'
 import { ErrorState } from '@/components/ErrorState'
@@ -36,6 +36,7 @@ import { formatTimeAgo } from '@/lib/time'
 const DeviceDetail = () => {
     const { networkId, deviceId } = useParams()
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
     const [activeScanId, setActiveScanId] = useState<string | null>(null)
     const [activityScans, setActivityScans] = useState<any[]>([])
     const [isEditing, setIsEditing] = useState(false)
@@ -77,6 +78,16 @@ const DeviceDetail = () => {
     })
 
     const scans = scansData?.scans || []
+
+    const { data: assessments = [] } = useQuery({
+        queryKey: ['risk-assessments', deviceId],
+        queryFn: () => api.riskAssessments.list(deviceId!),
+        enabled: !!deviceId,
+        refetchInterval: query =>
+            query.state.data?.some(item => item.status === 'pending' || item.status === 'active')
+                ? 3000
+                : false,
+    })
 
     const handleRefreshScans = async () => {
         await refetchScans()
@@ -203,10 +214,19 @@ const DeviceDetail = () => {
             })
         }
     }
-    const handleRiskAssessment = () => {
-        toast.success('Risk assessment started', {
-            description: 'Analyzing security posture and vulnerabilities...',
-        })
+    const handleRiskAssessment = async () => {
+        try {
+            const assessment = await api.riskAssessments.start(deviceId!)
+            await queryClient.invalidateQueries({ queryKey: ['risk-assessments', deviceId] })
+            toast.success('Risk assessment started', {
+                description: 'Collecting evidence for operator review...',
+            })
+            navigate(`/risk-assessments/${assessment.id}`)
+        } catch (error) {
+            toast.error('Failed to start risk assessment', {
+                description: error instanceof Error ? error.message : 'Unknown error occurred',
+            })
+        }
     }
     const handleComplianceAudit = () => {
         toast.success('Compliance audit launched', {
@@ -570,7 +590,23 @@ const DeviceDetail = () => {
                                 <ActivityViewer
                                     deviceId={deviceId!}
                                     scans={allActivityScans}
-                                    audits={[]}
+                                    audits={assessments.map(assessment => ({
+                                        id: assessment.id,
+                                        type: 'audit' as const,
+                                        name: 'Risk Assessment',
+                                        status: (assessment.status === 'pending' ||
+                                        assessment.status === 'active'
+                                            ? 'running'
+                                            : assessment.status === 'needs_review' ||
+                                                assessment.status === 'approved'
+                                              ? 'completed'
+                                              : 'failed') as 'running' | 'completed' | 'failed',
+                                        startedAt: assessment.created_at,
+                                        completedAt: assessment.completed_at || undefined,
+                                    }))}
+                                    onActivityClick={assessmentId =>
+                                        navigate(`/risk-assessments/${assessmentId}`)
+                                    }
                                     onScanComplete={(scanId, status) => {
                                         // Update the status in activity scans
                                         setActivityScans(prev =>

@@ -60,6 +60,7 @@ export function ActivityViewer({
     onDeleteScan,
     onStopScan,
     onClearAll,
+    onActivityClick,
 }: ActivityViewerProps) {
     const [activityType, setActivityType] = useState<ActivityType>('scans')
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
@@ -113,6 +114,11 @@ export function ActivityViewer({
     const recentActivities = currentActivities.filter(a => a.status !== 'running')
 
     const handleActivityClick = (activityId: string) => {
+        const activity = currentActivities.find(item => item.id === activityId)
+        if (activity?.type === 'audit' && onActivityClick) {
+            onActivityClick(activityId)
+            return
+        }
         console.log('Activity clicked:', activityId, 'Current selected:', selectedActivityId)
         setSelectedActivityId(prevId => {
             const newId = prevId === activityId ? null : activityId
