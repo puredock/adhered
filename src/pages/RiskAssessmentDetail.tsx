@@ -11,7 +11,7 @@ import {
     ShieldCheck,
     UserRound,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { AssessmentRunLog } from '@/components/AssessmentRunLog'
@@ -198,6 +198,7 @@ export default function RiskAssessmentDetail() {
     const { id } = useParams()
     const queryClient = useQueryClient()
     const [approver, setApprover] = useState('')
+    const recoveryAttempted = useRef(false)
     const assessmentQuery = useQuery({
         queryKey: ['risk-assessment', id],
         queryFn: () => api.riskAssessments.get(id!),
@@ -225,6 +226,7 @@ export default function RiskAssessmentDetail() {
         return grouped
     }, [checklistQuery.data])
     const approved = assessment?.answers_data.filter(answer => answer.status === 'approved').length || 0
+    const populated = assessment?.answers_data.filter(answer => answer.answer?.trim()).length || 0
     const total = checklistQuery.data?.items.length || 0
     const approveMutation = useMutation({
         mutationFn: () => api.riskAssessments.approve(id!, approver),
@@ -234,6 +236,26 @@ export default function RiskAssessmentDetail() {
         },
         onError: error => toast.error(error instanceof Error ? error.message : 'Approval failed'),
     })
+    const recoveryMutation = useMutation({
+        mutationFn: () => api.riskAssessments.reprocess(id!),
+        onSuccess: result => {
+            queryClient.invalidateQueries({ queryKey: ['risk-assessment', id] })
+            toast.success(`Imported ${result.imported} generated findings`)
+        },
+        onError: error =>
+            toast.error(error instanceof Error ? error.message : 'Unable to import generated findings'),
+    })
+
+    useEffect(() => {
+        if (
+            assessment?.status === 'needs_review' &&
+            populated === 0 &&
+            !recoveryAttempted.current
+        ) {
+            recoveryAttempted.current = true
+            recoveryMutation.mutate()
+        }
+    }, [assessment?.status, populated, recoveryMutation])
 
     if (assessmentQuery.isLoading || checklistQuery.isLoading)
         return (
@@ -276,7 +298,17 @@ export default function RiskAssessmentDetail() {
             </header>
             <div className="mx-auto grid max-w-7xl gap-6 px-6 py-6 lg:grid-cols-[1fr_300px]">
                 <div className="space-y-5">
-                    <AssessmentRunLog assessmentId={assessment.id} status={assessment.status} />
+                    <AssessmentRunLog
+                        assessmentId={assessment.id}
+                        status={assessment.status}
+                        artifacts={assessment.artifacts_data || []}
+                    />
+                    {recoveryMutation.isPending && (
+                        <div className="flex items-center gap-2 border border-border bg-card p-3 text-sm">
+                            <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            Importing Claude's generated findings and artifacts...
+                        </div>
+                    )}
                     {assessment.error && (
                         <div className="border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
                             {assessment.error}
