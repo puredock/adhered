@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { ActivityViewer } from '@/components/ActivityViewer'
+import { AssessmentStartDialog } from '@/components/AssessmentStartDialog'
 import { ErrorState } from '@/components/ErrorState'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -41,6 +42,7 @@ const DeviceDetail = () => {
     const [activityScans, setActivityScans] = useState<any[]>([])
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [isStartingAssessment, setIsStartingAssessment] = useState(false)
     const [editForm, setEditForm] = useState({
         hostname: '',
         manufacturer: '',
@@ -214,9 +216,10 @@ const DeviceDetail = () => {
             })
         }
     }
-    const handleRiskAssessment = async () => {
+    const handleRiskAssessment = async (templateIds: string[]) => {
+        setIsStartingAssessment(true)
         try {
-            const assessment = await api.riskAssessments.start(deviceId!)
+            const assessment = await api.riskAssessments.start(deviceId!, templateIds)
             await queryClient.invalidateQueries({ queryKey: ['risk-assessments', deviceId] })
             toast.success('Risk assessment started', {
                 description: 'Collecting evidence for operator review...',
@@ -226,6 +229,8 @@ const DeviceDetail = () => {
             toast.error('Failed to start risk assessment', {
                 description: error instanceof Error ? error.message : 'Unknown error occurred',
             })
+        } finally {
+            setIsStartingAssessment(false)
         }
     }
     const handleComplianceAudit = () => {
@@ -749,14 +754,10 @@ const DeviceDetail = () => {
                                     <Shield className="w-4 h-4 mr-2" />
                                     Penetration Test
                                 </Button>
-                                <Button
-                                    onClick={handleRiskAssessment}
-                                    variant="outline"
-                                    className="w-full justify-start hover:bg-secondary"
-                                >
-                                    <AlertTriangle className="w-4 h-4 mr-2" />
-                                    Risk Assessment
-                                </Button>
+                                <AssessmentStartDialog
+                                    isStarting={isStartingAssessment}
+                                    onStart={handleRiskAssessment}
+                                />
                                 <Button
                                     onClick={handleComplianceAudit}
                                     variant="outline"

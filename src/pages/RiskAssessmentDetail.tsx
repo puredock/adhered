@@ -7,7 +7,9 @@ import {
     ChevronDown,
     CircleDashed,
     FileCheck2,
+    FileStack,
     Loader2,
+    Search,
     ShieldCheck,
     UserRound,
 } from 'lucide-react'
@@ -110,13 +112,43 @@ function ReviewItem({
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor={`${item.id}-answer`}>Assessment response</Label>
-                            <Textarea
-                                id={`${item.id}-answer`}
-                                value={text}
-                                onChange={event => setText(event.target.value)}
-                                rows={4}
-                                placeholder="Enter the operator or vendor response"
-                            />
+                            {item.response_type === 'boolean' ||
+                            item.response_type === 'single_choice' ? (
+                                <Select value={text} onValueChange={setText}>
+                                    <SelectTrigger id={`${item.id}-answer`}>
+                                        <SelectValue placeholder="Select a response" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {(item.response_type === 'boolean'
+                                            ? ['Yes', 'No', 'Not applicable']
+                                            : item.response_options
+                                        ).map(option => (
+                                            <SelectItem key={option} value={option}>
+                                                {option}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            ) : item.response_type === 'number' || item.response_type === 'date' ? (
+                                <Input
+                                    id={`${item.id}-answer`}
+                                    type={item.response_type}
+                                    value={text}
+                                    onChange={event => setText(event.target.value)}
+                                />
+                            ) : (
+                                <Textarea
+                                    id={`${item.id}-answer`}
+                                    value={text}
+                                    onChange={event => setText(event.target.value)}
+                                    rows={item.response_type === 'table' ? 6 : 4}
+                                    placeholder={
+                                        item.response_type === 'attachment'
+                                            ? 'Describe or reference the supplied attachment'
+                                            : 'Enter the operator or vendor response'
+                                    }
+                                />
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor={`${item.id}-comment`}>Review comment</Label>
@@ -198,6 +230,9 @@ export default function RiskAssessmentDetail() {
     const { id } = useParams()
     const queryClient = useQueryClient()
     const [approver, setApprover] = useState('')
+    const [sourceFilter, setSourceFilter] = useState('all')
+    const [reviewFilter, setReviewFilter] = useState('all')
+    const [search, setSearch] = useState('')
     const recoveryAttempted = useRef(false)
     const assessmentQuery = useQuery({
         queryKey: ['risk-assessment', id],
@@ -208,10 +243,6 @@ export default function RiskAssessmentDetail() {
                 ? 2500
                 : false,
     })
-    const checklistQuery = useQuery({
-        queryKey: ['risk-assessment-checklist'],
-        queryFn: api.riskAssessments.checklist,
-    })
     const assessment = assessmentQuery.data
     const answers = useMemo(
         () => new Map(assessment?.answers_data.map(answer => [answer.question_id, answer]) || []),
@@ -219,15 +250,30 @@ export default function RiskAssessmentDetail() {
     )
     const sections = useMemo(() => {
         const grouped = new Map<string, ChecklistItem[]>()
-        for (const item of checklistQuery.data?.items || []) {
+        for (const item of assessment?.checklist_data || []) {
+            const answer = answers.get(item.id)
+            if (sourceFilter !== 'all' && item.source !== sourceFilter) continue
+            if (reviewFilter === 'unanswered' && answer?.answer?.trim()) continue
+            if (reviewFilter === 'needs_review' && answer?.status !== 'needs_review') continue
+            if (reviewFilter === 'approved' && answer?.status !== 'approved') continue
+            const needle = search.trim().toLocaleLowerCase()
+            if (
+                needle &&
+                !`${item.id} ${item.title} ${item.requirement}`.toLocaleLowerCase().includes(needle)
+            )
+                continue
             const key = `${item.source} · ${item.section}`
             grouped.set(key, [...(grouped.get(key) || []), item])
         }
         return grouped
-    }, [checklistQuery.data])
+    }, [assessment?.checklist_data, answers, reviewFilter, search, sourceFilter])
+    const sources = useMemo(
+        () => [...new Set((assessment?.checklist_data || []).map(item => item.source))],
+        [assessment?.checklist_data],
+    )
     const approved = assessment?.answers_data.filter(answer => answer.status === 'approved').length || 0
     const populated = assessment?.answers_data.filter(answer => answer.answer?.trim()).length || 0
-    const total = checklistQuery.data?.items.length || 0
+    const total = assessment?.checklist_data.length || 0
     const approveMutation = useMutation({
         mutationFn: () => api.riskAssessments.approve(id!, approver),
         onSuccess: () => {
@@ -247,23 +293,19 @@ export default function RiskAssessmentDetail() {
     })
 
     useEffect(() => {
-        if (
-            assessment?.status === 'needs_review' &&
-            populated === 0 &&
-            !recoveryAttempted.current
-        ) {
+        if (assessment?.status === 'needs_review' && populated === 0 && !recoveryAttempted.current) {
             recoveryAttempted.current = true
             recoveryMutation.mutate()
         }
     }, [assessment?.status, populated, recoveryMutation])
 
-    if (assessmentQuery.isLoading || checklistQuery.isLoading)
+    if (assessmentQuery.isLoading)
         return (
             <div className="flex min-h-screen flex-1 items-center justify-center">
                 <Loader2 className="h-7 w-7 animate-spin text-primary" />
             </div>
         )
-    if (!assessment || !checklistQuery.data)
+    if (!assessment)
         return (
             <div className="flex min-h-screen flex-1 items-center justify-center">
                 Risk assessment not found.
@@ -290,13 +332,50 @@ export default function RiskAssessmentDetail() {
                             </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            {assessment.id} · Checklist {assessment.checklist_version}
+                            {assessment.id} · Template {assessment.template_version}
                         </p>
                     </div>
                     <Badge variant="outline">{assessment.access_mode}</Badge>
                 </div>
             </header>
-            <div className="mx-auto grid max-w-7xl gap-6 px-6 py-6 lg:grid-cols-[1fr_300px]">
+            <div
+                className={cn(
+                    'mx-auto grid max-w-[1500px] gap-5 px-6 py-6',
+                    total > 0
+                        ? 'xl:grid-cols-[210px_minmax(0,1fr)_280px]'
+                        : 'lg:grid-cols-[minmax(0,1fr)_280px]',
+                )}
+            >
+                {total > 0 && (
+                    <aside className="hidden space-y-2 xl:sticky xl:top-24 xl:block xl:self-start">
+                        <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            Sources
+                        </p>
+                        <Button
+                            variant={sourceFilter === 'all' ? 'secondary' : 'ghost'}
+                            className="w-full justify-between"
+                            onClick={() => setSourceFilter('all')}
+                        >
+                            All documents <Badge variant="outline">{total}</Badge>
+                        </Button>
+                        {sources.map(source => (
+                            <Button
+                                key={source}
+                                variant={sourceFilter === source ? 'secondary' : 'ghost'}
+                                className="h-auto w-full justify-between gap-2 py-2 text-left"
+                                onClick={() => setSourceFilter(source)}
+                            >
+                                <span className="min-w-0 truncate">{source}</span>
+                                <Badge variant="outline">
+                                    {
+                                        assessment.checklist_data.filter(item => item.source === source)
+                                            .length
+                                    }
+                                </Badge>
+                            </Button>
+                        ))}
+                    </aside>
+                )}
                 <div className="space-y-5">
                     <AssessmentRunLog
                         assessmentId={assessment.id}
@@ -313,6 +392,48 @@ export default function RiskAssessmentDetail() {
                         <div className="border border-destructive/40 bg-destructive/5 p-4 text-sm text-destructive">
                             {assessment.error}
                         </div>
+                    )}
+                    {total > 0 && (
+                        <div className="flex flex-col gap-2 border border-border bg-card p-3 sm:flex-row">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    className="pl-9"
+                                    placeholder="Search checklist"
+                                    value={search}
+                                    onChange={event => setSearch(event.target.value)}
+                                />
+                            </div>
+                            <Select value={reviewFilter} onValueChange={setReviewFilter}>
+                                <SelectTrigger className="w-full sm:w-44">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All items</SelectItem>
+                                    <SelectItem value="unanswered">Unanswered</SelectItem>
+                                    <SelectItem value="needs_review">Needs review</SelectItem>
+                                    <SelectItem value="approved">Confirmed</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                    {total === 0 && (
+                        <Card className="border-dashed">
+                            <CardContent className="flex flex-col items-center gap-3 py-12 text-center">
+                                <FileStack className="h-9 w-9 text-muted-foreground" />
+                                <div>
+                                    <p className="font-medium">No template snapshot is attached</p>
+                                    <p className="max-w-lg text-sm text-muted-foreground">
+                                        This assessment predates document templates and cannot be
+                                        reconstructed safely. Create a template and start a new
+                                        assessment.
+                                    </p>
+                                </div>
+                                <Button asChild>
+                                    <Link to="/risk-templates">Open template library</Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
                     )}
                     {[...sections.entries()].map(([section, items]) => (
                         <Card key={section} className="overflow-hidden">
@@ -332,7 +453,7 @@ export default function RiskAssessmentDetail() {
                         </Card>
                     ))}
                 </div>
-                <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+                <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">

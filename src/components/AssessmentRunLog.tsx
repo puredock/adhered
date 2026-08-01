@@ -23,7 +23,11 @@ interface StepLog {
         id: string
         name: string
         timestamp?: string
-        input?: { todos?: { content?: string; activeForm?: string; status: string; priority?: string }[]; cmd?: string; command?: string }
+        input?: {
+            todos?: { content?: string; activeForm?: string; status: string; priority?: string }[]
+            cmd?: string
+            command?: string
+        }
         output?: string
     }
 }
@@ -179,7 +183,8 @@ export function AssessmentRunLog({ assessmentId, status, artifacts }: Assessment
                             ))
                         ) : (
                             <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />Preparing the assessment plan...
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Preparing the assessment plan...
                             </div>
                         )}
                     </div>

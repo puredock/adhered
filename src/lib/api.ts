@@ -113,6 +113,18 @@ export interface ChecklistItem {
     requirement: string
     automation: 'automated' | 'assisted' | 'human'
     evidence_expected: string[]
+    response_type:
+        | 'text'
+        | 'boolean'
+        | 'single_choice'
+        | 'multi_choice'
+        | 'number'
+        | 'date'
+        | 'attachment'
+        | 'table'
+    response_options: string[]
+    provenance: { document: string; section?: string | null; excerpt: string } | null
+    extraction_confidence: number
 }
 
 export interface AssessmentAnswer {
@@ -130,7 +142,9 @@ export interface AssessmentAnswer {
 export interface RiskAssessment {
     id: string
     device_id: string
-    checklist_version: string
+    template_ids_data: string[]
+    template_version: string
+    checklist_data: ChecklistItem[]
     status: 'pending' | 'active' | 'needs_review' | 'approved' | 'failed'
     access_mode: string
     controlled_auth_tests: boolean
@@ -141,6 +155,24 @@ export interface RiskAssessment {
     completed_at: string | null
     approved_at: string | null
     approved_by: string | null
+}
+
+export interface ChecklistTemplate {
+    id: string
+    name: string
+    version: string
+    documents: { name: string; sha256: string; media_type?: string | null }[]
+    items: ChecklistItem[]
+}
+
+export interface ChecklistTemplateSummary {
+    id: string
+    name: string
+    version: string
+    document_count: number
+    item_count: number
+    status: 'active' | 'archived'
+    updated_at: string
 }
 
 export interface AssessmentArtifact {
@@ -169,16 +201,25 @@ export interface AssessmentEvent {
 }
 
 async function fetchAPI<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const isFormData = options?.body instanceof FormData
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         headers: {
-            'Content-Type': 'application/json',
+            ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
             ...options?.headers,
         },
     })
 
     if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`)
+        const payload = await response.json().catch(() => null)
+        const detail = payload?.detail
+        const message =
+            typeof detail === 'string'
+                ? detail
+                : typeof detail?.message === 'string'
+                  ? detail.message
+                  : response.statusText
+        throw new Error(message || `Request failed (${response.status})`)
     }
 
     return response.json()
@@ -301,8 +342,7 @@ export const api = {
     },
 
     issues: {
-        get: (scanId: string, issueId: string) =>
-            fetchAPI<any>(`/issues/${scanId}/${issueId}`),
+        get: (scanId: string, issueId: string) => fetchAPI<any>(`/issues/${scanId}/${issueId}`),
 
         update: (
             scanId: string,
@@ -384,21 +424,32 @@ export const api = {
     },
 
     riskAssessments: {
-        checklist: () =>
-            fetchAPI<{ version: string; items: ChecklistItem[] }>('/risk-assessments/checklist'),
         configuration: () =>
             fetchAPI<{ access_mode: string; controlled_auth_tests: boolean }>(
                 '/risk-assessments/configuration',
             ),
+        templates: () => fetchAPI<ChecklistTemplateSummary[]>('/risk-assessments/templates'),
+        template: (id: string) => fetchAPI<ChecklistTemplate>(`/risk-assessments/templates/${id}`),
+        importTemplate: (name: string, documents: File[]) => {
+            const body = new FormData()
+            body.append('name', name)
+            documents.forEach(document => body.append('documents', document))
+            return fetchAPI<ChecklistTemplate>('/risk-assessments/templates/import', {
+                method: 'POST',
+                body,
+            })
+        },
+        archiveTemplate: (id: string) =>
+            fetchAPI<{ id: string; status: 'archived' }>(`/risk-assessments/templates/${id}/archive`, {
+                method: 'POST',
+            }),
         list: (deviceId?: string) =>
             fetchAPI<RiskAssessment[]>(
                 `/risk-assessments${deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : ''}`,
             ),
         get: (id: string) => fetchAPI<RiskAssessment>(`/risk-assessments/${id}`),
         events: (id: string) =>
-            fetchAPI<{ events: AssessmentEvent[]; total: number }>(
-                `/risk-assessments/${id}/events`,
-            ),
+            fetchAPI<{ events: AssessmentEvent[]; total: number }>(`/risk-assessments/${id}/events`),
         reprocess: (id: string) =>
             fetchAPI<{ assessment: RiskAssessment; imported: number; ignored_ids: string[] }>(
                 `/risk-assessments/${id}/reprocess`,
@@ -406,10 +457,10 @@ export const api = {
             ),
         artifactUrl: (id: string, artifactId: string) =>
             `${API_BASE_URL}/risk-assessments/${id}/artifacts/${artifactId}`,
-        start: (deviceId: string) =>
+        start: (deviceId: string, templateIds: string[]) =>
             fetchAPI<RiskAssessment>('/risk-assessments', {
                 method: 'POST',
-                body: JSON.stringify({ device_id: deviceId }),
+                body: JSON.stringify({ device_id: deviceId, template_ids: templateIds }),
             }),
         reviewAnswer: (
             id: string,

@@ -77,15 +77,17 @@ export function DeviceActivityCell({
                         <span
                             className={`w-2 h-2 rounded-full shrink-0 ${activity.dotClass} ${activity.status === 'online' ? 'animate-pulse' : ''}`}
                         />
-                        <span className={`text-sm ${activity.textClass}`}>
-                            {activity.label}
-                        </span>
+                        <span className={`text-sm ${activity.textClass}`}>{activity.label}</span>
                     </div>
 
                     {/* Scan count line */}
                     <div className="flex items-center gap-1">
-                        <Scan className={`w-3 h-3 ${scanCount > 0 ? 'text-primary' : 'text-muted-foreground/40'}`} />
-                        <span className={`text-xs ${scanCount > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}>
+                        <Scan
+                            className={`w-3 h-3 ${scanCount > 0 ? 'text-primary' : 'text-muted-foreground/40'}`}
+                        />
+                        <span
+                            className={`text-xs ${scanCount > 0 ? 'text-muted-foreground' : 'text-muted-foreground/40'}`}
+                        >
                             {scanCount === 1 ? '1 scan' : `${scanCount} scans`}
                         </span>
                     </div>
