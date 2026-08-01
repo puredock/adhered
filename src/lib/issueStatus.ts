@@ -3,12 +3,7 @@ import type { IssueVerificationStatus } from '@/components/artifacts/types'
 /**
  * Backend issue status values (from IssueStatus enum)
  */
-export type BackendIssueStatus =
-    | 'pending_review'
-    | 'confirmed'
-    | 'patched'
-    | 'dismissed'
-    | 'needs_info'
+export type BackendIssueStatus = 'pending_review' | 'confirmed' | 'patched' | 'dismissed' | 'needs_info'
 
 /**
  * Map frontend verification status to backend status

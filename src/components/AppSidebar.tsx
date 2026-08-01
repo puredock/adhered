@@ -6,6 +6,7 @@ import {
     ChevronDown,
     ChevronRight,
     ClipboardCheck,
+    Files,
     Home,
     Layers,
     LogOut,
@@ -39,6 +40,7 @@ const assetItems = [
 
 const actionItems = [
     { title: 'Audits', url: '/audits', icon: ClipboardCheck },
+    { title: 'Templates', url: '/risk-templates', icon: Files },
     { title: 'Scans', url: '/scans', icon: ScanLine },
     { title: 'Issues', url: '#', icon: AlertCircle },
     { title: 'Insights', url: '#', icon: TrendingUp },
