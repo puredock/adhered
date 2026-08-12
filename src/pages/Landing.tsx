@@ -1,7 +1,6 @@
 import {
     Activity,
     ArrowRight,
-    ClipboardCheck,
     FileText,
     Network,
     ScanLine,
@@ -9,643 +8,547 @@ import {
     Zap,
 } from 'lucide-react'
 import { useState } from 'react'
-import { FluidBackground } from '@/components/FluidBackground'
 import { GetDemoDialog } from '@/components/GetDemoDialog'
-import { InteractiveBackground } from '@/components/InteractiveBackground'
 import { RequestAccessDialog } from '@/components/RequestAccessDialog'
-import { SimpleWaveBackground } from '@/components/SimpleWaveBackground'
 import { TypewriterText } from '@/components/TypewriterText'
-import { Card, CardContent } from '@/components/ui/card'
 import { WorkflowCarousel } from '@/components/WorkflowCarousel'
+
+const features = [
+    {
+        title: 'Asset Discovery',
+        desc: 'Enumerate and identify all the connected devices on your networks.',
+        icon: Network,
+    },
+    {
+        title: 'Real-time Monitoring',
+        desc: 'Track devices, security and audit issues, as well as advisory reports in one place.',
+        icon: Activity,
+    },
+    {
+        title: 'Risk Assessment',
+        desc: 'Obtain deep insights into your cyber-risk posture and necessary remediation measures.',
+        icon: Shield,
+    },
+    {
+        title: 'Automated Pentesting',
+        desc: 'AI-powered fully automated pen-testing workflows and cookbooks tailored to your specific use cases.',
+        icon: Zap,
+        large: true,
+    },
+    {
+        title: 'Regulatory Advisory',
+        desc: 'Detailed advisory reports for your devices and target markets.',
+        icon: FileText,
+    },
+]
+
+const badges = [
+    { logo: '/hsa-logo.png', alt: 'HSA', label: 'HSA Compliant' },
+    { logo: '/mitre-logo.png', alt: 'MITRE ATT&CK', label: 'MITRE ATT&CK Aligned' },
+    { logo: '/csa-logo.avif', alt: 'CSA', label: 'CSA Singapore Aligned' },
+]
+
+const stats = [
+    { value: '100%', label: 'autonomous execution' },
+    { value: '24/7', label: 'continuous monitoring' },
+    { value: 'MITRE', label: 'ATT&CK framework coverage' },
+]
 
 export default function Landing() {
     const [showRequestAccess, setShowRequestAccess] = useState(false)
     const [showGetDemo, setShowGetDemo] = useState(false)
-    const features = [
-        {
-            title: 'Asset Discovery',
-            desc: 'Enumerate and identify all the connected devices on your networks.',
-            icon: Network,
-        },
-        {
-            title: 'Real-time Monitoring',
-            desc: 'Track devices, security and audit issues, as well as advisory reports in one place.',
-            icon: Activity,
-        },
-        {
-            title: 'Risk Assessment',
-            desc: 'Obtain deep insights into your cyber-risk posture and necessary remediation measures.',
-            icon: Shield,
-        },
-        {
-            title: 'Automated Pentesting',
-            desc: 'AI-powered fully automated pen-testing workflows and cookbooks tailored to fit your specific use cases.',
-            icon: Zap,
-        },
-        // TODO: suppressed for now, highlight later
-        // {
-        //     title: 'Compliance Audits',
-        //     desc: 'Enforce ongoing compliance with major regulatory frameworks to ensure your solutions never fall out of line.',
-        //     icon: ClipboardCheck,
-        // },
-        {
-            title: 'Regulatory Advisory',
-            desc: 'Detailed advisory reports based on your risk assessment and regulatory requirements for your devices and target markets.',
-            icon: FileText,
-        },
-    ]
 
     return (
-        <div className="min-h-screen bg-background w-full relative isolate overflow-hidden">
-            {/* Animated Background Layers - Desktop only */}
-            <div className="hidden sm:block">
-                <SimpleWaveBackground />
-                <FluidBackground />
-                <InteractiveBackground />
-            </div>
+        <div className="min-h-screen bg-background w-full relative antialiased">
+            <style>{`
+                @keyframes aurora-drift {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    33% { transform: translate(6%, 8%) scale(1.15); }
+                    66% { transform: translate(-5%, -4%) scale(0.95); }
+                }
+                @keyframes marquee {
+                    from { transform: translateX(0); }
+                    to { transform: translateX(-50%); }
+                }
+                @keyframes float-pulse {
+                    0%, 100% { opacity: 0.5; transform: scale(1); }
+                    50% { opacity: 0.85; transform: scale(1.06); }
+                }
+                @keyframes rise-in {
+                    from { opacity: 0; transform: translateY(24px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .landing-rise { animation: rise-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both; }
+                .landing-rise-1 { animation-delay: 0.1s; }
+                .landing-rise-2 { animation-delay: 0.2s; }
+                .landing-rise-3 { animation-delay: 0.3s; }
+                .landing-marquee { animation: marquee 32s linear infinite; }
+                .landing-marquee:hover { animation-play-state: paused; }
+            `}</style>
 
-            {/* Static gradient background for mobile - no animations, no blur on mobile */}
-            <div className="fixed inset-0 pointer-events-none sm:hidden" style={{ zIndex: -1 }}>
+            {/* ============ NAV ============ */}
+            <nav className="fixed top-4 inset-x-0 z-50 flex justify-center px-4">
                 <div
-                    className="absolute top-1/4 left-0 w-80 h-80 rounded-full opacity-20"
+                    className="flex items-center justify-between w-full max-w-3xl rounded-full pl-4 pr-2 py-2 border"
                     style={{
-                        background: 'radial-gradient(circle, hsl(165 70% 65%) 0%, transparent 70%)',
+                        backgroundColor: 'hsl(220 40% 12% / 0.75)',
+                        borderColor: 'hsl(var(--sidebar-border))',
+                        backdropFilter: 'blur(16px)',
+                        boxShadow: '0 8px 32px -12px rgba(0,0,0,0.35)',
                     }}
-                />
-                <div
-                    className="absolute bottom-1/4 right-0 w-72 h-72 rounded-full opacity-15"
-                    style={{
-                        background: 'radial-gradient(circle, hsl(165 60% 60%) 0%, transparent 70%)',
-                    }}
-                />
-            </div>
-
-            {/* Top Navigation */}
-            <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50 w-full">
-                <div className="w-full px-8 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
+                >
+                    <div className="flex items-center gap-2.5">
                         <div
-                            className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold"
-                            style={{
-                                backgroundColor: 'hsl(var(--sidebar-background))',
-                                color: 'hsl(var(--sidebar-foreground))',
-                            }}
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
+                            style={{ background: 'var(--gradient-primary)', color: 'hsl(220 50% 12%)' }}
                         >
-                            IGS
+                            IG
                         </div>
-                        <div>
-                            <div className="text-lg font-bold">Adhere</div>
-                            {/* <div className="text-xs text-muted-foreground">Agentic device security</div> */}
-                        </div>
+                        <span
+                            className="text-sm font-semibold tracking-tight"
+                            style={{ color: 'hsl(var(--sidebar-foreground))' }}
+                        >
+                            Adhere
+                        </span>
                     </div>
-                    {/*
-                    <Link
-                        to="/networks"
-                        className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-all"
-                        style={{
-                            backgroundColor: 'hsl(var(--sidebar-background))',
-                            color: 'hsl(var(--sidebar-foreground))',
-                        }}
+                    <button
+                        type="button"
+                        onClick={() => setShowRequestAccess(true)}
+                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground transition-transform hover:scale-105 active:scale-95"
                     >
-                        Request Access
-                        <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    */}
+                        Request access
+                        <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                 </div>
             </nav>
 
-            <main
-                className="w-full px-4 sm:px-6 md:px-8 py-12 sm:py-16 md:py-20 mx-auto relative z-10"
-                style={{ maxWidth: '1440px' }}
+            {/* ============ HERO (dark, aurora) ============ */}
+            <section
+                className="relative overflow-hidden pt-40 sm:pt-48 pb-24 sm:pb-32"
+                style={{ backgroundColor: 'hsl(220 40% 12%)' }}
             >
-                {/* Hero */}
-                <section className="mb-20 sm:mb-24 md:mb-32">
-                    <div className="text-center max-w-5xl mx-auto mb-12 sm:mb-14 md:mb-16">
-                        <div className="inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs font-semibold border-2 border-primary/40 bg-primary/10 text-primary mb-6 sm:mb-8 animate-pulse shadow-lg">
-                            🔜 Launching soon
-                        </div>
-                        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black leading-[1.1] mb-6 sm:mb-8 tracking-tight group">
-                            <span
-                                className="block text-foreground mb-2 transition-all duration-300 sm:group-hover:scale-[1.02]"
-                                style={{
-                                    textShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                                    letterSpacing: '-0.02em',
-                                }}
-                            >
-                                Agentic Security
-                            </span>
-                            <span
-                                className="block bg-clip-text text-transparent transition-all duration-300 sm:group-hover:scale-[1.02]"
-                                style={{
-                                    backgroundImage:
-                                        'linear-gradient(135deg, hsl(165 80% 50%) 0%, hsl(165 70% 60%) 100%)',
-                                    letterSpacing: '-0.01em',
-                                }}
-                            >
-                                for connected devices
-                            </span>
-                        </h1>
-                        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-foreground/70 mb-8 sm:mb-10 max-w-3xl mx-auto leading-relaxed font-light px-4">
-                            Enforce security by design across all your connected devices and networks
-                            using{' '}
-                            <span className="font-semibold text-primary bg-primary/10 px-2 py-1 rounded">
-                                AI-powered
-                            </span>{' '}
-                            <span className="underline decoration-primary decoration-2 underline-offset-4 font-medium">
-                                pen-testing
-                            </span>{' '}
-                            and{' '}
-                            <span className="underline decoration-primary decoration-2 underline-offset-4 font-medium">
-                                audit workflows
-                            </span>
-                            .
-                        </p>
-                        <div className="flex items-center justify-center gap-3 sm:gap-4 md:gap-5 flex-wrap px-4">
-                            <button
-                                type="button"
-                                onClick={() => setShowRequestAccess(true)}
-                                className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl text-base sm:text-lg font-bold transition-all hover:scale-105 hover:shadow-2xl group relative overflow-hidden"
-                                style={{
-                                    backgroundColor: 'hsl(var(--sidebar-background))',
-                                    color: 'hsl(var(--sidebar-foreground))',
-                                    boxShadow: '0 10px 40px -10px rgba(0, 0, 0, 0.4)',
-                                }}
-                            >
-                                <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                                <span className="relative">Request Access</span>
-                                <ArrowRight className="w-6 h-6 relative group-hover:translate-x-1 transition-transform" />
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setShowGetDemo(true)}
-                                className="inline-flex items-center gap-2 sm:gap-3 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-xl text-base sm:text-lg font-bold bg-card/80 backdrop-blur-sm text-foreground hover:bg-card transition-all border-2 border-border/50 hover:border-primary hover:scale-105 group shadow-lg"
-                            >
-                                <ScanLine className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform" />
-                                <span>Get a demo</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Trust Badges */}
+                {/* Aurora glow layers */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <div
-                        className="rounded-2xl sm:rounded-3xl border-2 border-border/40 p-6 sm:p-8 md:p-10 shadow-2xl backdrop-blur-md relative overflow-hidden group hover:border-primary/40 transition-all duration-500"
+                        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[900px] h-[600px] rounded-full"
                         style={{
                             background:
-                                'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%)',
+                                'radial-gradient(ellipse at center, hsl(165 70% 50% / 0.28) 0%, transparent 65%)',
+                            animation: 'aurora-drift 14s ease-in-out infinite',
+                        }}
+                    />
+                    <div
+                        className="absolute top-20 -left-40 w-[500px] h-[500px] rounded-full"
+                        style={{
+                            background:
+                                'radial-gradient(circle, hsl(165 60% 45% / 0.18) 0%, transparent 70%)',
+                            animation: 'aurora-drift 18s ease-in-out infinite reverse',
+                        }}
+                    />
+                    <div
+                        className="absolute bottom-0 -right-40 w-[600px] h-[500px] rounded-full"
+                        style={{
+                            background:
+                                'radial-gradient(circle, hsl(200 60% 45% / 0.12) 0%, transparent 70%)',
+                            animation: 'aurora-drift 22s ease-in-out infinite',
+                        }}
+                    />
+                    {/* Fine grid overlay */}
+                    <div
+                        className="absolute inset-0 opacity-[0.4]"
+                        style={{
+                            backgroundImage:
+                                'linear-gradient(hsl(165 30% 75% / 0.05) 1px, transparent 1px), linear-gradient(90deg, hsl(165 30% 75% / 0.05) 1px, transparent 1px)',
+                            backgroundSize: '56px 56px',
+                            maskImage:
+                                'radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 75%)',
+                            WebkitMaskImage:
+                                'radial-gradient(ellipse 70% 60% at 50% 30%, black 30%, transparent 75%)',
+                        }}
+                    />
+                </div>
+
+                <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+                    <div
+                        className="landing-rise inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium border mb-8"
+                        style={{
+                            borderColor: 'hsl(165 70% 55% / 0.35)',
+                            color: 'hsl(165 70% 65%)',
+                            backgroundColor: 'hsl(165 70% 40% / 0.1)',
                         }}
                     >
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 relative z-10">
-                            {/* HSA Compliant */}
-                            <div className="flex flex-col items-center text-center group/badge">
-                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 sm:p-6 bg-white rounded-2xl shadow-lg">
-                                    <img
-                                        src="/hsa-logo.png"
-                                        alt="HSA Logo"
-                                        className="w-32 sm:w-40 md:w-48 h-20 sm:h-24 object-contain mx-auto"
-                                    />
-                                </div>
-                                <div className="font-black text-lg sm:text-xl mb-1 tracking-tight">
-                                    HSA Compliant
-                                </div>
-                                <div className="text-sm text-foreground/60">
-                                    Singapore Health Sciences Authority
-                                </div>
-                            </div>
-
-                            {/* MITRE ATT&CK */}
-                            <div className="flex flex-col items-center text-center group/badge relative before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-px before:h-3/4 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-px after:h-3/4 after:bg-gradient-to-b after:from-transparent after:via-border after:to-transparent">
-                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 sm:p-6 bg-white rounded-2xl shadow-lg">
-                                    <img
-                                        src="/mitre-logo.png"
-                                        alt="MITRE ATT&CK Logo"
-                                        className="w-32 sm:w-40 md:w-48 h-20 sm:h-24 object-contain mx-auto"
-                                    />
-                                </div>
-                                <div className="font-black text-lg sm:text-xl mb-1 tracking-tight">
-                                    MITRE ATT&CK
-                                </div>
-                                <div className="text-sm text-foreground/60">
-                                    Aligned Framework Coverage
-                                </div>
-                            </div>
-
-                            {/* Cybersecurity Act */}
-                            <div className="flex flex-col items-center text-center group/badge">
-                                <div className="mb-4 group-hover/badge:scale-110 transition-all duration-300 p-4 sm:p-6 bg-white rounded-2xl shadow-lg">
-                                    <img
-                                        src="/csa-logo.avif"
-                                        alt="CSA Singapore Logo"
-                                        className="w-32 sm:w-40 md:w-48 h-20 sm:h-24 object-contain mx-auto"
-                                    />
-                                </div>
-                                <div className="font-black text-lg sm:text-xl mb-1 tracking-tight">
-                                    CSA Aligned
-                                </div>
-                                <div className="text-sm text-foreground/60">
-                                    Cyber Security Agency Singapore
-                                </div>
-                            </div>
-                        </div>
+                        <span
+                            className="w-1.5 h-1.5 rounded-full"
+                            style={{
+                                backgroundColor: 'hsl(165 80% 55%)',
+                                animation: 'float-pulse 2.4s ease-in-out infinite',
+                            }}
+                        />
+                        Launching soon
                     </div>
-                </section>
 
-                {/* Features */}
-                <section className="mb-20 sm:mb-24 md:mb-32">
-                    <div className="text-center mb-12 sm:mb-14 md:mb-16 px-4">
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 sm:mb-5 tracking-tight min-h-[3rem] sm:min-h-[4.5rem]">
-                            <TypewriterText
-                                texts={[
-                                    'Comprehensive Insights',
-                                    'Actionable Reports',
-                                    // TODO: add more texts
-
-                                    // 'Real-time Monitoring. Complete Visibility',
-                                    // 'Automated Testing. Continuous Security',
-                                ]}
-                                className="bg-clip-text text-transparent"
-                                style={{
-                                    backgroundImage:
-                                        'linear-gradient(135deg, hsl(220 50% 15%) 0%, hsl(165 70% 50%) 50%, hsl(220 45% 20%) 100%)',
-                                    fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
-                                    letterSpacing: '-0.02em',
-                                }}
-                            />
-                        </h2>
-                        <p className="text-base sm:text-lg md:text-xl text-foreground/60 max-w-3xl mx-auto leading-relaxed">
-                            {/* TODO: s/GRC/compliance */}
-                            Uncover gaps in your security and GRC postures in a single unified platform.
-                        </p>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-                        {features.map(f => (
-                            <Card
-                                key={f.title}
-                                className="shadow-2xl border-2 border-border/50 bg-card/90 backdrop-blur-sm hover:shadow-[0_20px_60px_-15px_rgba(74,222,189,0.3)] hover:border-primary/50 transition-all duration-500 group relative overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-                                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/0 via-primary to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                <CardContent className="pt-8 pb-8 relative z-10">
-                                    <div className="flex items-start gap-5">
-                                        <div
-                                            className="w-16 h-16 rounded-2xl flex items-center justify-center text-primary-foreground group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 relative overflow-hidden shadow-lg"
-                                            style={{
-                                                background:
-                                                    'linear-gradient(135deg, hsl(165 70% 60%) 0%, hsl(165 60% 45%) 100%)',
-                                            }}
-                                        >
-                                            <div className="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <f.icon className="w-8 h-8 relative z-10" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-colors tracking-tight">
-                                                {f.title}
-                                            </h3>
-                                            <p className="text-sm text-foreground/70 leading-relaxed">
-                                                {f.desc}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </section>
-
-                {/* How it works */}
-                <section className="mb-20 sm:mb-24 md:mb-32">
-                    <div className="text-center mb-12 sm:mb-14 md:mb-16 px-4">
-                        <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight">
-                            <span
-                                className="bg-clip-text text-transparent"
-                                style={{
-                                    backgroundImage:
-                                        'linear-gradient(135deg, hsl(165 70% 55%) 0%, hsl(165 60% 45%) 100%)',
-                                }}
-                            >
-                                Discovery
-                            </span>{' '}
-                            to{' '}
-                            <span
-                                className="bg-clip-text text-transparent"
-                                style={{
-                                    backgroundImage:
-                                        'linear-gradient(135deg, hsl(165 70% 55%) 0%, hsl(165 60% 45%) 100%)',
-                                }}
-                            >
-                                remediation
-                            </span>
-                            <br />
-                            <TypewriterText
-                                texts={['in minutes', 'effortlessly', 'automatically']}
-                                className="text-foreground/60 text-4xl md:text-5xl"
-                            />
-                        </h2>
-                    </div>
-                    <WorkflowCarousel
-                        steps={[
-                            {
-                                number: 1,
-                                title: 'Identify',
-                                description:
-                                    'Discover all your devices across all of your networks in one unified view.',
-                                screenshot: '/screenshots/devices.png',
-                                linkText: 'Find your devices',
-                                onButtonClick: () => setShowRequestAccess(true),
-                            },
-                            {
-                                number: 2,
-                                title: 'Assess',
-                                description:
-                                    'Run AI‑assisted audit scans and penetration tests on specific devices with live logs. Identify vulnerabilities and misconfigurations and enforce provided remediation suggestions.',
-                                screenshot: '/screenshots/scan.png',
-                                linkText: 'Start a scan',
-                                onButtonClick: () => setShowRequestAccess(true),
-                            },
-                        ]}
-                    />
-                </section>
-
-                {/* CTA Section */}
-                <section
-                    className="rounded-2xl p-12 text-center border-2"
-                    style={{
-                        backgroundColor: 'hsl(var(--sidebar-background))',
-                        borderColor: 'hsl(var(--sidebar-border))',
-                    }}
-                >
-                    <h2
-                        className="text-3xl font-bold mb-4"
-                        style={{ color: 'hsl(var(--sidebar-foreground))' }}
+                    <h1
+                        className="landing-rise landing-rise-1 text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-semibold leading-[1.02] tracking-[-0.045em] mb-7"
+                        style={{ color: 'hsl(165 40% 96%)' }}
                     >
-                        Ready to secure your devices?
-                    </h2>
+                        Agentic security
+                        <br />
+                        <span
+                            className="bg-clip-text text-transparent"
+                            style={{
+                                backgroundImage:
+                                    'linear-gradient(120deg, hsl(165 85% 65%) 0%, hsl(165 70% 50%) 45%, hsl(190 70% 55%) 100%)',
+                            }}
+                        >
+                            for connected devices
+                        </span>
+                    </h1>
+
                     <p
-                        className="mb-8 max-w-2xl mx-auto"
-                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
+                        className="landing-rise landing-rise-2 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto mb-10"
+                        style={{ color: 'hsl(165 30% 75% / 0.85)' }}
                     >
-                        Experience the power of agentic AI to automate your device security & compliance.
+                        Enforce security by design across your devices and networks with
+                        AI-powered pen-testing and audit workflows.
                     </p>
-                    <div className="flex items-center justify-center gap-4 flex-wrap">
+
+                    <div className="landing-rise landing-rise-3 flex items-center justify-center gap-3 flex-wrap mb-16">
                         <button
                             type="button"
                             onClick={() => setShowRequestAccess(true)}
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-primary text-primary-foreground hover:shadow-2xl transition-all text-base font-semibold hover:scale-105"
+                            className="group inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-semibold transition-transform hover:scale-[1.04] active:scale-[0.97]"
+                            style={{
+                                background:
+                                    'linear-gradient(135deg, hsl(165 80% 60%) 0%, hsl(165 70% 45%) 100%)',
+                                color: 'hsl(220 50% 12%)',
+                                boxShadow:
+                                    '0 0 0 1px hsl(165 80% 65% / 0.4), 0 12px 40px -8px hsl(165 70% 50% / 0.5)',
+                            }}
                         >
-                            Request Access
-                            <ArrowRight className="w-5 h-5" />
+                            Request access
+                            <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-0.5 transition-transform" />
                         </button>
                         <button
                             type="button"
                             onClick={() => setShowGetDemo(true)}
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-lg bg-card text-foreground border-2 border-border/50 hover:border-primary hover:shadow-xl transition-all text-base font-semibold hover:scale-105 group"
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-semibold border transition-all hover:scale-[1.04] active:scale-[0.97]"
+                            style={{
+                                borderColor: 'hsl(165 30% 75% / 0.25)',
+                                color: 'hsl(165 30% 75%)',
+                                backgroundColor: 'hsl(165 30% 75% / 0.05)',
+                            }}
                         >
-                            <ScanLine className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-                            Get a Demo
+                            <ScanLine className="w-4.5 h-4.5" />
+                            Get a demo
                         </button>
                     </div>
-                </section>
-            </main>
 
-            {/* Footer */}
-            <footer
-                className="border-t w-full py-12"
-                style={{
-                    backgroundColor: 'hsl(var(--sidebar-background))',
-                    borderColor: 'hsl(var(--sidebar-border))',
-                }}
-            >
-                <div className="w-full px-8 mx-auto" style={{ maxWidth: '1400px' }}>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-                        <div>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div
-                                    className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold"
-                                    style={{ background: 'var(--gradient-primary)' }}
-                                >
-                                    IGS
-                                </div>
-                                <div>
-                                    <div
-                                        className="text-lg font-bold"
-                                        style={{ color: 'hsl(var(--sidebar-foreground))' }}
-                                    >
-                                        Adhere
-                                    </div>
-                                </div>
-                            </div>
-                            <p
-                                className="text-sm"
-                                style={{ color: 'hsl(var(--sidebar-foreground) / 0.7)' }}
-                            >
-                                Agentic device security.
-                            </p>
-                        </div>
-                        {/*
-                        <div>
-                            <h3
-                                className="font-semibold mb-4"
-                                style={{ color: 'hsl(var(--sidebar-primary))' }}
-                            >
-                                Platform
-                            </h3>
-                            <ul className="space-y-2">
-                                <li>
-                                    <Link
-                                        to="/networks"
-                                        className="text-sm hover:underline"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
-                                    >
-                                        Networks
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        to="/catalog"
-                                        className="text-sm hover:underline"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
-                                    >
-                                        Devices
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        to="/scans"
-                                        className="text-sm hover:underline"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
-                                    >
-                                        Scans
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link
-                                        to="/audits"
-                                        className="text-sm hover:underline"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
-                                    >
-                                        Audits
-                                    </Link>
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h3
-                                className="font-semibold mb-4"
-                                style={{ color: 'hsl(var(--sidebar-primary))' }}
-                            >
-                                Resources
-                            </h3>
-                            <ul className="space-y-2">
-                                <li>
-                                    <span
-                                        className="text-sm"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
-                                    >
-                                        Documentation
-                                    </span>
-                                </li>
-                                <li>
-                                    <span
-                                        className="text-sm"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
-                                    >
-                                        API Reference
-                                    </span>
-                                </li>
-                                <li>
-                                    <span
-                                        className="text-sm"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.8)' }}
-                                    >
-                                        Support
-                                    </span>
-                                </li>
-                            </ul>
-                        </div>
-                        */}
-                    </div>
+                    {/* Stats strip */}
                     <div
-                        className="pt-8 border-t"
+                        className="landing-rise landing-rise-3 grid grid-cols-1 sm:grid-cols-3 divide-x divide-y sm:divide-y-0 rounded-2xl border max-w-2xl mx-auto overflow-hidden"
                         style={{
                             borderColor: 'hsl(var(--sidebar-border))',
+                            backgroundColor: 'hsl(220 40% 10% / 0.6)',
+                            backdropFilter: 'blur(12px)',
                         }}
                     >
-                        <div className="flex flex-col items-start gap-6">
-                            {/* Partner Logos */}
-                            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4">
-                                <a
-                                    href="https://www.imperial.ac.uk/about/global/singapore/"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    <img
-                                        src="/igs-logo.png"
-                                        alt="Imperial Global Singapore"
-                                        className="h-8 sm:h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
-                                    />
-                                </a>
+                        {stats.map(s => (
+                            <div
+                                key={s.label}
+                                className="px-6 py-5 text-center"
+                                style={{ borderColor: 'hsl(var(--sidebar-border))' }}
+                            >
                                 <div
-                                    className="w-px h-6 sm:h-8"
-                                    style={{ backgroundColor: 'hsl(var(--sidebar-border))' }}
-                                />
-                                <div className="flex items-center gap-2 sm:gap-3">
-                                    <a
-                                        href="https://www.imperial.ac.uk/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <img
-                                            src="/imperial-logo.png"
-                                            alt="Imperial College London"
-                                            className="h-8 sm:h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
-                                        />
-                                    </a>
-                                    <span
-                                        className="text-lg sm:text-xl font-light"
-                                        style={{ color: 'hsl(var(--sidebar-foreground) / 0.5)' }}
-                                    >
-                                        +
-                                    </span>
-                                    <a
-                                        href="https://www.ntu.edu.sg/"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        <img
-                                            src="/ntu-logo.png"
-                                            alt="NTU Singapore"
-                                            className="h-8 sm:h-10 w-auto opacity-80 hover:opacity-100 transition-opacity"
-                                        />
-                                    </a>
+                                    className="text-2xl font-bold tracking-tight"
+                                    style={{ color: 'hsl(165 80% 62%)' }}
+                                >
+                                    {s.value}
+                                </div>
+                                <div
+                                    className="text-xs mt-1"
+                                    style={{ color: 'hsl(165 30% 75% / 0.6)' }}
+                                >
+                                    {s.label}
                                 </div>
                             </div>
+                        ))}
+                    </div>
+                </div>
 
-                            {/* Copyright - acts as caption */}
+                {/* Bottom fade into light page */}
+                <div
+                    className="absolute bottom-0 inset-x-0 h-24 pointer-events-none"
+                    style={{
+                        background:
+                            'linear-gradient(to bottom, transparent, hsl(var(--background)))',
+                    }}
+                />
+            </section>
+
+            {/* ============ TRUST MARQUEE ============ */}
+            <section className="py-10 border-b border-border/60 overflow-hidden">
+                <div
+                    className="flex items-center gap-16 whitespace-nowrap w-max landing-marquee"
+                    style={{ maskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 15%, black 85%, transparent)' }}
+                >
+                    {[...badges, ...badges, ...badges, ...badges].map((b, i) => (
+                        <div key={i} className="flex items-center gap-3 shrink-0">
+                            <img src={b.logo} alt={b.alt} className="h-7 w-auto object-contain opacity-70" />
+                            <span className="text-xs font-semibold uppercase tracking-[0.15em] text-foreground/50">
+                                {b.label}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            {/* ============ FEATURES (bento) ============ */}
+            <section className="py-24 sm:py-32 max-w-6xl mx-auto px-6 sm:px-8">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-14">
+                    <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4">
+                            01 — Platform
+                        </div>
+                        <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-[-0.03em] min-h-[3rem] sm:min-h-[4rem]">
+                            <TypewriterText
+                                texts={['Comprehensive insights', 'Actionable reports']}
+                                className="bg-clip-text text-transparent"
+                                style={{
+                                    backgroundImage:
+                                        'linear-gradient(135deg, hsl(220 50% 12%) 0%, hsl(165 60% 38%) 100%)',
+                                }}
+                            />
+                        </h2>
+                    </div>
+                    <p className="text-base text-foreground/55 max-w-md leading-relaxed sm:text-right">
+                        Uncover gaps in your security and compliance postures in a single
+                        unified platform.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-[minmax(180px,auto)]">
+                    {features.map(f =>
+                        f.large ? (
                             <div
-                                className="text-sm"
-                                style={{ color: 'hsl(var(--sidebar-foreground) / 0.6)' }}
+                                key={f.title}
+                                className="group relative sm:col-span-2 rounded-3xl overflow-hidden p-8 sm:p-10 flex flex-col justify-end min-h-[240px] transition-transform duration-300 hover:-translate-y-1"
+                                style={{
+                                    backgroundColor: 'hsl(220 40% 12%)',
+                                    boxShadow: '0 16px 48px -16px hsl(165 60% 35% / 0.35)',
+                                }}
                             >
-                                © {new Date().getFullYear()} Imperial Global Singapore. Authorized
-                                research & security testing only.
+                                <div
+                                    className="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none"
+                                    style={{
+                                        background:
+                                            'radial-gradient(circle, hsl(165 70% 50% / 0.35) 0%, transparent 70%)',
+                                    }}
+                                />
+                                <div
+                                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 relative"
+                                    style={{
+                                        background:
+                                            'linear-gradient(135deg, hsl(165 80% 60%) 0%, hsl(165 70% 45%) 100%)',
+                                        color: 'hsl(220 50% 12%)',
+                                    }}
+                                >
+                                    <f.icon className="w-5 h-5" />
+                                </div>
+                                <h3
+                                    className="font-semibold text-2xl mb-2 tracking-tight relative"
+                                    style={{ color: 'hsl(165 40% 96%)' }}
+                                >
+                                    {f.title}
+                                </h3>
+                                <p
+                                    className="text-sm leading-relaxed max-w-lg relative"
+                                    style={{ color: 'hsl(165 30% 75% / 0.75)' }}
+                                >
+                                    {f.desc}
+                                </p>
                             </div>
+                        ) : (
+                            <div
+                                key={f.title}
+                                className="group relative rounded-3xl border border-border/70 bg-card p-8 transition-all duration-300 hover:-translate-y-1 hover:border-primary/40"
+                            >
+                                <div
+                                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+                                    style={{
+                                        backgroundColor: 'hsl(165 65% 55% / 0.12)',
+                                        color: 'hsl(165 60% 35%)',
+                                    }}
+                                >
+                                    <f.icon className="w-5 h-5" />
+                                </div>
+                                <h3 className="font-semibold text-lg mb-2 tracking-tight">
+                                    {f.title}
+                                </h3>
+                                <p className="text-sm text-foreground/60 leading-relaxed">
+                                    {f.desc}
+                                </p>
+                            </div>
+                        ),
+                    )}
+                </div>
+            </section>
+
+            {/* ============ HOW IT WORKS ============ */}
+            <section className="py-24 sm:py-32 max-w-6xl mx-auto px-6 sm:px-8">
+                <div className="text-center mb-14">
+                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4">
+                        02 — How it works
+                    </div>
+                    <h2 className="text-4xl sm:text-5xl md:text-6xl font-semibold tracking-[-0.03em]">
+                        Discovery to{' '}
+                        <span
+                            className="bg-clip-text text-transparent"
+                            style={{
+                                backgroundImage:
+                                    'linear-gradient(120deg, hsl(165 75% 45%) 0%, hsl(190 65% 40%) 100%)',
+                            }}
+                        >
+                            remediation
+                        </span>
+                        <br />
+                        <TypewriterText
+                            texts={['in minutes', 'effortlessly', 'automatically']}
+                            className="text-foreground/45 text-3xl sm:text-4xl md:text-5xl"
+                        />
+                    </h2>
+                </div>
+                <WorkflowCarousel
+                    steps={[
+                        {
+                            number: 1,
+                            title: 'Identify',
+                            description:
+                                'Discover all your devices across all of your networks in one unified view.',
+                            screenshot: '/screenshots/devices.png',
+                            linkText: 'Find your devices',
+                            onButtonClick: () => setShowRequestAccess(true),
+                        },
+                        {
+                            number: 2,
+                            title: 'Assess',
+                            description:
+                                'Run AI‑assisted audit scans and penetration tests on specific devices with live logs. Identify vulnerabilities and misconfigurations and enforce provided remediation suggestions.',
+                            screenshot: '/screenshots/scan.png',
+                            linkText: 'Start a scan',
+                            onButtonClick: () => setShowRequestAccess(true),
+                        },
+                    ]}
+                />
+            </section>
+
+            {/* ============ CTA ============ */}
+            <section className="max-w-6xl mx-auto px-6 sm:px-8 pb-24 sm:pb-32">
+                <div
+                    className="relative rounded-[2rem] overflow-hidden px-8 py-20 sm:py-28 text-center"
+                    style={{ backgroundColor: 'hsl(220 40% 12%)' }}
+                >
+                    <div
+                        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full pointer-events-none"
+                        style={{
+                            background:
+                                'radial-gradient(ellipse at center, hsl(165 70% 50% / 0.3) 0%, transparent 65%)',
+                            animation: 'aurora-drift 16s ease-in-out infinite',
+                        }}
+                    />
+                    <h2
+                        className="relative text-4xl sm:text-5xl font-semibold tracking-[-0.03em] mb-5"
+                        style={{ color: 'hsl(165 40% 96%)' }}
+                    >
+                        Ready to secure
+                        <br />
+                        your devices?
+                    </h2>
+                    <p
+                        className="relative text-lg max-w-xl mx-auto mb-10"
+                        style={{ color: 'hsl(165 30% 75% / 0.8)' }}
+                    >
+                        Experience the power of agentic AI to automate your device security &
+                        compliance.
+                    </p>
+                    <div className="relative flex items-center justify-center gap-3 flex-wrap">
+                        <button
+                            type="button"
+                            onClick={() => setShowRequestAccess(true)}
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-semibold transition-transform hover:scale-[1.04] active:scale-[0.97]"
+                            style={{
+                                background:
+                                    'linear-gradient(135deg, hsl(165 80% 60%) 0%, hsl(165 70% 45%) 100%)',
+                                color: 'hsl(220 50% 12%)',
+                                boxShadow:
+                                    '0 0 0 1px hsl(165 80% 65% / 0.4), 0 12px 40px -8px hsl(165 70% 50% / 0.5)',
+                            }}
+                        >
+                            Request access
+                            <ArrowRight className="w-4.5 h-4.5" />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setShowGetDemo(true)}
+                            className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-base font-semibold border transition-all hover:scale-[1.04] active:scale-[0.97]"
+                            style={{
+                                borderColor: 'hsl(165 30% 75% / 0.25)',
+                                color: 'hsl(165 30% 75%)',
+                                backgroundColor: 'hsl(165 30% 75% / 0.05)',
+                            }}
+                        >
+                            <ScanLine className="w-4.5 h-4.5" />
+                            Get a demo
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            {/* ============ FOOTER ============ */}
+            <footer
+                className="w-full py-12"
+                style={{ backgroundColor: 'hsl(220 40% 12%)' }}
+            >
+                <div className="w-full px-8 mx-auto max-w-6xl">
+                    <div className="flex items-center gap-2.5 mb-8">
+                        <div
+                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold"
+                            style={{ background: 'var(--gradient-primary)', color: 'hsl(220 50% 12%)' }}
+                        >
+                            IG
+                        </div>
+                        <span
+                            className="text-sm font-semibold"
+                            style={{ color: 'hsl(var(--sidebar-foreground))' }}
+                        >
+                            Adhere — agentic device security
+                        </span>
+                    </div>
+                    <div
+                        className="pt-8 border-t flex flex-col items-start gap-6"
+                        style={{ borderColor: 'hsl(var(--sidebar-border))' }}
+                    >
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                            <a href="https://www.imperial.ac.uk/about/global/singapore/" target="_blank" rel="noopener noreferrer">
+                                <img src="/igs-logo.png" alt="Imperial Global Singapore" className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity" />
+                            </a>
+                            <div className="w-px h-6" style={{ backgroundColor: 'hsl(var(--sidebar-border))' }} />
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <a href="https://www.imperial.ac.uk/" target="_blank" rel="noopener noreferrer">
+                                    <img src="/imperial-logo.png" alt="Imperial College London" className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity" />
+                                </a>
+                                <span className="text-lg font-light" style={{ color: 'hsl(165 30% 75% / 0.5)' }}>+</span>
+                                <a href="https://www.ntu.edu.sg/" target="_blank" rel="noopener noreferrer">
+                                    <img src="/ntu-logo.png" alt="NTU Singapore" className="h-8 w-auto opacity-70 hover:opacity-100 transition-opacity" />
+                                </a>
+                            </div>
+                        </div>
+                        <div className="text-xs" style={{ color: 'hsl(165 30% 75% / 0.5)' }}>
+                            © {new Date().getFullYear()} Imperial Global Singapore. Authorized
+                            research & security testing only.
                         </div>
                     </div>
                 </div>
             </footer>
-
-            {/* Global Styles for Animations */}
-            <style>{`
-                @keyframes gradient-shift {
-                    0% {
-                        background-position: 0% 50%;
-                    }
-                    50% {
-                        background-position: 100% 50%;
-                    }
-                    100% {
-                        background-position: 0% 50%;
-                    }
-                }
-
-                @keyframes gradient-flow {
-                    0% {
-                        background-position: 0% 50%;
-                    }
-                    100% {
-                        background-position: 300% 50%;
-                    }
-                }
-
-                @keyframes fade-in {
-                    from {
-                        opacity: 0;
-                    }
-                    to {
-                        opacity: 1;
-                    }
-                }
-
-                @keyframes slide-up {
-                    from {
-                        transform: translateY(30px);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-
-                @keyframes pulse-glow {
-                    0%, 100% {
-                        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
-                    }
-                    50% {
-                        filter: drop-shadow(0 8px 24px rgba(74, 222, 189, 0.3));
-                    }
-                }
-            `}</style>
 
             {/* Dialogs */}
             <RequestAccessDialog open={showRequestAccess} onOpenChange={setShowRequestAccess} />
