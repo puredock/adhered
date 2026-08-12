@@ -74,6 +74,14 @@ export default function Landing() {
                     0%, 100% { opacity: 0.5; transform: scale(1); }
                     50% { opacity: 0.85; transform: scale(1.06); }
                 }
+                @keyframes ambient-drift {
+                    0%, 100% { transform: translate(0, 0); }
+                    50% { transform: translate(3%, -4%); }
+                }
+                @keyframes ambient-drift-rev {
+                    0%, 100% { transform: translate(0, 0); }
+                    50% { transform: translate(-4%, 3%); }
+                }
                 @keyframes rise-in {
                     from { opacity: 0; transform: translateY(24px); }
                     to { opacity: 1; transform: translateY(0); }
@@ -302,8 +310,51 @@ export default function Landing() {
                 </div>
             </section>
 
+            {/* ============ AMBIENT BACKGROUND (light sections) ============ */}
+            <div className="relative">
+                <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+                    {/* Soft teal blobs drifting slowly */}
+                    <div
+                        className="absolute top-[5%] -left-32 w-[520px] h-[520px] rounded-full opacity-50"
+                        style={{
+                            background:
+                                'radial-gradient(circle, hsl(165 70% 70% / 0.35) 0%, transparent 65%)',
+                            animation: 'ambient-drift 26s ease-in-out infinite',
+                        }}
+                    />
+                    <div
+                        className="absolute top-[35%] -right-40 w-[620px] h-[620px] rounded-full opacity-40"
+                        style={{
+                            background:
+                                'radial-gradient(circle, hsl(185 65% 68% / 0.35) 0%, transparent 65%)',
+                            animation: 'ambient-drift-rev 32s ease-in-out infinite',
+                        }}
+                    />
+                    <div
+                        className="absolute bottom-[10%] left-1/4 w-[700px] h-[500px] rounded-full opacity-40"
+                        style={{
+                            background:
+                                'radial-gradient(circle, hsl(165 70% 72% / 0.3) 0%, transparent 65%)',
+                            animation: 'ambient-drift 38s ease-in-out infinite reverse',
+                        }}
+                    />
+                    {/* Faint diagonal grid for texture */}
+                    <div
+                        className="absolute inset-0 opacity-[0.7]"
+                        style={{
+                            backgroundImage:
+                                'linear-gradient(hsl(165 40% 55% / 0.14) 1px, transparent 1px), linear-gradient(90deg, hsl(165 40% 55% / 0.14) 1px, transparent 1px)',
+                            backgroundSize: '56px 56px',
+                            maskImage:
+                                'radial-gradient(ellipse 90% 80% at 50% 40%, black 30%, transparent 85%)',
+                            WebkitMaskImage:
+                                'radial-gradient(ellipse 90% 80% at 50% 40%, black 30%, transparent 85%)',
+                        }}
+                    />
+                </div>
+
             {/* ============ FEATURES (bento) ============ */}
-            <section className="py-24 sm:py-32 max-w-6xl mx-auto px-6 sm:px-8">
+            <section className="relative py-24 sm:py-32 max-w-6xl mx-auto px-6 sm:px-8">
                 <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-14">
                     <div>
                         <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4">
@@ -394,7 +445,7 @@ export default function Landing() {
             </section>
 
             {/* ============ HOW IT WORKS ============ */}
-            <section className="py-24 sm:py-32 max-w-6xl mx-auto px-6 sm:px-8">
+            <section className="relative py-24 sm:py-32 max-w-6xl mx-auto px-6 sm:px-8">
                 <div className="text-center mb-14">
                     <div className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-4">
                         02 — How it works
@@ -442,7 +493,7 @@ export default function Landing() {
             </section>
 
             {/* ============ CTA ============ */}
-            <section className="max-w-6xl mx-auto px-6 sm:px-8 pb-24 sm:pb-32">
+            <section className="relative max-w-6xl mx-auto px-6 sm:px-8 pb-24 sm:pb-32">
                 <div
                     className="relative rounded-[2rem] overflow-hidden px-8 py-20 sm:py-28 text-center"
                     style={{ backgroundColor: 'hsl(220 40% 12%)' }}
@@ -502,6 +553,8 @@ export default function Landing() {
                     </div>
                 </div>
             </section>
+
+            </div>{/* end ambient background wrapper */}
 
             {/* ============ FOOTER ============ */}
             <footer
