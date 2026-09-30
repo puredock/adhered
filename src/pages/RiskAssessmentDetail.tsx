@@ -6,6 +6,7 @@ import {
     CheckCircle2,
     ChevronDown,
     CircleDashed,
+    ExternalLink,
     FileCheck2,
     FileStack,
     Loader2,
@@ -25,7 +26,7 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { type AssessmentAnswer, api, type ChecklistItem } from '@/lib/api'
+import { type AssessmentAnswer, type AssessmentArtifact, api, type ChecklistItem } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 const complianceLabels: Record<string, string> = {
@@ -36,14 +37,25 @@ const complianceLabels: Record<string, string> = {
     unknown: 'Unknown',
 }
 
+/** Evidence references are run-relative paths, optionally suffixed with a location like "(lines 1-20)". */
+function findArtifact(reference: string, artifacts: AssessmentArtifact[]) {
+    const path = reference
+        .replace(/\s*\(.*\)\s*$/, '')
+        .replace(/^\.\//, '')
+        .trim()
+    return artifacts.find(artifact => artifact.name === path)
+}
+
 function ReviewItem({
     item,
     answer,
     assessmentId,
+    artifacts,
 }: {
     item: ChecklistItem
     answer?: AssessmentAnswer
     assessmentId: string
+    artifacts: AssessmentArtifact[]
 }) {
     const queryClient = useQueryClient()
     const [open, setOpen] = useState(answer?.status === 'needs_review')
@@ -181,17 +193,44 @@ function ReviewItem({
                             <p className="text-sm font-medium">Evidence</p>
                             {answer?.evidence.length ? (
                                 <div className="mt-2 space-y-2">
-                                    {answer.evidence.map((evidence, index) => (
-                                        <div
-                                            key={`${evidence.source}-${index}`}
-                                            className="border-l-2 border-primary pl-3 text-sm"
-                                        >
-                                            <p>{evidence.summary}</p>
-                                            <p className="mt-1 text-xs text-muted-foreground">
-                                                {evidence.source}
-                                            </p>
-                                        </div>
-                                    ))}
+                                    {answer.evidence.map((evidence, index) => {
+                                        const artifact = evidence.reference
+                                            ? findArtifact(evidence.reference, artifacts)
+                                            : undefined
+                                        return (
+                                            <div
+                                                key={`${evidence.source}-${index}`}
+                                                className="border-l-2 border-primary pl-3 text-sm"
+                                            >
+                                                <p>{evidence.summary}</p>
+                                                <p className="mt-1 text-xs text-muted-foreground">
+                                                    {evidence.source}
+                                                </p>
+                                                {evidence.reference &&
+                                                    (artifact ? (
+                                                        <a
+                                                            href={api.riskAssessments.artifactUrl(
+                                                                assessmentId,
+                                                                artifact.id,
+                                                            )}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="mt-1 inline-flex items-center gap-1 break-all font-mono text-xs text-primary hover:underline"
+                                                        >
+                                                            {evidence.reference}
+                                                            <ExternalLink className="h-3 w-3 shrink-0" />
+                                                        </a>
+                                                    ) : (
+                                                        <p
+                                                            className="mt-1 break-all font-mono text-xs text-muted-foreground"
+                                                            title="Referenced file not found in this assessment's artifacts"
+                                                        >
+                                                            {evidence.reference}
+                                                        </p>
+                                                    ))}
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             ) : (
                                 <p className="mt-1 text-sm text-muted-foreground">
@@ -447,6 +486,7 @@ export default function RiskAssessmentDetail() {
                                         item={item}
                                         answer={answers.get(item.id)}
                                         assessmentId={assessment.id}
+                                        artifacts={assessment.artifacts_data || []}
                                     />
                                 ))}
                             </CardContent>
