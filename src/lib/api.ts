@@ -448,6 +448,10 @@ export const api = {
                 `/risk-assessments${deviceId ? `?device_id=${encodeURIComponent(deviceId)}` : ''}`,
             ),
         get: (id: string) => fetchAPI<RiskAssessment>(`/risk-assessments/${id}`),
+        delete: (id: string) =>
+            fetchAPI<{ id: string; deleted: boolean }>(`/risk-assessments/${id}`, {
+                method: 'DELETE',
+            }),
         events: (id: string) =>
             fetchAPI<{ events: AssessmentEvent[]; total: number }>(`/risk-assessments/${id}/events`),
         reprocess: (id: string) =>
