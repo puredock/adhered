@@ -12,7 +12,6 @@ import {
     CircleX,
     Contrast,
     ExternalLink,
-    FileCheck2,
     FileStack,
     FileText,
     Loader2,
@@ -63,27 +62,27 @@ const conclusionOptions = [
     {
         value: 'compliant',
         icon: CheckCircle2,
-        className: 'aria-checked:bg-success/15 aria-checked:text-success',
+        className: 'data-[state=on]:bg-success/15 data-[state=on]:text-success',
     },
     {
         value: 'partial',
         icon: Contrast,
-        className: 'aria-checked:bg-warning/15 aria-checked:text-warning',
+        className: 'data-[state=on]:bg-warning/15 data-[state=on]:text-warning',
     },
     {
         value: 'non_compliant',
         icon: CircleX,
-        className: 'aria-checked:bg-destructive/15 aria-checked:text-destructive',
+        className: 'data-[state=on]:bg-destructive/15 data-[state=on]:text-destructive',
     },
     {
         value: 'not_applicable',
         icon: CircleMinus,
-        className: 'aria-checked:bg-muted aria-checked:text-foreground',
+        className: 'data-[state=on]:bg-muted data-[state=on]:text-foreground',
     },
     {
         value: 'unknown',
         icon: CircleHelp,
-        className: 'aria-checked:bg-muted aria-checked:text-foreground',
+        className: 'data-[state=on]:bg-muted data-[state=on]:text-foreground',
     },
 ]
 
@@ -201,16 +200,15 @@ function ReviewItem({
                 <div className="border-t bg-background px-4 py-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                         <p className="font-mono text-xs text-muted-foreground">{item.id}</p>
-                        <div className="flex items-center gap-2">
+                        <div className="flex h-8 items-center gap-0.5 rounded-md border bg-card p-0.5">
                             <Tooltip>
                                 <TooltipTrigger asChild>
                                     <Toggle
                                         size="sm"
-                                        variant="outline"
                                         pressed={commentOpen}
                                         onPressedChange={setCommentOpen}
                                         aria-label="Review comment"
-                                        className="relative h-8 w-8 px-0 aria-pressed:bg-muted"
+                                        className="relative h-7 w-7 px-0 text-muted-foreground aria-pressed:bg-muted aria-pressed:text-foreground"
                                     >
                                         {savedComment ? (
                                             <MessageSquareText className="h-4 w-4" />
@@ -226,6 +224,7 @@ function ReviewItem({
                                     {savedComment ? 'Edit comment' : 'Add comment'}
                                 </TooltipContent>
                             </Tooltip>
+                            <span aria-hidden className="mx-0.5 h-4 w-px bg-border" />
                             <ToggleGroup
                                 type="single"
                                 value={compliance}
@@ -236,25 +235,39 @@ function ReviewItem({
                                 }}
                                 disabled={mutation.isPending}
                                 aria-label="Conclusion"
-                                className="gap-0.5 rounded-md border p-0.5"
+                                className="gap-0.5"
                             >
-                                {conclusionOptions.map(({ value, icon: Icon, className }) => (
-                                    <Tooltip key={value}>
-                                        <TooltipTrigger asChild>
-                                            <ToggleGroupItem
-                                                value={value}
-                                                aria-label={complianceLabels[value]}
-                                                className={cn(
-                                                    'h-7 w-7 px-0 text-muted-foreground',
-                                                    className,
-                                                )}
-                                            >
-                                                <Icon className="h-4 w-4" />
-                                            </ToggleGroupItem>
-                                        </TooltipTrigger>
-                                        <TooltipContent>{complianceLabels[value]}</TooltipContent>
-                                    </Tooltip>
-                                ))}
+                                {conclusionOptions.map(({ value, icon: Icon, className }) => {
+                                    const selected = compliance === value
+                                    const option = (
+                                        <ToggleGroupItem
+                                            value={value}
+                                            aria-label={complianceLabels[value]}
+                                            className={cn(
+                                                'h-7 gap-1.5 text-muted-foreground',
+                                                selected ? 'px-2' : 'w-7 px-0',
+                                                className,
+                                            )}
+                                        >
+                                            <Icon className="h-4 w-4 shrink-0" />
+                                            {selected && (
+                                                <span className="text-xs font-medium">
+                                                    {complianceLabels[value]}
+                                                </span>
+                                            )}
+                                        </ToggleGroupItem>
+                                    )
+                                    return selected ? (
+                                        <span key={value} className="contents">
+                                            {option}
+                                        </span>
+                                    ) : (
+                                        <Tooltip key={value}>
+                                            <TooltipTrigger asChild>{option}</TooltipTrigger>
+                                            <TooltipContent>{complianceLabels[value]}</TooltipContent>
+                                        </Tooltip>
+                                    )
+                                })}
                             </ToggleGroup>
                         </div>
                     </div>
@@ -504,6 +517,8 @@ export default function RiskAssessmentDetail() {
         [assessment?.checklist_data],
     )
     const approved = assessment?.answers_data.filter(answer => answer.status === 'approved').length || 0
+    const needsReview =
+        assessment?.answers_data.filter(answer => answer.status === 'needs_review').length || 0
     const populated = assessment?.answers_data.filter(answer => answer.answer?.trim()).length || 0
     const total = assessment?.checklist_data.length || 0
     const approveMutation = useMutation({
@@ -638,32 +653,37 @@ export default function RiskAssessmentDetail() {
             >
                 {total > 0 && (
                     <aside className="hidden space-y-2 xl:sticky xl:top-24 xl:block xl:self-start">
-                        <p className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                            Sources
-                        </p>
-                        <Button
-                            variant={sourceFilter === 'all' ? 'secondary' : 'ghost'}
-                            className="w-full justify-between"
-                            onClick={() => setSourceFilter('all')}
-                        >
-                            All documents <Badge variant="outline">{total}</Badge>
-                        </Button>
-                        {sources.map(source => (
-                            <Button
-                                key={source}
-                                variant={sourceFilter === source ? 'secondary' : 'ghost'}
-                                className="h-auto w-full justify-between gap-2 py-2 text-left"
-                                onClick={() => setSourceFilter(source)}
-                            >
-                                <span className="min-w-0 truncate">{source}</span>
-                                <Badge variant="outline">
-                                    {
-                                        assessment.checklist_data.filter(item => item.source === source)
-                                            .length
-                                    }
-                                </Badge>
-                            </Button>
-                        ))}
+                        <h3 className="px-1 text-sm font-medium">Sources</h3>
+                        <nav className="divide-y rounded-md border bg-card">
+                            {[
+                                { value: 'all', label: 'All documents', count: total },
+                                ...sources.map(source => ({
+                                    value: source,
+                                    label: source,
+                                    count: assessment.checklist_data.filter(
+                                        item => item.source === source,
+                                    ).length,
+                                })),
+                            ].map(({ value, label, count }) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    title={label}
+                                    aria-current={sourceFilter === value ? 'true' : undefined}
+                                    onClick={() => setSourceFilter(value)}
+                                    className={cn(
+                                        'flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-muted-foreground transition-colors first:rounded-t-md last:rounded-b-md hover:bg-muted/40 hover:text-foreground',
+                                        sourceFilter === value &&
+                                            'bg-primary/5 font-medium text-foreground hover:bg-primary/10',
+                                    )}
+                                >
+                                    <span className="min-w-0 flex-1 truncate">{label}</span>
+                                    <span className="shrink-0 text-xs font-normal tabular-nums text-muted-foreground">
+                                        {count}
+                                    </span>
+                                </button>
+                            ))}
+                        </nav>
                     </aside>
                 )}
                 <div className="space-y-5">
@@ -745,51 +765,70 @@ export default function RiskAssessmentDetail() {
                         </Card>
                     ))}
                 </div>
-                <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-base">
-                                <FileCheck2 className="h-5 w-5 text-primary" />
-                                Review progress
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <div className="mb-2 flex justify-between text-sm">
-                                    <span>Confirmed</span>
-                                    <span>
-                                        {approved} / {total}
-                                    </span>
-                                </div>
-                                <Progress value={total ? (approved / total) * 100 : 0} />
+                <aside className="space-y-2 xl:sticky xl:top-24 xl:self-start">
+                    <h3 className="px-1 text-sm font-medium">Review progress</h3>
+                    <div className="divide-y rounded-md border bg-card">
+                        <div className="space-y-2.5 px-3 py-3">
+                            <div className="flex items-baseline justify-between text-sm">
+                                <span className="text-muted-foreground">Confirmed</span>
+                                <span className="tabular-nums">
+                                    <span className="font-medium">{approved}</span>
+                                    <span className="text-muted-foreground"> of {total}</span>
+                                </span>
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="approver">Final approver</Label>
+                            <Progress value={total ? (approved / total) * 100 : 0} className="h-1.5" />
+                            {needsReview > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setReviewFilter('needs_review')}
+                                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                                >
+                                    <AlertTriangle className="h-3.5 w-3.5 text-warning" />
+                                    {needsReview} need{needsReview === 1 ? 's' : ''} review
+                                </button>
+                            )}
+                        </div>
+                        {assessment.status === 'approved' ? (
+                            <div className="flex items-center gap-2 px-3 py-3 text-sm">
+                                <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
+                                <span className="min-w-0 truncate">
+                                    Approved
+                                    {assessment.approved_by ? ` by ${assessment.approved_by}` : ''}
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 px-3 py-3">
                                 <Input
                                     id="approver"
+                                    aria-label="Final approver"
+                                    placeholder="Final approver"
                                     value={approver}
                                     onChange={event => setApprover(event.target.value)}
                                 />
+                                <Button
+                                    className="w-full"
+                                    disabled={
+                                        !approver.trim() ||
+                                        approved !== total ||
+                                        approveMutation.isPending
+                                    }
+                                    onClick={() => approveMutation.mutate()}
+                                >
+                                    {approveMutation.isPending ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <ShieldCheck className="mr-2 h-4 w-4" />
+                                    )}
+                                    Approve assessment
+                                </Button>
+                                {approved !== total && (
+                                    <p className="text-xs text-muted-foreground">
+                                        Confirm every item to approve.
+                                    </p>
+                                )}
                             </div>
-                            <Button
-                                className="w-full"
-                                disabled={
-                                    !approver.trim() ||
-                                    approved !== total ||
-                                    approveMutation.isPending ||
-                                    assessment.status === 'approved'
-                                }
-                                onClick={() => approveMutation.mutate()}
-                            >
-                                <ShieldCheck className="mr-2 h-4 w-4" />
-                                Approve assessment
-                            </Button>
-                            <p className="text-xs text-muted-foreground">
-                                All items must be confirmed before final approval. EAM synchronization
-                                will be added at this approval boundary.
-                            </p>
-                        </CardContent>
-                    </Card>
+                        )}
+                    </div>
                 </aside>
             </div>
         </main>
