@@ -595,9 +595,9 @@ const DeviceDetail = () => {
                                 <ActivityViewer
                                     deviceId={deviceId!}
                                     scans={allActivityScans}
-                                    audits={assessments.map(assessment => ({
+                                    assessments={assessments.map(assessment => ({
                                         id: assessment.id,
-                                        type: 'audit' as const,
+                                        type: 'assessment' as const,
                                         name: 'Risk Assessment',
                                         status: (assessment.status === 'pending' ||
                                         assessment.status === 'active'
