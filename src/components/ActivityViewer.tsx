@@ -66,7 +66,10 @@ export function ActivityViewer({
     onClearAll,
     onActivityClick,
 }: ActivityViewerProps) {
-    const [activityType, setActivityType] = useState<ActivityType>('scans')
+    const [activityType, setActivityType] = useState<ActivityType>(() => {
+        const savedType = sessionStorage.getItem(`device-activity-type:${deviceId}`)
+        return savedType === 'assessments' ? 'assessments' : 'scans'
+    })
     const [selectedActivityId, setSelectedActivityId] = useState<string | null>(null)
     const [mountKey, setMountKey] = useState(0)
     const [scanStates, setScanStates] = useState<Record<string, { steps: any[]; logs: any[] }>>({})
@@ -149,6 +152,11 @@ export function ActivityViewer({
             : activityType === 'audits'
               ? 'Audits'
               : 'Assessments'
+    }
+
+    const selectActivityType = (type: ActivityType) => {
+        setActivityType(type)
+        sessionStorage.setItem(`device-activity-type:${deviceId}`, type)
     }
 
     const handleDeleteActivity = async (
@@ -301,7 +309,7 @@ export function ActivityViewer({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
                                 <DropdownMenuItem
-                                    onClick={() => setActivityType('scans')}
+                                    onClick={() => selectActivityType('scans')}
                                     className={cn(
                                         'gap-2 cursor-pointer',
                                         activityType === 'scans' && 'bg-accent',
@@ -311,7 +319,7 @@ export function ActivityViewer({
                                     Scans
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() => setActivityType('audits')}
+                                    onClick={() => selectActivityType('audits')}
                                     disabled
                                     className={cn(
                                         'gap-2 cursor-not-allowed opacity-50',
@@ -322,7 +330,7 @@ export function ActivityViewer({
                                     Audits
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() => setActivityType('assessments')}
+                                    onClick={() => selectActivityType('assessments')}
                                     className={cn(
                                         'gap-2 cursor-pointer',
                                         activityType === 'assessments' && 'bg-accent',
