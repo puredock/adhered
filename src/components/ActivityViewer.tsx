@@ -48,6 +48,7 @@ interface ActivityViewerProps {
     onScanComplete?: (scanId: string, status: string) => void
     onClearStaleScan?: (scanId: string) => void
     onDeleteScan?: (scanId: string) => void
+    onDeleteAssessment?: (assessmentId: string) => void
     onStopScan?: (scanId: string) => void
     onClearAll?: () => void
 }
@@ -60,6 +61,7 @@ export function ActivityViewer({
     onScanComplete,
     onClearStaleScan,
     onDeleteScan,
+    onDeleteAssessment,
     onStopScan,
     onClearAll,
     onActivityClick,
@@ -149,13 +151,19 @@ export function ActivityViewer({
               : 'Assessments'
     }
 
-    const handleDeleteScan = async (e: React.MouseEvent, scanId: string, isRunning: boolean) => {
+    const handleDeleteActivity = async (
+        e: React.MouseEvent,
+        activity: ActivityEntry,
+        isRunning: boolean,
+    ) => {
         e.stopPropagation()
+        const noun = activity.type === 'assessment' ? 'assessment' : 'scan'
         const message = isRunning
-            ? 'This scan is currently running. Deleting it will terminate the scan and remove all data. Are you sure?'
-            : 'Are you sure you want to delete this scan?'
+            ? `This ${noun} is currently running. Deleting it will terminate the run and remove its history. Are you sure?`
+            : `Are you sure you want to delete this ${noun}?`
         if (confirm(message)) {
-            onDeleteScan?.(scanId)
+            if (activity.type === 'assessment') onDeleteAssessment?.(activity.id)
+            else onDeleteScan?.(activity.id)
         }
     }
 
@@ -171,6 +179,7 @@ export function ActivityViewer({
         const isHovered = hoveredActivityId === activity.id
         const isRunning = activity.status === 'running'
         const isScan = activity.type === 'scan'
+        const canDelete = isScan || (activity.type === 'assessment' && !isRunning)
 
         return (
             <div key={activity.id} className="space-y-2">
@@ -192,13 +201,13 @@ export function ActivityViewer({
                                 <StopCircle className="h-4 w-4" />
                             </Button>
                         )}
-                        {isScan && (
+                        {canDelete && (
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 className="h-9 w-9 rounded-lg bg-destructive/90 hover:bg-destructive text-white shadow-sm"
-                                onClick={e => handleDeleteScan(e, activity.id, isRunning)}
-                                title="Delete scan"
+                                onClick={e => handleDeleteActivity(e, activity, isRunning)}
+                                title={activity.type === 'assessment' ? 'Delete assessment' : 'Delete scan'}
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>

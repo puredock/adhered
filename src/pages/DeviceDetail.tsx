@@ -707,6 +707,26 @@ const DeviceDetail = () => {
                                             }
                                         }
                                     }}
+                                    onDeleteAssessment={async assessmentId => {
+                                        try {
+                                            await api.riskAssessments.delete(assessmentId)
+                                            await queryClient.invalidateQueries({
+                                                queryKey: ['risk-assessments', deviceId],
+                                            })
+                                            toast.success('Assessment deleted', {
+                                                description:
+                                                    'The assessment has been removed from the history.',
+                                            })
+                                        } catch (error) {
+                                            console.error('Failed to delete assessment:', error)
+                                            toast.error('Failed to delete assessment', {
+                                                description:
+                                                    error instanceof Error
+                                                        ? error.message
+                                                        : 'An error occurred while deleting the assessment.',
+                                            })
+                                        }
+                                    }}
                                     onClearAll={async () => {
                                         try {
                                             const scanIds = recentScans.map(s => s.id)
