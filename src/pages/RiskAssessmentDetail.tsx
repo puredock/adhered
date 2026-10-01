@@ -408,7 +408,12 @@ export default function RiskAssessmentDetail() {
     })
 
     useEffect(() => {
-        if (assessment?.status === 'needs_review' && populated === 0 && !recoveryAttempted.current) {
+        if (
+            assessment?.status === 'needs_review' &&
+            ['live', 'disclosure_and_live'].includes(assessment.source_mode) &&
+            populated === 0 &&
+            !recoveryAttempted.current
+        ) {
             recoveryAttempted.current = true
             recoveryMutation.mutate()
         }
@@ -449,7 +454,14 @@ export default function RiskAssessmentDetail() {
                             </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            {assessment.id} · Template {assessment.template_version}
+                            {assessment.id} · Template {assessment.template_version} ·{' '}
+                            {assessment.source_mode === 'manual'
+                                ? 'Manual'
+                                : assessment.source_mode === 'disclosure_only'
+                                  ? `MDS2 only${assessment.disclosure_name ? ` · ${assessment.disclosure_name}` : ''}`
+                                  : assessment.source_mode === 'disclosure_and_live'
+                                    ? `MDS2 + live${assessment.disclosure_name ? ` · ${assessment.disclosure_name}` : ''}`
+                                    : 'Live assessment'}
                         </p>
                     </div>
                     <Badge variant="outline">{assessment.access_mode}</Badge>
@@ -532,6 +544,7 @@ export default function RiskAssessmentDetail() {
                         assessmentId={assessment.id}
                         status={assessment.status}
                         artifacts={assessment.artifacts_data || []}
+                        sourceMode={assessment.source_mode}
                     />
                     {recoveryMutation.isPending && (
                         <div className="flex items-center gap-2 border border-border bg-card p-3 text-sm">

@@ -142,6 +142,8 @@ export interface AssessmentAnswer {
 export interface RiskAssessment {
     id: string
     device_id: string
+    source_mode: 'live' | 'manual' | 'disclosure_only' | 'disclosure_and_live'
+    disclosure_name: string | null
     template_ids_data: string[]
     template_version: string
     checklist_data: ChecklistItem[]
@@ -179,7 +181,7 @@ export interface AssessmentArtifact {
     id: string
     name: string
     path: string
-    type: 'report' | 'image' | 'script'
+    type: 'report' | 'image' | 'script' | 'pdf'
     size: number
     timestamp: string
 }
@@ -465,11 +467,19 @@ export const api = {
             ),
         artifactUrl: (id: string, artifactId: string) =>
             `${API_BASE_URL}/risk-assessments/${id}/artifacts/${artifactId}`,
-        start: (deviceId: string, templateIds: string[]) =>
-            fetchAPI<RiskAssessment>('/risk-assessments', {
-                method: 'POST',
-                body: JSON.stringify({ device_id: deviceId, template_ids: templateIds }),
-            }),
+        start: (
+            deviceId: string,
+            templateIds: string[],
+            sourceMode: RiskAssessment['source_mode'] = 'live',
+            disclosure?: File,
+        ) => {
+            const body = new FormData()
+            body.append('device_id', deviceId)
+            body.append('template_ids', JSON.stringify(templateIds))
+            body.append('source_mode', sourceMode)
+            if (disclosure) body.append('disclosure', disclosure)
+            return fetchAPI<RiskAssessment>('/risk-assessments/start', { method: 'POST', body })
+        },
         reviewAnswer: (
             id: string,
             questionId: string,

@@ -1,7 +1,7 @@
 export interface Artifact {
     id: string
     name: string
-    type: 'report' | 'image' | 'graph' | 'script'
+    type: 'report' | 'image' | 'graph' | 'script' | 'pdf'
     size: string
     timestamp: string
     content?: string
