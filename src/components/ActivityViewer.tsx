@@ -50,6 +50,7 @@ interface ActivityViewerProps {
     onDeleteScan?: (scanId: string) => void
     onDeleteAssessment?: (assessmentId: string) => void
     onStopScan?: (scanId: string) => void
+    onStopAssessment?: (assessmentId: string) => void
     onClearAll?: () => void
 }
 
@@ -63,6 +64,7 @@ export function ActivityViewer({
     onDeleteScan,
     onDeleteAssessment,
     onStopScan,
+    onStopAssessment,
     onClearAll,
     onActivityClick,
 }: ActivityViewerProps) {
@@ -182,12 +184,24 @@ export function ActivityViewer({
         }
     }
 
+    const handleStopAssessment = async (e: React.MouseEvent, assessmentId: string) => {
+        e.stopPropagation()
+        if (
+            confirm(
+                'Are you sure you want to stop this risk assessment? It will be marked as cancelled.',
+            )
+        ) {
+            onStopAssessment?.(assessmentId)
+        }
+    }
+
     const renderActivityEntry = (activity: ActivityEntry) => {
         const isSelected = selectedActivityId === activity.id
         const isHovered = hoveredActivityId === activity.id
         const isRunning = activity.status === 'running'
         const isScan = activity.type === 'scan'
-        const canDelete = isScan || (activity.type === 'assessment' && !isRunning)
+        const isAssessment = activity.type === 'assessment'
+        const canDelete = isScan || isAssessment
 
         return (
             <div key={activity.id} className="space-y-2">
@@ -205,6 +219,17 @@ export function ActivityViewer({
                                 className="h-9 w-9 rounded-lg bg-orange-500/90 hover:bg-orange-600 text-white shadow-sm"
                                 onClick={e => handleStopScan(e, activity.id)}
                                 title="Stop scan"
+                            >
+                                <StopCircle className="h-4 w-4" />
+                            </Button>
+                        )}
+                        {isAssessment && isRunning && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-lg bg-orange-500/90 hover:bg-orange-600 text-white shadow-sm"
+                                onClick={e => handleStopAssessment(e, activity.id)}
+                                title="Stop risk assessment"
                             >
                                 <StopCircle className="h-4 w-4" />
                             </Button>
