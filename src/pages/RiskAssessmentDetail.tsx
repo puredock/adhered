@@ -12,6 +12,7 @@ import {
     FileStack,
     Loader2,
     MoreHorizontal,
+    Save,
     Search,
     ShieldCheck,
     Trash2,
@@ -48,6 +49,8 @@ const complianceLabels: Record<string, string> = {
     unknown: 'Unknown',
 }
 
+const CURRENT_REVIEWER = 'Harish Navnit <hrajasek@ic.ac.uk>'
+
 /** Evidence references are run-relative paths, optionally suffixed with a location like "(lines 1-20)". */
 function findArtifact(reference: string, artifacts: AssessmentArtifact[]) {
     const path = reference
@@ -72,8 +75,9 @@ function ReviewItem({
     const [open, setOpen] = useState(answer?.status === 'needs_review')
     const [text, setText] = useState(answer?.answer || '')
     const [comment, setComment] = useState(answer?.operator_comment || '')
+    const [savedComment, setSavedComment] = useState(answer?.operator_comment || '')
     const [compliance, setCompliance] = useState(answer?.compliance || 'unknown')
-    const [reviewer, setReviewer] = useState(answer?.reviewer || '')
+    const reviewer = CURRENT_REVIEWER
     const [artifactToPreview, setArtifactToPreview] = useState<string>()
     const modalArtifacts: Artifact[] = artifacts.map(artifact => ({
         id: artifact.id,
@@ -84,19 +88,33 @@ function ReviewItem({
         url: api.riskAssessments.artifactUrl(assessmentId, artifact.id),
     }))
     const mutation = useMutation({
-        mutationFn: () =>
+        mutationFn: (nextCompliance: string) =>
             api.riskAssessments.reviewAnswer(assessmentId, item.id, {
                 answer: text,
-                compliance,
+                compliance: nextCompliance,
                 operator_comment: comment,
                 reviewer,
                 approve: true,
-            }),
+        }),
         onSuccess: () => {
+            setSavedComment(comment)
             queryClient.invalidateQueries({ queryKey: ['risk-assessment', assessmentId] })
             toast.success(`${item.id} confirmed`)
         },
         onError: error => toast.error(error instanceof Error ? error.message : 'Review failed'),
+    })
+    const commentMutation = useMutation({
+        mutationFn: (value: string) =>
+            api.riskAssessments.reviewAnswer(assessmentId, item.id, {
+                operator_comment: value,
+                reviewer,
+            }),
+        onSuccess: (_result, savedValue) => {
+            setSavedComment(savedValue)
+            queryClient.invalidateQueries({ queryKey: ['risk-assessment', assessmentId] })
+            toast.success('Review comment saved')
+        },
+        onError: error => toast.error(error instanceof Error ? error.message : 'Comment save failed'),
     })
 
     return (
@@ -188,20 +206,47 @@ function ReviewItem({
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor={`${item.id}-comment`}>Review comment</Label>
-                            <Textarea
-                                id={`${item.id}-comment`}
-                                value={comment}
-                                onChange={event => setComment(event.target.value)}
-                                rows={2}
-                                placeholder="Add review context"
-                            />
+                            <div className="relative">
+                                <Textarea
+                                    id={`${item.id}-comment`}
+                                    value={comment}
+                                    onChange={event => setComment(event.target.value)}
+                                    rows={2}
+                                    className={comment !== savedComment ? 'pr-12 pb-10' : undefined}
+                                    placeholder="Add review context"
+                                />
+                                {comment !== savedComment && (
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute bottom-2 right-2 h-8 w-8"
+                                        aria-label="Save review comment"
+                                        title="Save review comment"
+                                        disabled={commentMutation.isPending}
+                                        onClick={() => commentMutation.mutate(comment)}
+                                    >
+                                        {commentMutation.isPending ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <Save className="h-4 w-4" />
+                                        )}
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <div className="space-y-4">
                         <div className="space-y-2">
                             <Label>Conclusion</Label>
-                            <Select value={compliance} onValueChange={setCompliance}>
-                                <SelectTrigger>
+                            <Select
+                                value={compliance}
+                                onValueChange={value => {
+                                    setCompliance(value)
+                                    mutation.mutate(value)
+                                }}
+                            >
+                                <SelectTrigger disabled={mutation.isPending}>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -258,26 +303,6 @@ function ReviewItem({
                                 </p>
                             )}
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor={`${item.id}-reviewer`}>Reviewer</Label>
-                            <Input
-                                id={`${item.id}-reviewer`}
-                                value={reviewer}
-                                onChange={event => setReviewer(event.target.value)}
-                            />
-                        </div>
-                        <Button
-                            className="w-full"
-                            disabled={!reviewer.trim() || mutation.isPending}
-                            onClick={() => mutation.mutate()}
-                        >
-                            {mutation.isPending ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                                <ShieldCheck className="mr-2 h-4 w-4" />
-                            )}
-                            Confirm answer
-                        </Button>
                     </div>
                 </div>
             )}
