@@ -452,6 +452,10 @@ export const api = {
             fetchAPI<{ id: string; deleted: boolean }>(`/risk-assessments/${id}`, {
                 method: 'DELETE',
             }),
+        stop: (id: string) =>
+            fetchAPI<{ id: string; status: 'stopping' }>(`/risk-assessments/${id}/stop`, {
+                method: 'POST',
+            }),
         events: (id: string) =>
             fetchAPI<{ events: AssessmentEvent[]; total: number }>(`/risk-assessments/${id}/events`),
         reprocess: (id: string) =>

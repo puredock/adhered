@@ -602,10 +602,12 @@ const DeviceDetail = () => {
                                         status: (assessment.status === 'pending' ||
                                         assessment.status === 'active'
                                             ? 'running'
+                                            : assessment.status === 'cancelled'
+                                              ? 'cancelled'
                                             : assessment.status === 'needs_review' ||
                                                 assessment.status === 'approved'
                                               ? 'completed'
-                                              : 'failed') as 'running' | 'completed' | 'failed',
+                                              : 'failed') as 'running' | 'completed' | 'failed' | 'cancelled',
                                         startedAt: assessment.created_at,
                                         completedAt: assessment.completed_at || undefined,
                                     }))}
@@ -725,6 +727,21 @@ const DeviceDetail = () => {
                                                         ? error.message
                                                         : 'An error occurred while deleting the assessment.',
                                             })
+                                        }
+                                    }}
+                                    onStopAssessment={async assessmentId => {
+                                        try {
+                                            await api.riskAssessments.stop(assessmentId)
+                                            await queryClient.invalidateQueries({
+                                                queryKey: ['risk-assessments', deviceId],
+                                            })
+                                            toast.success('Stopping risk assessment')
+                                        } catch (error) {
+                                            toast.error(
+                                                error instanceof Error
+                                                    ? error.message
+                                                    : 'Failed to stop risk assessment',
+                                            )
                                         }
                                     }}
                                     onClearAll={async () => {
