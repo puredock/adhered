@@ -20,6 +20,7 @@ interface ArtifactsModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     artifacts: Artifact[]
+    initialSelectedArtifactId?: string
     stepName: string
     logs?: LogEntry[]
     issues?: Issue[]
@@ -34,6 +35,7 @@ export function ArtifactsModal({
     open,
     onOpenChange,
     artifacts,
+    initialSelectedArtifactId,
     stepName,
     logs = [],
     issues = [],
@@ -260,7 +262,10 @@ export function ArtifactsModal({
 
                             {activeTab === 'files' &&
                                 (artifacts.length > 0 ? (
-                                    <ArtifactsFilesTab artifacts={artifacts} />
+                                    <ArtifactsFilesTab
+                                        artifacts={artifacts}
+                                        initialSelectedId={initialSelectedArtifactId}
+                                    />
                                 ) : (
                                     <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
                                         No generated files are available.
