@@ -19,18 +19,32 @@ export function ArtifactsFilesTab({
     const [selectedId, setSelectedId] = useState(initialSelectedId || artifacts[0]?.id)
     const selected = artifacts.find(artifact => artifact.id === selectedId) || artifacts[0]
     const [content, setContent] = useState<string>()
+    const [pdfUrl, setPdfUrl] = useState<string>()
 
     useEffect(() => {
         setContent(undefined)
+        setPdfUrl(undefined)
         if (!selected?.url || selected.type === 'image') return
         const controller = new AbortController()
+        let objectUrl: string | undefined
         fetch(selected.url, { signal: controller.signal })
-            .then(response => (response.ok ? response.text() : Promise.reject(response)))
-            .then(setContent)
+            .then(response => (response.ok ? response : Promise.reject(response)))
+            .then(response => (selected.type === 'pdf' ? response.blob() : response.text()))
+            .then(value => {
+                if (value instanceof Blob) {
+                    objectUrl = URL.createObjectURL(value)
+                    setPdfUrl(objectUrl)
+                } else {
+                    setContent(value)
+                }
+            })
             .catch(error => {
                 if (error?.name !== 'AbortError') setContent('Unable to preview this artifact.')
             })
-        return () => controller.abort()
+        return () => {
+            controller.abort()
+            if (objectUrl) URL.revokeObjectURL(objectUrl)
+        }
     }, [selected?.id, selected?.type, selected?.url])
 
     if (!selected) return null
@@ -87,6 +101,8 @@ export function ArtifactsFilesTab({
                     <div className="p-4">
                         {selected.type === 'image' && selected.url ? (
                             <img src={selected.url} alt={selected.name} className="max-w-full border" />
+                        ) : selected.type === 'pdf' && pdfUrl ? (
+                            <iframe src={pdfUrl} title={selected.name} className="h-[65vh] w-full border" />
                         ) : selected.content || content ? (
                             <pre className="whitespace-pre-wrap break-words font-mono text-xs">
                                 {selected.content || content}

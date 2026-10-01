@@ -12,6 +12,7 @@ interface AssessmentRunLogProps {
     assessmentId: string
     status: 'pending' | 'active' | 'needs_review' | 'approved' | 'failed'
     artifacts: AssessmentArtifact[]
+    sourceMode?: 'live' | 'manual' | 'disclosure_only' | 'disclosure_and_live'
 }
 
 interface StepLog {
@@ -136,7 +137,7 @@ function formatBytes(size: number) {
     return `${(size / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export function AssessmentRunLog({ assessmentId, status, artifacts }: AssessmentRunLogProps) {
+export function AssessmentRunLog({ assessmentId, status, artifacts, sourceMode = 'live' }: AssessmentRunLogProps) {
     const isRunning = status === 'pending' || status === 'active'
     const [expanded, setExpanded] = useState(isRunning)
     const eventsQuery = useQuery({
@@ -227,8 +228,16 @@ export function AssessmentRunLog({ assessmentId, status, artifacts }: Assessment
                             ))
                         ) : (
                             <div className="flex items-center justify-center p-8 text-sm text-muted-foreground">
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Preparing the assessment plan...
+                                {sourceMode === 'manual' ? (
+                                    'Manual assessment: no automated run was started.'
+                                ) : sourceMode === 'disclosure_only' ? (
+                                    'Assessment findings are based on the uploaded manufacturer disclosure.'
+                                ) : (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Preparing the assessment plan...
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

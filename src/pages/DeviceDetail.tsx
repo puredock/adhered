@@ -216,14 +216,22 @@ const DeviceDetail = () => {
             })
         }
     }
-    const handleRiskAssessment = async (templateIds: string[]) => {
+    const handleRiskAssessment = async (
+        templateIds: string[],
+        sourceMode: 'live' | 'manual' | 'disclosure_only' | 'disclosure_and_live',
+        disclosure?: File,
+    ) => {
         setIsStartingAssessment(true)
         try {
-            const assessment = await api.riskAssessments.start(deviceId!, templateIds)
+            const assessment = await api.riskAssessments.start(deviceId!, templateIds, sourceMode, disclosure)
             await queryClient.invalidateQueries({ queryKey: ['risk-assessments', deviceId] })
-            toast.success('Risk assessment started', {
-                description: 'Collecting evidence for operator review...',
-            })
+            const startedMessages = {
+                live: ['Live risk assessment started', 'Collecting evidence from the device for review...'],
+                manual: ['Manual assessment ready', 'Complete the checklist without probing the device.'],
+                disclosure_only: ['Disclosure assessment started', 'Mapping manufacturer statements to the checklist...'],
+                disclosure_and_live: ['Disclosure and live assessment started', 'Autofilling from the disclosure before probing the device...'],
+            } as const
+            toast.success(startedMessages[sourceMode][0], { description: startedMessages[sourceMode][1] })
             navigate(`/risk-assessments/${assessment.id}`)
         } catch (error) {
             toast.error('Failed to start risk assessment', {
