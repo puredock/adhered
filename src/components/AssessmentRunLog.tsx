@@ -145,7 +145,15 @@ export function AssessmentRunLog({ assessmentId, status, artifacts, sourceMode =
         queryFn: () => api.riskAssessments.events(assessmentId),
         refetchInterval: isRunning ? 1000 : false,
     })
-    const events = useMemo(() => eventsQuery.data?.events || [], [eventsQuery.data?.events])
+    const allEvents = useMemo(() => eventsQuery.data?.events || [], [eventsQuery.data?.events])
+    // Attaching a disclosure later starts a new run on the same event stream; show only the latest run.
+    const events = useMemo(() => {
+        let start = 0
+        allEvents.forEach((event, index) => {
+            if (event.type === 'run_start') start = index
+        })
+        return allEvents.slice(start)
+    }, [allEvents])
     const steps = useMemo(() => buildSteps(events), [events])
     const hasAgentTodos = events.some(
         event =>

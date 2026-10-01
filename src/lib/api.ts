@@ -146,6 +146,7 @@ export interface RiskAssessment {
     source_mode: 'live' | 'manual' | 'disclosure_only' | 'disclosure_and_live'
     disclosure_name: string | null
     template_ids_data: string[]
+    templates_data: { id: string; name: string; sources: string[] }[]
     template_version: string
     checklist_data: ChecklistItem[]
     status: 'pending' | 'active' | 'needs_review' | 'approved' | 'failed'
@@ -466,6 +467,14 @@ export const api = {
                 `/risk-assessments/${id}/reprocess`,
                 { method: 'POST' },
             ),
+        attachDisclosure: (id: string, disclosure: File) => {
+            const body = new FormData()
+            body.append('disclosure', disclosure)
+            return fetchAPI<RiskAssessment>(`/risk-assessments/${id}/disclosure`, {
+                method: 'POST',
+                body,
+            })
+        },
         artifactUrl: (id: string, artifactId: string) =>
             `${API_BASE_URL}/risk-assessments/${id}/artifacts/${artifactId}`,
         start: (
