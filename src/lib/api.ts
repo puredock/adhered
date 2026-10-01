@@ -133,6 +133,7 @@ export interface AssessmentAnswer {
     compliance: 'compliant' | 'partial' | 'non_compliant' | 'not_applicable' | 'unknown' | null
     confidence: number | null
     evidence: { summary: string; source: string; reference?: string | null }[]
+    disclosures: { source: string; excerpts: string[]; reference?: string | null }[]
     status: 'not_assessed' | 'needs_review' | 'approved'
     operator_comment: string | null
     reviewer: string | null
