@@ -26,12 +26,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-type ActivityType = 'scans' | 'audits'
+type ActivityType = 'scans' | 'audits' | 'assessments'
 type ActivityTab = 'ongoing' | 'recent'
 
 interface ActivityEntry {
     id: string
-    type: 'scan' | 'audit'
+    type: 'scan' | 'audit' | 'assessment'
     name: string
     status: 'running' | 'completed' | 'failed' | 'cancelled'
     startedAt: string
@@ -43,6 +43,7 @@ interface ActivityViewerProps {
     deviceId: string
     scans?: ActivityEntry[]
     audits?: ActivityEntry[]
+    assessments?: ActivityEntry[]
     onActivityClick?: (activityId: string) => void
     onScanComplete?: (scanId: string, status: string) => void
     onClearStaleScan?: (scanId: string) => void
@@ -55,6 +56,7 @@ export function ActivityViewer({
     deviceId,
     scans = [],
     audits = [],
+    assessments = [],
     onScanComplete,
     onClearStaleScan,
     onDeleteScan,
@@ -109,13 +111,14 @@ export function ActivityViewer({
         return `${diffInDays}d ago`
     }
 
-    const currentActivities = activityType === 'scans' ? scans : audits
+    const currentActivities =
+        activityType === 'scans' ? scans : activityType === 'audits' ? audits : assessments
     const ongoingActivities = currentActivities.filter(a => a.status === 'running')
     const recentActivities = currentActivities.filter(a => a.status !== 'running')
 
     const handleActivityClick = (activityId: string) => {
         const activity = currentActivities.find(item => item.id === activityId)
-        if (activity?.type === 'audit' && onActivityClick) {
+        if ((activity?.type === 'audit' || activity?.type === 'assessment') && onActivityClick) {
             onActivityClick(activityId)
             return
         }
@@ -139,7 +142,11 @@ export function ActivityViewer({
     }
 
     const getActivityTypeLabel = () => {
-        return activityType === 'scans' ? 'Scans' : 'Audits'
+        return activityType === 'scans'
+            ? 'Scans'
+            : activityType === 'audits'
+              ? 'Audits'
+              : 'Assessments'
     }
 
     const handleDeleteScan = async (e: React.MouseEvent, scanId: string, isRunning: boolean) => {
@@ -163,6 +170,7 @@ export function ActivityViewer({
         const isSelected = selectedActivityId === activity.id
         const isHovered = hoveredActivityId === activity.id
         const isRunning = activity.status === 'running'
+        const isScan = activity.type === 'scan'
 
         return (
             <div key={activity.id} className="space-y-2">
@@ -173,7 +181,7 @@ export function ActivityViewer({
                 >
                     {/* Action buttons underneath - revealed on hover */}
                     <div className="absolute left-0 top-0 bottom-0 flex items-center gap-1.5 pl-2">
-                        {isRunning && (
+                        {isScan && isRunning && (
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -184,15 +192,17 @@ export function ActivityViewer({
                                 <StopCircle className="h-4 w-4" />
                             </Button>
                         )}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 rounded-lg bg-destructive/90 hover:bg-destructive text-white shadow-sm"
-                            onClick={e => handleDeleteScan(e, activity.id, isRunning)}
-                            title="Delete scan"
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                        {isScan && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-9 w-9 rounded-lg bg-destructive/90 hover:bg-destructive text-white shadow-sm"
+                                onClick={e => handleDeleteScan(e, activity.id, isRunning)}
+                                title="Delete scan"
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        )}
                     </div>
 
                     {/* Main scan entry button - slides right on hover to reveal actions underneath */}
@@ -236,7 +246,7 @@ export function ActivityViewer({
                     </button>
                 </div>
 
-                {isSelected && (
+                {isSelected && isScan && (
                     <div className="mt-3 ml-8 pl-4 border-l-2 border-muted space-y-2">
                         <PenetrationTestLog
                             scanId={activity.id}
@@ -293,13 +303,24 @@ export function ActivityViewer({
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     onClick={() => setActivityType('audits')}
+                                    disabled
                                     className={cn(
-                                        'gap-2 cursor-pointer',
+                                        'gap-2 cursor-not-allowed opacity-50',
                                         activityType === 'audits' && 'bg-accent',
                                     )}
                                 >
                                     <ClipboardCheck className="w-4 h-4" />
                                     Audits
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setActivityType('assessments')}
+                                    className={cn(
+                                        'gap-2 cursor-pointer',
+                                        activityType === 'assessments' && 'bg-accent',
+                                    )}
+                                >
+                                    <ClipboardCheck className="w-4 h-4" />
+                                    Assessments
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
