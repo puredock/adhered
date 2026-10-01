@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     AlertTriangle,
     ArrowLeft,
+    Archive,
     Bot,
     CheckCircle2,
     ChevronDown,
@@ -10,17 +11,25 @@ import {
     FileCheck2,
     FileStack,
     Loader2,
+    MoreHorizontal,
     Search,
     ShieldCheck,
+    Trash2,
     UserRound,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { AssessmentRunLog } from '@/components/AssessmentRunLog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
@@ -268,6 +277,7 @@ function ReviewItem({
 export default function RiskAssessmentDetail() {
     const { id } = useParams()
     const queryClient = useQueryClient()
+    const navigate = useNavigate()
     const [approver, setApprover] = useState('')
     const [sourceFilter, setSourceFilter] = useState('all')
     const [reviewFilter, setReviewFilter] = useState('all')
@@ -288,6 +298,9 @@ export default function RiskAssessmentDetail() {
         queryFn: () => api.devices.get(assessment!.device_id),
         enabled: !!assessment?.device_id,
     })
+    const deviceDetailsPath = deviceQuery.data
+        ? `/networks/${deviceQuery.data.network_id}/devices/${deviceQuery.data.id}`
+        : '/networks'
     const answers = useMemo(
         () => new Map(assessment?.answers_data.map(answer => [answer.question_id, answer]) || []),
         [assessment],
@@ -335,6 +348,18 @@ export default function RiskAssessmentDetail() {
         onError: error =>
             toast.error(error instanceof Error ? error.message : 'Unable to import generated findings'),
     })
+    const deleteMutation = useMutation({
+        mutationFn: () => api.riskAssessments.delete(id!),
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ['risk-assessments'] })
+            toast.success('Assessment deleted', {
+                description: 'The assessment has been removed from the history.',
+            })
+            navigate(deviceDetailsPath)
+        },
+        onError: error =>
+            toast.error(error instanceof Error ? error.message : 'Failed to delete assessment'),
+    })
 
     useEffect(() => {
         if (assessment?.status === 'needs_review' && populated === 0 && !recoveryAttempted.current) {
@@ -361,11 +386,7 @@ export default function RiskAssessmentDetail() {
             <header className="sticky top-0 z-30 border-b bg-card">
                 <div className="mx-auto flex max-w-[1500px] items-center gap-4 px-6 py-4">
                     <Link
-                        to={
-                            deviceQuery.data
-                                ? `/networks/${deviceQuery.data.network_id}/devices/${deviceQuery.data.id}`
-                                : '/networks'
-                        }
+                        to={deviceDetailsPath}
                     >
                         <Button variant="ghost" size="icon">
                             <ArrowLeft className="h-5 w-5" />
@@ -386,6 +407,40 @@ export default function RiskAssessmentDetail() {
                         </p>
                     </div>
                     <Badge variant="outline">{assessment.access_mode}</Badge>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="icon" aria-label="Assessment actions">
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem disabled className="cursor-not-allowed opacity-50">
+                                <Archive className="mr-2 h-4 w-4" />
+                                Archive
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                disabled={
+                                    deleteMutation.isPending ||
+                                    assessment.status === 'pending' ||
+                                    assessment.status === 'active'
+                                }
+                                onSelect={event => {
+                                    event.preventDefault()
+                                    if (
+                                        window.confirm(
+                                            'Delete this risk assessment? This will permanently remove it from the history.',
+                                        )
+                                    ) {
+                                        deleteMutation.mutate()
+                                    }
+                                }}
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </header>
             <div
