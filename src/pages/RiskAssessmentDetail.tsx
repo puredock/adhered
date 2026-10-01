@@ -283,6 +283,11 @@ export default function RiskAssessmentDetail() {
                 : false,
     })
     const assessment = assessmentQuery.data
+    const deviceQuery = useQuery({
+        queryKey: ['device', assessment?.device_id],
+        queryFn: () => api.devices.get(assessment!.device_id),
+        enabled: !!assessment?.device_id,
+    })
     const answers = useMemo(
         () => new Map(assessment?.answers_data.map(answer => [answer.question_id, answer]) || []),
         [assessment],
@@ -355,7 +360,13 @@ export default function RiskAssessmentDetail() {
         <main className="min-h-screen flex-1 bg-background">
             <header className="sticky top-0 z-30 border-b bg-card">
                 <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
-                    <Link to={`/networks`}>
+                    <Link
+                        to={
+                            deviceQuery.data
+                                ? `/networks/${deviceQuery.data.network_id}/devices/${deviceQuery.data.id}`
+                                : '/networks'
+                        }
+                    >
                         <Button variant="ghost" size="icon">
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
