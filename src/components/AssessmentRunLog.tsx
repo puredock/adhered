@@ -97,6 +97,36 @@ function buildSteps(events: AssessmentEvent[]): RunStep[] {
         const log = toLog(event)
         if (log && current && steps[current - 1]) steps[current - 1].logs.push(log)
     }
+
+    // Claude's TodoWrite tool is the closest representation of its live plan.
+    // Prefer that plan when available; keep the backend milestones as fallback.
+    const latestTodos = [...events]
+        .reverse()
+        .find(event => event.type === 'tool_use' && event.data?.name === 'TodoWrite')
+        ?.data?.input?.todos as
+        | { content?: string; activeForm?: string; status?: string }[]
+        | undefined
+    if (latestTodos?.length) {
+        const todoSteps = latestTodos.map((todo, index) => {
+            const todoStatus = todo.status?.toLowerCase()
+            return {
+                index: index + 1,
+                name: todo.content || todo.activeForm || 'Untitled task',
+                status: (
+                    todoStatus === 'completed' || todoStatus === 'complete'
+                        ? 'success'
+                        : todoStatus === 'in_progress' || todoStatus === 'in progress'
+                          ? 'running'
+                          : 'pending'
+                ) as RunStep['status'],
+                logs: [],
+            }
+        })
+        const agentLogs = steps[1]?.logs || []
+        const activeIndex = todoSteps.findIndex(step => step.status === 'running')
+        todoSteps[activeIndex < 0 ? 0 : activeIndex].logs = agentLogs
+        return todoSteps
+    }
     return steps
 }
 
@@ -116,6 +146,13 @@ export function AssessmentRunLog({ assessmentId, status, artifacts }: Assessment
     })
     const events = useMemo(() => eventsQuery.data?.events || [], [eventsQuery.data?.events])
     const steps = useMemo(() => buildSteps(events), [events])
+    const hasAgentTodos = events.some(
+        event =>
+            event.type === 'tool_use' &&
+            event.data?.name === 'TodoWrite' &&
+            Array.isArray(event.data.input?.todos) &&
+            event.data.input.todos.length > 0,
+    )
     const completedSteps = steps.filter(step => step.status === 'success').length
     const failedSteps = steps.filter(step => step.status === 'error').length
     const progress = steps.length ? ((completedSteps + failedSteps) / steps.length) * 100 : 0
@@ -178,7 +215,14 @@ export function AssessmentRunLog({ assessmentId, status, artifacts }: Assessment
                                     status={step.status}
                                     logs={step.logs}
                                     severity="medium"
-                                    artifacts={step.index === 2 ? modalArtifacts : []}
+                                    artifacts={
+                                        step.index ===
+                                        (hasAgentTodos
+                                            ? Math.max(1, steps.find(item => item.status === 'running')?.index || 1)
+                                            : 2)
+                                            ? modalArtifacts
+                                            : []
+                                    }
                                 />
                             ))
                         ) : (
