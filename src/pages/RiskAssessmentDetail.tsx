@@ -14,10 +14,15 @@ import {
     ExternalLink,
     FileStack,
     FileText,
+    FolderOpen,
     Loader2,
     MessageSquare,
     MessageSquareText,
     MoreHorizontal,
+    Paperclip,
+    PenLine,
+    Radar,
+    RefreshCw,
     Save,
     Search,
     ShieldCheck,
@@ -47,7 +52,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { Toggle } from '@/components/ui/toggle'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { type AssessmentAnswer, type AssessmentArtifact, api, type ChecklistItem } from '@/lib/api'
+import {
+    type AssessmentAnswer,
+    type AssessmentArtifact,
+    api,
+    type ChecklistItem,
+    type RiskAssessment,
+} from '@/lib/api'
 import { cn } from '@/lib/utils'
 
 const complianceLabels: Record<string, string> = {
@@ -462,6 +473,110 @@ function ReviewItem({
     )
 }
 
+const sourceChannels = [
+    { key: 'disclosure', label: 'Manufacturer disclosure', icon: FileText },
+    { key: 'live', label: 'Live probe', icon: Radar },
+] as const
+
+const sourceModeLabels: Record<RiskAssessment['source_mode'], string> = {
+    disclosure_only: 'MDS2 only',
+    live: 'Live probe',
+    disclosure_and_live: 'MDS2 + live probe',
+    manual: 'Manual',
+}
+
+/** Shows which answer sources fed this assessment; used sources light up and ping while a run is active. */
+function SourceIndicator({ mode, running }: { mode: RiskAssessment['source_mode']; running: boolean }) {
+    const used = {
+        disclosure: mode === 'disclosure_only' || mode === 'disclosure_and_live',
+        live: mode === 'live' || mode === 'disclosure_and_live',
+    }
+    return (
+        <div className="flex items-center gap-2.5 rounded-full border bg-background py-1 pl-1 pr-3">
+            <div className="flex items-center">
+                {mode === 'manual' ? (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-foreground">
+                        <PenLine className="h-3.5 w-3.5" />
+                    </span>
+                ) : (
+                    sourceChannels.map(({ key, label, icon: Icon }, index) => (
+                        <Tooltip key={key}>
+                            <TooltipTrigger asChild>
+                                <span
+                                    className={cn(
+                                        'relative flex h-7 w-7 items-center justify-center rounded-full border-2 border-background',
+                                        index > 0 && '-ml-1.5',
+                                        used[key]
+                                            ? 'bg-primary/15 text-primary'
+                                            : 'bg-muted text-muted-foreground/40',
+                                    )}
+                                >
+                                    {used[key] && running && (
+                                        <span className="absolute inset-0 rounded-full bg-primary/30 motion-safe:animate-ping" />
+                                    )}
+                                    <Icon className="relative h-3.5 w-3.5" />
+                                </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                {label}
+                                {used[key] ? '' : ' not used'}
+                            </TooltipContent>
+                        </Tooltip>
+                    ))
+                )}
+            </div>
+            <span className="text-sm font-medium">{sourceModeLabels[mode]}</span>
+        </div>
+    )
+}
+
+function SourceRow({
+    label,
+    title,
+    count,
+    icon: Icon,
+    active,
+    heading,
+    onSelect,
+}: {
+    label: string
+    title?: string
+    count: number
+    icon?: typeof FileText
+    active: boolean
+    heading?: boolean
+    onSelect?: () => void
+}) {
+    return (
+        <button
+            type="button"
+            title={title || label}
+            disabled={!onSelect}
+            aria-current={active ? 'true' : undefined}
+            onClick={onSelect}
+            className={cn(
+                'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors disabled:cursor-default',
+                heading ? 'font-medium text-foreground' : 'text-muted-foreground',
+                onSelect && 'hover:bg-muted/50 hover:text-foreground',
+                active && 'bg-primary/10 text-foreground hover:bg-primary/10',
+            )}
+        >
+            {Icon && (
+                <Icon
+                    className={cn(
+                        'h-3.5 w-3.5 shrink-0',
+                        heading ? 'text-primary' : active ? 'text-primary' : 'text-muted-foreground/70',
+                    )}
+                />
+            )}
+            <span className="min-w-0 flex-1 truncate">{label}</span>
+            <span className="shrink-0 text-xs font-normal tabular-nums text-muted-foreground">
+                {count}
+            </span>
+        </button>
+    )
+}
+
 export default function RiskAssessmentDetail() {
     const { id } = useParams()
     const queryClient = useQueryClient()
@@ -471,6 +586,8 @@ export default function RiskAssessmentDetail() {
     const [reviewFilter, setReviewFilter] = useState('all')
     const [search, setSearch] = useState('')
     const recoveryAttempted = useRef(false)
+    const disclosureInput = useRef<HTMLInputElement>(null)
+    const [previewDisclosure, setPreviewDisclosure] = useState(false)
     const assessmentQuery = useQuery({
         queryKey: ['risk-assessment', id],
         queryFn: () => api.riskAssessments.get(id!),
@@ -493,11 +610,41 @@ export default function RiskAssessmentDetail() {
         () => new Map(assessment?.answers_data.map(answer => [answer.question_id, answer]) || []),
         [assessment],
     )
+    const counts = useMemo(() => {
+        const result = new Map<string, number>()
+        for (const item of assessment?.checklist_data || []) {
+            result.set(item.source, (result.get(item.source) || 0) + 1)
+        }
+        return result
+    }, [assessment?.checklist_data])
+    // Group documents under the template they came from; documents with no known template go under "Other".
+    const sourceTree = useMemo(() => {
+        const templates = (assessment?.templates_data || [])
+            .map(template => ({
+                ...template,
+                sources: template.sources.filter(source => counts.has(source)),
+            }))
+            .filter(template => template.sources.length)
+        const claimed = new Set(templates.flatMap(template => template.sources))
+        const orphans = [...counts.keys()].filter(source => !claimed.has(source))
+        return orphans.length
+            ? [...templates, { id: 'other', name: 'Other', sources: orphans }]
+            : templates
+    }, [assessment?.templates_data, counts])
     const sections = useMemo(() => {
+        const visibleSources =
+            sourceFilter === 'all'
+                ? null
+                : new Set(
+                      sourceFilter.startsWith('template:')
+                          ? sourceTree.find(template => `template:${template.id}` === sourceFilter)
+                                ?.sources
+                          : [sourceFilter],
+                  )
         const grouped = new Map<string, ChecklistItem[]>()
         for (const item of assessment?.checklist_data || []) {
             const answer = answers.get(item.id)
-            if (sourceFilter !== 'all' && item.source !== sourceFilter) continue
+            if (visibleSources && !visibleSources.has(item.source)) continue
             if (reviewFilter === 'unanswered' && answer?.answer?.trim()) continue
             if (reviewFilter === 'needs_review' && answer?.status !== 'needs_review') continue
             if (reviewFilter === 'approved' && answer?.status !== 'approved') continue
@@ -511,16 +658,18 @@ export default function RiskAssessmentDetail() {
             grouped.set(key, [...(grouped.get(key) || []), item])
         }
         return grouped
-    }, [assessment?.checklist_data, answers, reviewFilter, search, sourceFilter])
-    const sources = useMemo(
-        () => [...new Set((assessment?.checklist_data || []).map(item => item.source))],
-        [assessment?.checklist_data],
-    )
+    }, [assessment?.checklist_data, answers, reviewFilter, search, sourceFilter, sourceTree])
     const approved = assessment?.answers_data.filter(answer => answer.status === 'approved').length || 0
     const needsReview =
         assessment?.answers_data.filter(answer => answer.status === 'needs_review').length || 0
     const populated = assessment?.answers_data.filter(answer => answer.answer?.trim()).length || 0
     const total = assessment?.checklist_data.length || 0
+    const disclosureArtifact = assessment?.artifacts_data?.find(
+        artifact => artifact.id === 'mds2-disclosure',
+    )
+    const citedItems = assessment?.answers_data.filter(answer => answer.disclosures?.length).length || 0
+    const canAttachDisclosure =
+        !!assessment && !['pending', 'active', 'approved'].includes(assessment.status)
     const approveMutation = useMutation({
         mutationFn: () => api.riskAssessments.approve(id!, approver),
         onSuccess: () => {
@@ -528,6 +677,18 @@ export default function RiskAssessmentDetail() {
             toast.success('Risk assessment approved')
         },
         onError: error => toast.error(error instanceof Error ? error.message : 'Approval failed'),
+    })
+    const disclosureMutation = useMutation({
+        mutationFn: (file: File) => api.riskAssessments.attachDisclosure(id!, file),
+        onSuccess: result => {
+            queryClient.invalidateQueries({ queryKey: ['risk-assessment', id] })
+            queryClient.invalidateQueries({ queryKey: ['risk-assessment-events', id] })
+            toast.success(`Autofilling from ${result.disclosure_name}`, {
+                description: 'Existing answers are kept; only empty items are filled.',
+            })
+        },
+        onError: error =>
+            toast.error(error instanceof Error ? error.message : 'Unable to attach disclosure'),
     })
     const recoveryMutation = useMutation({
         mutationFn: () => api.riskAssessments.reprocess(id!),
@@ -596,17 +757,19 @@ export default function RiskAssessmentDetail() {
                             </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                            {assessment.id} · Template {assessment.template_version} ·{' '}
-                            {assessment.source_mode === 'manual'
-                                ? 'Manual'
-                                : assessment.source_mode === 'disclosure_only'
-                                  ? `MDS2 only${assessment.disclosure_name ? ` · ${assessment.disclosure_name}` : ''}`
-                                  : assessment.source_mode === 'disclosure_and_live'
-                                    ? `MDS2 + live${assessment.disclosure_name ? ` · ${assessment.disclosure_name}` : ''}`
-                                    : 'Live assessment'}
+                            <span className="font-mono text-xs">{assessment.id}</span>
+                            <span className="mx-2 text-border">|</span>
+                            Started{' '}
+                            {new Date(assessment.created_at).toLocaleString(undefined, {
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                            })}
                         </p>
                     </div>
-                    <Badge variant="outline">{assessment.access_mode}</Badge>
+                    <SourceIndicator
+                        mode={assessment.source_mode}
+                        running={assessment.status === 'pending' || assessment.status === 'active'}
+                    />
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="icon" aria-label="Assessment actions">
@@ -654,36 +817,150 @@ export default function RiskAssessmentDetail() {
                 {total > 0 && (
                     <aside className="hidden space-y-2 xl:sticky xl:top-24 xl:block xl:self-start">
                         <h3 className="px-1 text-sm font-medium">Sources</h3>
-                        <nav className="divide-y rounded-md border bg-card">
-                            {[
-                                { value: 'all', label: 'All documents', count: total },
-                                ...sources.map(source => ({
-                                    value: source,
-                                    label: source,
-                                    count: assessment.checklist_data.filter(
-                                        item => item.source === source,
-                                    ).length,
-                                })),
-                            ].map(({ value, label, count }) => (
-                                <button
-                                    key={value}
-                                    type="button"
-                                    title={label}
-                                    aria-current={sourceFilter === value ? 'true' : undefined}
-                                    onClick={() => setSourceFilter(value)}
-                                    className={cn(
-                                        'flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm text-muted-foreground transition-colors first:rounded-t-md last:rounded-b-md hover:bg-muted/40 hover:text-foreground',
-                                        sourceFilter === value &&
-                                            'bg-primary/5 font-medium text-foreground hover:bg-primary/10',
-                                    )}
-                                >
-                                    <span className="min-w-0 flex-1 truncate">{label}</span>
-                                    <span className="shrink-0 text-xs font-normal tabular-nums text-muted-foreground">
-                                        {count}
-                                    </span>
-                                </button>
+                        <nav className="rounded-md border bg-card p-1 text-sm">
+                            <SourceRow
+                                label="All documents"
+                                count={total}
+                                active={sourceFilter === 'all'}
+                                onSelect={() => setSourceFilter('all')}
+                            />
+                            <div aria-hidden className="mx-2 my-1 h-px bg-border" />
+                            {sourceTree.map(template => (
+                                <div key={template.id} className="py-0.5">
+                                    <SourceRow
+                                        label={template.name}
+                                        count={template.sources.reduce(
+                                            (sum, source) => sum + (counts.get(source) || 0),
+                                            0,
+                                        )}
+                                        icon={FolderOpen}
+                                        active={sourceFilter === `template:${template.id}`}
+                                        onSelect={() =>
+                                            setSourceFilter(
+                                                template.sources.length === 1
+                                                    ? template.sources[0]
+                                                    : `template:${template.id}`,
+                                            )
+                                        }
+                                        heading
+                                    />
+                                    <div className="relative ml-[1.15rem] border-l pl-1.5">
+                                        {template.sources.map(source => (
+                                            <SourceRow
+                                                key={source}
+                                                label={source.replace(/_/g, ' ')}
+                                                title={source}
+                                                count={counts.get(source) || 0}
+                                                icon={FileText}
+                                                active={sourceFilter === source}
+                                                onSelect={() => setSourceFilter(source)}
+                                            />
+                                        ))}
+                                    </div>
+                                </div>
                             ))}
                         </nav>
+                        <div aria-hidden className="mx-1 !my-5 h-px bg-border" />
+                        <h3 className="px-1 text-sm font-medium">Manufacturer disclosure</h3>
+                        <div className="rounded-md border bg-card">
+                            {disclosureArtifact ? (
+                                <div className="flex items-center gap-2 py-1.5 pl-3 pr-1.5">
+                                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                    <button
+                                        type="button"
+                                        title={assessment.disclosure_name || disclosureArtifact.name}
+                                        onClick={() => setPreviewDisclosure(true)}
+                                        className="min-w-0 flex-1 truncate py-1 text-left text-sm hover:text-primary hover:underline"
+                                    >
+                                        {assessment.disclosure_name || disclosureArtifact.name}
+                                    </button>
+                                    {canAttachDisclosure && (
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-7 w-7 shrink-0 text-muted-foreground"
+                                                    aria-label="Replace disclosure"
+                                                    disabled={disclosureMutation.isPending}
+                                                    onClick={() => disclosureInput.current?.click()}
+                                                >
+                                                    {disclosureMutation.isPending ? (
+                                                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    ) : (
+                                                        <RefreshCw className="h-3.5 w-3.5" />
+                                                    )}
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Replace and autofill again</TooltipContent>
+                                        </Tooltip>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="space-y-2.5 px-3 py-3">
+                                    <p className="text-xs text-muted-foreground">
+                                        Attach an MDS2 to cite manufacturer statements and fill empty
+                                        answers.
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 w-full"
+                                        disabled={!canAttachDisclosure || disclosureMutation.isPending}
+                                        onClick={() => disclosureInput.current?.click()}
+                                    >
+                                        {disclosureMutation.isPending ? (
+                                            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                        ) : (
+                                            <Paperclip className="mr-1.5 h-3.5 w-3.5" />
+                                        )}
+                                        Attach
+                                    </Button>
+                                </div>
+                            )}
+                            {disclosureArtifact && citedItems > 0 && (
+                                <p className="border-t px-3 py-2 text-xs text-muted-foreground">
+                                    Cited on {citedItems} of {total} items
+                                </p>
+                            )}
+                        </div>
+                        <input
+                            ref={disclosureInput}
+                            type="file"
+                            hidden
+                            accept=".pdf,.docx,.xlsx,.pptx,.html,.htm,.md,.txt"
+                            onChange={event => {
+                                const file = event.target.files?.[0]
+                                if (file) disclosureMutation.mutate(file)
+                                event.target.value = ''
+                            }}
+                        />
+                        {disclosureArtifact && (
+                            <ArtifactsModal
+                                open={previewDisclosure}
+                                onOpenChange={setPreviewDisclosure}
+                                artifacts={[
+                                    {
+                                        id: disclosureArtifact.id,
+                                        name: disclosureArtifact.name,
+                                        type: disclosureArtifact.type,
+                                        size:
+                                            disclosureArtifact.size < 1024
+                                                ? `${disclosureArtifact.size} B`
+                                                : `${(disclosureArtifact.size / 1024).toFixed(1)} KB`,
+                                        timestamp: disclosureArtifact.timestamp,
+                                        url: api.riskAssessments.artifactUrl(
+                                            assessment.id,
+                                            disclosureArtifact.id,
+                                        ),
+                                    },
+                                ]}
+                                initialSelectedArtifactId={disclosureArtifact.id}
+                                stepName="Manufacturer disclosure"
+                            />
+                        )}
                     </aside>
                 )}
                 <div className="space-y-5">
@@ -754,7 +1031,7 @@ export default function RiskAssessmentDetail() {
                             <CardContent className="p-0">
                                 {items.map(item => (
                                     <ReviewItem
-                                        key={item.id}
+                                        key={`${item.id}-${assessment.completed_at}`}
                                         item={item}
                                         answer={answers.get(item.id)}
                                         assessmentId={assessment.id}
