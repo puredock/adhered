@@ -9,8 +9,14 @@ function formatSize(size: string) {
     return size || 'Unknown size'
 }
 
-export function ArtifactsFilesTab({ artifacts }: { artifacts: Artifact[] }) {
-    const [selectedId, setSelectedId] = useState(artifacts[0]?.id)
+export function ArtifactsFilesTab({
+    artifacts,
+    initialSelectedId,
+}: {
+    artifacts: Artifact[]
+    initialSelectedId?: string
+}) {
+    const [selectedId, setSelectedId] = useState(initialSelectedId || artifacts[0]?.id)
     const selected = artifacts.find(artifact => artifact.id === selectedId) || artifacts[0]
     const [content, setContent] = useState<string>()
 

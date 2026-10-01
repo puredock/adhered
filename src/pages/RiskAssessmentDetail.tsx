@@ -21,6 +21,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { AssessmentRunLog } from '@/components/AssessmentRunLog'
+import { ArtifactsModal } from '@/components/ArtifactsModal'
+import type { Artifact } from '@/components/artifacts/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -72,6 +74,15 @@ function ReviewItem({
     const [comment, setComment] = useState(answer?.operator_comment || '')
     const [compliance, setCompliance] = useState(answer?.compliance || 'unknown')
     const [reviewer, setReviewer] = useState(answer?.reviewer || '')
+    const [artifactToPreview, setArtifactToPreview] = useState<string>()
+    const modalArtifacts: Artifact[] = artifacts.map(artifact => ({
+        id: artifact.id,
+        name: artifact.name,
+        type: artifact.type,
+        size: artifact.size < 1024 ? `${artifact.size} B` : `${(artifact.size / 1024).toFixed(1)} KB`,
+        timestamp: artifact.timestamp,
+        url: api.riskAssessments.artifactUrl(assessmentId, artifact.id),
+    }))
     const mutation = useMutation({
         mutationFn: () =>
             api.riskAssessments.reviewAnswer(assessmentId, item.id, {
@@ -221,18 +232,14 @@ function ReviewItem({
                                                 </p>
                                                 {evidence.reference &&
                                                     (artifact ? (
-                                                        <a
-                                                            href={api.riskAssessments.artifactUrl(
-                                                                assessmentId,
-                                                                artifact.id,
-                                                            )}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className="mt-1 inline-flex items-center gap-1 break-all font-mono text-xs text-primary hover:underline"
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setArtifactToPreview(artifact.id)}
+                                                            className="mt-1 inline-flex items-center gap-1 break-all text-left font-mono text-xs text-primary hover:underline"
                                                         >
                                                             {evidence.reference}
                                                             <ExternalLink className="h-3 w-3 shrink-0" />
-                                                        </a>
+                                                        </button>
                                                     ) : (
                                                         <p
                                                             className="mt-1 break-all font-mono text-xs text-muted-foreground"
@@ -274,6 +281,16 @@ function ReviewItem({
                     </div>
                 </div>
             )}
+            <ArtifactsModal
+                key={artifactToPreview || 'closed'}
+                open={Boolean(artifactToPreview)}
+                onOpenChange={open => {
+                    if (!open) setArtifactToPreview(undefined)
+                }}
+                artifacts={modalArtifacts}
+                initialSelectedArtifactId={artifactToPreview}
+                stepName="Assessment artifacts"
+            />
         </div>
     )
 }
