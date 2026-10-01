@@ -104,8 +104,9 @@ function ReviewItem({
                 )}
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono text-xs text-muted-foreground">{item.id}</span>
-                        <span className="font-medium">{item.title}</span>
+                        <span className="font-medium" title={item.id}>
+                            {item.title}
+                        </span>
                         <Badge variant="outline" className="capitalize">
                             {item.automation === 'human' ? (
                                 <UserRound className="mr-1 h-3 w-3" />
@@ -127,6 +128,9 @@ function ReviewItem({
             {open && (
                 <div className="grid gap-4 border-t bg-background px-4 py-4 lg:grid-cols-[1fr_320px]">
                     <div className="space-y-4">
+                        <div>
+                            <p className="font-mono text-xs text-muted-foreground">{item.id}</p>
+                        </div>
                         <div>
                             <p className="text-sm font-medium">Requirement</p>
                             <p className="mt-1 text-sm text-muted-foreground">{item.requirement}</p>
