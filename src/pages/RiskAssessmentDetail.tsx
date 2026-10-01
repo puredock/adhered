@@ -359,7 +359,7 @@ export default function RiskAssessmentDetail() {
     return (
         <main className="min-h-screen flex-1 bg-background">
             <header className="sticky top-0 z-30 border-b bg-card">
-                <div className="mx-auto flex max-w-7xl items-center gap-4 px-6 py-4">
+                <div className="mx-auto flex max-w-[1500px] items-center gap-4 px-6 py-4">
                     <Link
                         to={
                             deviceQuery.data
