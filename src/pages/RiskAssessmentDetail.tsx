@@ -1,16 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
     AlertTriangle,
-    ArrowLeft,
     Archive,
+    ArrowLeft,
     Bot,
     CheckCircle2,
     ChevronDown,
     CircleDashed,
+    CircleHelp,
+    CircleMinus,
+    CircleX,
+    Contrast,
     ExternalLink,
     FileCheck2,
     FileStack,
+    FileText,
     Loader2,
+    MessageSquare,
+    MessageSquareText,
     MoreHorizontal,
     Save,
     Search,
@@ -21,8 +28,8 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { AssessmentRunLog } from '@/components/AssessmentRunLog'
 import { ArtifactsModal } from '@/components/ArtifactsModal'
+import { AssessmentRunLog } from '@/components/AssessmentRunLog'
 import type { Artifact } from '@/components/artifacts/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -38,6 +45,9 @@ import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { Toggle } from '@/components/ui/toggle'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { type AssessmentAnswer, type AssessmentArtifact, api, type ChecklistItem } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -48,6 +58,34 @@ const complianceLabels: Record<string, string> = {
     not_applicable: 'Not applicable',
     unknown: 'Unknown',
 }
+
+const conclusionOptions = [
+    {
+        value: 'compliant',
+        icon: CheckCircle2,
+        className: 'aria-checked:bg-success/15 aria-checked:text-success',
+    },
+    {
+        value: 'partial',
+        icon: Contrast,
+        className: 'aria-checked:bg-warning/15 aria-checked:text-warning',
+    },
+    {
+        value: 'non_compliant',
+        icon: CircleX,
+        className: 'aria-checked:bg-destructive/15 aria-checked:text-destructive',
+    },
+    {
+        value: 'not_applicable',
+        icon: CircleMinus,
+        className: 'aria-checked:bg-muted aria-checked:text-foreground',
+    },
+    {
+        value: 'unknown',
+        icon: CircleHelp,
+        className: 'aria-checked:bg-muted aria-checked:text-foreground',
+    },
+]
 
 const CURRENT_REVIEWER = 'Harish Navnit <hrajasek@ic.ac.uk>'
 
@@ -76,7 +114,8 @@ function ReviewItem({
     const [text, setText] = useState(answer?.answer || '')
     const [comment, setComment] = useState(answer?.operator_comment || '')
     const [savedComment, setSavedComment] = useState(answer?.operator_comment || '')
-    const [compliance, setCompliance] = useState(answer?.compliance || 'unknown')
+    const [compliance, setCompliance] = useState<string>(answer?.compliance || 'unknown')
+    const [commentOpen, setCommentOpen] = useState(Boolean(answer?.operator_comment))
     const reviewer = CURRENT_REVIEWER
     const [artifactToPreview, setArtifactToPreview] = useState<string>()
     const modalArtifacts: Artifact[] = artifacts.map(artifact => ({
@@ -95,10 +134,12 @@ function ReviewItem({
                 operator_comment: comment,
                 reviewer,
                 approve: true,
-        }),
+            }),
         onSuccess: () => {
             setSavedComment(comment)
-            queryClient.invalidateQueries({ queryKey: ['risk-assessment', assessmentId] })
+            queryClient.invalidateQueries({
+                queryKey: ['risk-assessment', assessmentId],
+            })
             toast.success(`${item.id} confirmed`)
         },
         onError: error => toast.error(error instanceof Error ? error.message : 'Review failed'),
@@ -111,7 +152,9 @@ function ReviewItem({
             }),
         onSuccess: (_result, savedValue) => {
             setSavedComment(savedValue)
-            queryClient.invalidateQueries({ queryKey: ['risk-assessment', assessmentId] })
+            queryClient.invalidateQueries({
+                queryKey: ['risk-assessment', assessmentId],
+            })
             toast.success('Review comment saved')
         },
         onError: error => toast.error(error instanceof Error ? error.message : 'Comment save failed'),
@@ -155,108 +198,192 @@ function ReviewItem({
                 <ChevronDown className={cn('h-4 w-4 transition-transform', open && 'rotate-180')} />
             </button>
             {open && (
-                <div className="grid gap-4 border-t bg-background px-4 py-4 lg:grid-cols-[1fr_320px]">
-                    <div className="space-y-4">
-                        <div>
-                            <p className="font-mono text-xs text-muted-foreground">{item.id}</p>
-                        </div>
-                        <div>
-                            <p className="text-sm font-medium">Requirement</p>
-                            <p className="mt-1 text-sm text-muted-foreground">{item.requirement}</p>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor={`${item.id}-answer`}>Assessment response</Label>
-                            {item.response_type === 'boolean' ||
-                            item.response_type === 'single_choice' ? (
-                                <Select value={text} onValueChange={setText}>
-                                    <SelectTrigger id={`${item.id}-answer`}>
-                                        <SelectValue placeholder="Select a response" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {(item.response_type === 'boolean'
-                                            ? ['Yes', 'No', 'Not applicable']
-                                            : item.response_options
-                                        ).map(option => (
-                                            <SelectItem key={option} value={option}>
-                                                {option}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            ) : item.response_type === 'number' || item.response_type === 'date' ? (
-                                <Input
-                                    id={`${item.id}-answer`}
-                                    type={item.response_type}
-                                    value={text}
-                                    onChange={event => setText(event.target.value)}
-                                />
-                            ) : (
-                                <Textarea
-                                    id={`${item.id}-answer`}
-                                    value={text}
-                                    onChange={event => setText(event.target.value)}
-                                    rows={item.response_type === 'table' ? 6 : 4}
-                                    placeholder={
-                                        item.response_type === 'attachment'
-                                            ? 'Describe or reference the supplied attachment'
-                                            : 'Enter the operator or vendor response'
-                                    }
-                                />
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor={`${item.id}-comment`}>Review comment</Label>
-                            <div className="relative">
-                                <Textarea
-                                    id={`${item.id}-comment`}
-                                    value={comment}
-                                    onChange={event => setComment(event.target.value)}
-                                    rows={2}
-                                    className={comment !== savedComment ? 'pr-12 pb-10' : undefined}
-                                    placeholder="Add review context"
-                                />
-                                {comment !== savedComment && (
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute bottom-2 right-2 h-8 w-8"
-                                        aria-label="Save review comment"
-                                        title="Save review comment"
-                                        disabled={commentMutation.isPending}
-                                        onClick={() => commentMutation.mutate(comment)}
+                <div className="border-t bg-background px-4 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-mono text-xs text-muted-foreground">{item.id}</p>
+                        <div className="flex items-center gap-2">
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Toggle
+                                        size="sm"
+                                        variant="outline"
+                                        pressed={commentOpen}
+                                        onPressedChange={setCommentOpen}
+                                        aria-label="Review comment"
+                                        className="relative h-8 w-8 px-0 aria-pressed:bg-muted"
                                     >
-                                        {commentMutation.isPending ? (
-                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        {savedComment ? (
+                                            <MessageSquareText className="h-4 w-4" />
                                         ) : (
-                                            <Save className="h-4 w-4" />
+                                            <MessageSquare className="h-4 w-4" />
                                         )}
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    <div className="space-y-4">
-                        <div className="space-y-2">
-                            <Label>Conclusion</Label>
-                            <Select
+                                        {comment !== savedComment && (
+                                            <span className="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                                        )}
+                                    </Toggle>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    {savedComment ? 'Edit comment' : 'Add comment'}
+                                </TooltipContent>
+                            </Tooltip>
+                            <ToggleGroup
+                                type="single"
                                 value={compliance}
                                 onValueChange={value => {
+                                    if (!value || value === compliance) return
                                     setCompliance(value)
                                     mutation.mutate(value)
                                 }}
+                                disabled={mutation.isPending}
+                                aria-label="Conclusion"
+                                className="gap-0.5 rounded-md border p-0.5"
                             >
-                                <SelectTrigger disabled={mutation.isPending}>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.entries(complianceLabels).map(([value, label]) => (
-                                        <SelectItem key={value} value={value}>
-                                            {label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                                {conclusionOptions.map(({ value, icon: Icon, className }) => (
+                                    <Tooltip key={value}>
+                                        <TooltipTrigger asChild>
+                                            <ToggleGroupItem
+                                                value={value}
+                                                aria-label={complianceLabels[value]}
+                                                className={cn(
+                                                    'h-7 w-7 px-0 text-muted-foreground',
+                                                    className,
+                                                )}
+                                            >
+                                                <Icon className="h-4 w-4" />
+                                            </ToggleGroupItem>
+                                        </TooltipTrigger>
+                                        <TooltipContent>{complianceLabels[value]}</TooltipContent>
+                                    </Tooltip>
+                                ))}
+                            </ToggleGroup>
+                        </div>
+                    </div>
+                    {commentOpen && (
+                        <div className="relative mt-3">
+                            <Textarea
+                                id={`${item.id}-comment`}
+                                aria-label="Review comment"
+                                value={comment}
+                                onChange={event => setComment(event.target.value)}
+                                rows={2}
+                                autoFocus={!savedComment}
+                                className={comment !== savedComment ? 'pr-12' : undefined}
+                                placeholder="Add review context"
+                            />
+                            {comment !== savedComment && (
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="absolute bottom-2 right-2 h-8 w-8"
+                                    aria-label="Save review comment"
+                                    title="Save review comment"
+                                    disabled={commentMutation.isPending}
+                                    onClick={() => commentMutation.mutate(comment)}
+                                >
+                                    {commentMutation.isPending ? (
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Save className="h-4 w-4" />
+                                    )}
+                                </Button>
+                            )}
+                        </div>
+                    )}
+                    <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
+                        <div className="space-y-4">
+                            <div>
+                                <p className="text-sm font-medium">Requirement</p>
+                                <p className="mt-1 text-sm text-muted-foreground">{item.requirement}</p>
+                            </div>
+                            {answer?.disclosures?.length ? (
+                                <div>
+                                    <p className="text-sm font-medium">Disclosures</p>
+                                    <div className="mt-2 space-y-3">
+                                        {answer.disclosures.map((disclosure, index) => {
+                                            const artifact = disclosure.reference
+                                                ? findArtifact(disclosure.reference, artifacts)
+                                                : undefined
+                                            return (
+                                                <figure
+                                                    key={`${disclosure.source}-${index}`}
+                                                    className="space-y-2"
+                                                >
+                                                    {disclosure.excerpts.map(excerpt => (
+                                                        <blockquote
+                                                            key={excerpt}
+                                                            className="border-l-2 border-muted-foreground/30 pl-3 text-sm"
+                                                        >
+                                                            {excerpt}
+                                                        </blockquote>
+                                                    ))}
+                                                    <figcaption className="flex items-center gap-1.5 pl-3 text-xs text-muted-foreground">
+                                                        <FileText className="h-3 w-3 shrink-0" />
+                                                        {artifact ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() =>
+                                                                    setArtifactToPreview(artifact.id)
+                                                                }
+                                                                className="inline-flex min-w-0 items-center gap-1 text-left hover:text-primary hover:underline"
+                                                            >
+                                                                <span className="truncate">
+                                                                    {disclosure.source}
+                                                                </span>
+                                                                <ExternalLink className="h-3 w-3 shrink-0" />
+                                                            </button>
+                                                        ) : (
+                                                            <span className="truncate">
+                                                                {disclosure.source}
+                                                            </span>
+                                                        )}
+                                                    </figcaption>
+                                                </figure>
+                                            )
+                                        })}
+                                    </div>
+                                </div>
+                            ) : null}
+                            <div className="space-y-2">
+                                <Label htmlFor={`${item.id}-answer`}>Response</Label>
+                                {item.response_type === 'boolean' ||
+                                item.response_type === 'single_choice' ? (
+                                    <Select value={text} onValueChange={setText}>
+                                        <SelectTrigger id={`${item.id}-answer`}>
+                                            <SelectValue placeholder="Select a response" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {(item.response_type === 'boolean'
+                                                ? ['Yes', 'No', 'Not applicable']
+                                                : item.response_options
+                                            ).map(option => (
+                                                <SelectItem key={option} value={option}>
+                                                    {option}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                ) : item.response_type === 'number' || item.response_type === 'date' ? (
+                                    <Input
+                                        id={`${item.id}-answer`}
+                                        type={item.response_type}
+                                        value={text}
+                                        onChange={event => setText(event.target.value)}
+                                    />
+                                ) : (
+                                    <Textarea
+                                        id={`${item.id}-answer`}
+                                        value={text}
+                                        onChange={event => setText(event.target.value)}
+                                        rows={item.response_type === 'table' ? 6 : 4}
+                                        placeholder={
+                                            item.response_type === 'attachment'
+                                                ? 'Describe or reference the supplied attachment'
+                                                : 'Enter the operator or vendor response'
+                                        }
+                                    />
+                                )}
+                            </div>
                         </div>
                         <div>
                             <p className="text-sm font-medium">Evidence</p>
@@ -279,7 +406,9 @@ function ReviewItem({
                                                     (artifact ? (
                                                         <button
                                                             type="button"
-                                                            onClick={() => setArtifactToPreview(artifact.id)}
+                                                            onClick={() =>
+                                                                setArtifactToPreview(artifact.id)
+                                                            }
                                                             className="mt-1 inline-flex items-center gap-1 break-all text-left font-mono text-xs text-primary hover:underline"
                                                         >
                                                             {evidence.reference}
@@ -436,9 +565,7 @@ export default function RiskAssessmentDetail() {
         <main className="min-h-screen flex-1 bg-background">
             <header className="sticky top-0 z-30 border-b bg-card">
                 <div className="mx-auto flex max-w-[1500px] items-center gap-4 px-6 py-4">
-                    <Link
-                        to={deviceDetailsPath}
-                    >
+                    <Link to={deviceDetailsPath}>
                         <Button variant="ghost" size="icon">
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
