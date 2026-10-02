@@ -46,7 +46,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Toggle } from '@/components/ui/toggle'
@@ -535,6 +534,7 @@ function SourceRow({
     title,
     count,
     icon: Icon,
+    iconClassName,
     active,
     heading,
     onSelect,
@@ -543,6 +543,7 @@ function SourceRow({
     title?: string
     count: number
     icon?: typeof FileText
+    iconClassName?: string
     active: boolean
     heading?: boolean
     onSelect?: () => void
@@ -566,6 +567,7 @@ function SourceRow({
                     className={cn(
                         'h-3.5 w-3.5 shrink-0',
                         heading ? 'text-primary' : active ? 'text-primary' : 'text-muted-foreground/70',
+                        iconClassName,
                     )}
                 />
             )}
@@ -664,6 +666,9 @@ export default function RiskAssessmentDetail() {
         assessment?.answers_data.filter(answer => answer.status === 'needs_review').length || 0
     const populated = assessment?.answers_data.filter(answer => answer.answer?.trim()).length || 0
     const total = assessment?.checklist_data.length || 0
+    const unanswered = total - populated
+    const toggleReviewFilter = (value: string) =>
+        setReviewFilter(current => (current === value ? 'all' : value))
     const disclosureArtifact = assessment?.artifacts_data?.find(
         artifact => artifact.id === 'mds2-disclosure',
     )
@@ -1085,69 +1090,118 @@ export default function RiskAssessmentDetail() {
                 </div>
                 <aside className="space-y-2 xl:sticky xl:top-24 xl:self-start">
                     <h3 className="px-1 text-sm font-medium">Review progress</h3>
-                    <div className="divide-y rounded-md border bg-card">
-                        <div className="space-y-2.5 px-3 py-3">
-                            <div className="flex items-baseline justify-between text-sm">
-                                <span className="text-muted-foreground">Confirmed</span>
-                                <span className="tabular-nums">
-                                    <span className="font-medium">{approved}</span>
-                                    <span className="text-muted-foreground"> of {total}</span>
+                    <div className="rounded-md border bg-card p-1 text-sm">
+                        <div className="space-y-2 px-2 pb-2.5 pt-1.5">
+                            <div className="flex items-baseline justify-between tabular-nums">
+                                <span className="text-muted-foreground">
+                                    <span className="font-medium text-foreground">{approved}</span> of {total}{' '}
+                                    confirmed
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                    {total ? Math.floor((approved / total) * 100) : 0}%
                                 </span>
                             </div>
-                            <Progress value={total ? (approved / total) * 100 : 0} className="h-1.5" />
-                            {needsReview > 0 && (
-                                <button
-                                    type="button"
-                                    onClick={() => setReviewFilter('needs_review')}
-                                    className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                                >
-                                    <AlertTriangle className="h-3.5 w-3.5 text-warning" />
-                                    {needsReview} need{needsReview === 1 ? 's' : ''} review
-                                </button>
-                            )}
-                        </div>
-                        {assessment.status === 'approved' ? (
-                            <div className="flex items-center gap-2 px-3 py-3 text-sm">
-                                <ShieldCheck className="h-4 w-4 shrink-0 text-success" />
-                                <span className="min-w-0 truncate">
-                                    Approved
-                                    {assessment.approved_by ? ` by ${assessment.approved_by}` : ''}
-                                </span>
-                            </div>
-                        ) : (
-                            <div className="space-y-2 px-3 py-3">
-                                <Input
-                                    id="approver"
-                                    aria-label="Final approver"
-                                    placeholder="Final approver"
-                                    value={approver}
-                                    onChange={event => setApprover(event.target.value)}
+                            {/* Confirmed and awaiting review share one track, so the gap still to cover is visible at a glance. */}
+                            <div
+                                role="progressbar"
+                                aria-label="Confirmed items"
+                                aria-valuemin={0}
+                                aria-valuemax={total}
+                                aria-valuenow={approved}
+                                className="flex h-1.5 gap-px overflow-hidden rounded-full bg-muted"
+                            >
+                                <div
+                                    className="bg-primary transition-[width] duration-500 motion-reduce:transition-none"
+                                    style={{ width: `${total ? (approved / total) * 100 : 0}%` }}
                                 />
-                                <Button
-                                    className="w-full"
-                                    disabled={
-                                        !approver.trim() ||
-                                        approved !== total ||
-                                        isRunning ||
-                                        approveMutation.isPending
-                                    }
-                                    onClick={() => approveMutation.mutate()}
-                                >
-                                    {approveMutation.isPending ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <ShieldCheck className="mr-2 h-4 w-4" />
-                                    )}
-                                    Submit
-                                </Button>
-                                {approved !== total && (
+                                <div
+                                    className="bg-warning/45 transition-[width] duration-500 motion-reduce:transition-none"
+                                    style={{ width: `${total ? (needsReview / total) * 100 : 0}%` }}
+                                />
+                            </div>
+                        </div>
+                        <div aria-hidden className="mx-2 my-1 h-px bg-border" />
+                        <SourceRow
+                            label="Confirmed"
+                            count={approved}
+                            icon={CheckCircle2}
+                            iconClassName="text-primary"
+                            active={reviewFilter === 'approved'}
+                            onSelect={() => toggleReviewFilter('approved')}
+                        />
+                        <SourceRow
+                            label="Needs review"
+                            count={needsReview}
+                            icon={AlertTriangle}
+                            iconClassName="text-warning"
+                            active={reviewFilter === 'needs_review'}
+                            onSelect={() => toggleReviewFilter('needs_review')}
+                        />
+                        <SourceRow
+                            label="Unanswered"
+                            count={unanswered}
+                            icon={CircleDashed}
+                            active={reviewFilter === 'unanswered'}
+                            onSelect={() => toggleReviewFilter('unanswered')}
+                        />
+                    </div>
+                    <div aria-hidden className="mx-1 !my-5 h-px bg-border" />
+                    <h3 className="px-1 text-sm font-medium">Approval</h3>
+                    {assessment.status === 'approved' ? (
+                        <div className="flex items-start gap-2.5 rounded-md border border-success/30 bg-success/5 px-3 py-3">
+                            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                            <div className="min-w-0 space-y-0.5">
+                                <p className="truncate text-sm font-medium">
+                                    Approved{assessment.approved_by ? ` by ${assessment.approved_by}` : ''}
+                                </p>
+                                {assessment.approved_at && (
                                     <p className="text-xs text-muted-foreground">
-                                        Confirm every item to approve.
+                                        {new Date(assessment.approved_at).toLocaleString(undefined, {
+                                            dateStyle: 'medium',
+                                            timeStyle: 'short',
+                                        })}
                                     </p>
                                 )}
                             </div>
-                        )}
-                    </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-2.5 rounded-md border bg-card px-3 py-3">
+                            <p className="text-xs text-muted-foreground">
+                                {isRunning
+                                    ? 'Approval opens once the current run finishes.'
+                                    : approved === total
+                                      ? 'Every item is confirmed. Sign off as the final approver.'
+                                      : `Confirm the remaining ${total - approved} item${total - approved === 1 ? '' : 's'} to approve.`}
+                            </p>
+                            <Input
+                                id="approver"
+                                aria-label="Final approver"
+                                placeholder="Final approver"
+                                className="h-8 text-sm"
+                                value={approver}
+                                onChange={event => setApprover(event.target.value)}
+                            />
+                            <Button
+                                type="button"
+                                size="sm"
+                                className="h-8 w-full"
+                                disabled={
+                                    !approver.trim() ||
+                                    approved !== total ||
+                                    isRunning ||
+                                    approveMutation.isPending
+                                }
+                                onClick={() => approveMutation.mutate()}
+                            >
+                                {approveMutation.isPending ? (
+                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                    <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />
+                                )}
+                                Submit
+                            </Button>
+                        </div>
+                    )}
                 </aside>
             </div>
         </main>
