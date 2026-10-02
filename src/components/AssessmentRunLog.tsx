@@ -263,7 +263,3 @@ export function AssessmentRunLog({
         </div>
     )
 }
-            </Card>
-        </div>
-    )
-}
