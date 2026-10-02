@@ -670,6 +670,10 @@ export default function RiskAssessmentDetail() {
     const citedItems = assessment?.answers_data.filter(answer => answer.disclosures?.length).length || 0
     const canAttachDisclosure =
         !!assessment && !['pending', 'active', 'approved'].includes(assessment.status)
+    const isRunning = assessment?.status === 'pending' || assessment?.status === 'active'
+    const canStartLiveProbe = !!assessment && !isRunning && assessment.status !== 'approved'
+    const hasLiveEvidence =
+        assessment?.source_mode === 'live' || assessment?.source_mode === 'disclosure_and_live'
     const approveMutation = useMutation({
         mutationFn: () => api.riskAssessments.approve(id!, approver),
         onSuccess: () => {
@@ -689,6 +693,18 @@ export default function RiskAssessmentDetail() {
         },
         onError: error =>
             toast.error(error instanceof Error ? error.message : 'Unable to attach disclosure'),
+    })
+    const liveProbeMutation = useMutation({
+        mutationFn: () => api.riskAssessments.startLiveProbe(id!),
+        onSuccess: result => {
+            // Seed the pending state immediately so the action stays disabled until polling takes over.
+            queryClient.setQueryData(['risk-assessment', id], result)
+            queryClient.invalidateQueries({ queryKey: ['risk-assessment-events', id] })
+            queryClient.invalidateQueries({ queryKey: ['risk-assessments'] })
+            toast.success('Live probe started')
+        },
+        onError: error =>
+            toast.error(error instanceof Error ? error.message : 'Unable to start live probe'),
     })
     const recoveryMutation = useMutation({
         mutationFn: () => api.riskAssessments.reprocess(id!),
@@ -926,6 +942,31 @@ export default function RiskAssessmentDetail() {
                                 </p>
                             )}
                         </div>
+                        <h3 className="px-1 pt-3 text-sm font-medium">Live probe</h3>
+                        <div className="space-y-2.5 rounded-md border bg-card px-3 py-3">
+                            <p className="text-xs text-muted-foreground">
+                                {isRunning
+                                    ? 'A run is in progress. Follow it in the execution log.'
+                                    : assessment.status === 'approved'
+                                      ? 'Approved assessments cannot be probed again.'
+                                      : 'Probe the device for every item. Confirmed answers are kept; others are refreshed from new findings.'}
+                            </p>
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                className="h-7 w-full"
+                                disabled={!canStartLiveProbe || liveProbeMutation.isPending}
+                                onClick={() => liveProbeMutation.mutate()}
+                            >
+                                {liveProbeMutation.isPending || isRunning ? (
+                                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                    <Radar className="mr-1.5 h-3.5 w-3.5" />
+                                )}
+                                {hasLiveEvidence ? 'Relaunch' : 'Launch'}
+                            </Button>
+                        </div>
                         <input
                             ref={disclosureInput}
                             type="file"
@@ -1087,6 +1128,7 @@ export default function RiskAssessmentDetail() {
                                     disabled={
                                         !approver.trim() ||
                                         approved !== total ||
+                                        isRunning ||
                                         approveMutation.isPending
                                     }
                                     onClick={() => approveMutation.mutate()}
@@ -1096,7 +1138,7 @@ export default function RiskAssessmentDetail() {
                                     ) : (
                                         <ShieldCheck className="mr-2 h-4 w-4" />
                                     )}
-                                    Approve assessment
+                                    Submit
                                 </Button>
                                 {approved !== total && (
                                     <p className="text-xs text-muted-foreground">
