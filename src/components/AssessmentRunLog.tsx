@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { CheckCircle2, ChevronRight, Loader2, XCircle } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AttackVectorStep } from '@/components/AttackVectorStep'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
@@ -174,9 +174,13 @@ export function AssessmentRunLog({ assessmentId, status, artifacts, sourceMode =
         url: api.riskAssessments.artifactUrl(assessmentId, artifact.id),
     }))
 
+    const wasRunning = useRef(isRunning)
     useEffect(() => {
         if (isRunning) setExpanded(true)
-    }, [isRunning])
+        // Polling stops with the run; fetch once more so the final step and run_end events are shown.
+        else if (wasRunning.current) eventsQuery.refetch()
+        wasRunning.current = isRunning
+    }, [isRunning, eventsQuery])
 
     return (
         <div>

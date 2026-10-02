@@ -460,6 +460,8 @@ export const api = {
             fetchAPI<{ id: string; status: 'stopping' }>(`/risk-assessments/${id}/stop`, {
                 method: 'POST',
             }),
+        startLiveProbe: (id: string) =>
+            fetchAPI<RiskAssessment>(`/risk-assessments/${id}/live-probe`, { method: 'POST' }),
         events: (id: string) =>
             fetchAPI<{ events: AssessmentEvent[]; total: number }>(`/risk-assessments/${id}/events`),
         reprocess: (id: string) =>
