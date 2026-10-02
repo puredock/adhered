@@ -142,7 +142,10 @@ export function AttackVectorStep({
             .replace(/([A-Z])/g, ' $1')
             .trim()
             .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .map((word, index) => {
+                if (index > 0 && ['a', 'an', 'the'].includes(word.toLowerCase())) return word.toLowerCase()
+                return word.charAt(0).toUpperCase() + word.slice(1)
+            })
             .join(' ')
     }
 
