@@ -105,9 +105,16 @@ export function TemplatePreviewDialog({
                                                 </PopoverTrigger>
                                                 <PopoverContent align="end" className="w-80 space-y-2">
                                                     <div className="flex items-center justify-between gap-3">
-                                                        <p className="text-sm font-medium">Extraction confidence</p>
-                                                        <span className={`text-sm font-semibold tabular-nums ${item.extraction_confidence < 0.75 ? 'text-amber-700' : 'text-emerald-700'}`}>
-                                                            {Math.round(item.extraction_confidence * 100)}%
+                                                        <p className="text-sm font-medium">
+                                                            Extraction confidence
+                                                        </p>
+                                                        <span
+                                                            className={`text-sm font-semibold tabular-nums ${item.extraction_confidence < 0.75 ? 'text-amber-700' : 'text-emerald-700'}`}
+                                                        >
+                                                            {Math.round(
+                                                                item.extraction_confidence * 100,
+                                                            )}
+                                                            %
                                                         </span>
                                                     </div>
                                                     {item.extraction_confidence < 0.75 && (
@@ -116,13 +123,17 @@ export function TemplatePreviewDialog({
                                                         </p>
                                                     )}
                                                     <div className="border-t pt-2">
-                                                        <p className="mb-1 text-xs font-medium text-muted-foreground">Source excerpt</p>
+                                                        <p className="mb-1 text-xs font-medium text-muted-foreground">
+                                                            Source excerpt
+                                                        </p>
                                                         {item.provenance ? (
                                                             <p className="text-sm text-muted-foreground">
                                                                 “{item.provenance.excerpt}”
                                                             </p>
                                                         ) : (
-                                                            <p className="text-sm text-muted-foreground">No source excerpt available.</p>
+                                                            <p className="text-sm text-muted-foreground">
+                                                                No source excerpt available.
+                                                            </p>
                                                         )}
                                                     </div>
                                                 </PopoverContent>

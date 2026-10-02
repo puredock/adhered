@@ -143,7 +143,8 @@ export function AttackVectorStep({
             .trim()
             .split(' ')
             .map((word, index) => {
-                if (index > 0 && ['a', 'an', 'the'].includes(word.toLowerCase())) return word.toLowerCase()
+                if (index > 0 && ['a', 'an', 'the'].includes(word.toLowerCase()))
+                    return word.toLowerCase()
                 return word.charAt(0).toUpperCase() + word.slice(1)
             })
             .join(' ')

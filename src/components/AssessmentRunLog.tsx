@@ -5,7 +5,7 @@ import { AttackVectorStep } from '@/components/AttackVectorStep'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
-import { api, type AssessmentArtifact, type AssessmentEvent } from '@/lib/api'
+import { type AssessmentArtifact, type AssessmentEvent, api } from '@/lib/api'
 import type { Artifact } from './artifacts/types'
 
 interface AssessmentRunLogProps {
@@ -103,23 +103,19 @@ function buildSteps(events: AssessmentEvent[]): RunStep[] {
     // Prefer that plan when available; keep the backend milestones as fallback.
     const latestTodos = [...events]
         .reverse()
-        .find(event => event.type === 'tool_use' && event.data?.name === 'TodoWrite')
-        ?.data?.input?.todos as
-        | { content?: string; activeForm?: string; status?: string }[]
-        | undefined
+        .find(event => event.type === 'tool_use' && event.data?.name === 'TodoWrite')?.data?.input
+        ?.todos as { content?: string; activeForm?: string; status?: string }[] | undefined
     if (latestTodos?.length) {
         const todoSteps = latestTodos.map((todo, index) => {
             const todoStatus = todo.status?.toLowerCase()
             return {
                 index: index + 1,
                 name: todo.content || todo.activeForm || 'Untitled task',
-                status: (
-                    todoStatus === 'completed' || todoStatus === 'complete'
-                        ? 'success'
-                        : todoStatus === 'in_progress' || todoStatus === 'in progress'
-                          ? 'running'
-                          : 'pending'
-                ) as RunStep['status'],
+                status: (todoStatus === 'completed' || todoStatus === 'complete'
+                    ? 'success'
+                    : todoStatus === 'in_progress' || todoStatus === 'in progress'
+                      ? 'running'
+                      : 'pending') as RunStep['status'],
                 logs: [],
             }
         })
@@ -137,7 +133,12 @@ function formatBytes(size: number) {
     return `${(size / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export function AssessmentRunLog({ assessmentId, status, artifacts, sourceMode = 'live' }: AssessmentRunLogProps) {
+export function AssessmentRunLog({
+    assessmentId,
+    status,
+    artifacts,
+    sourceMode = 'live',
+}: AssessmentRunLogProps) {
     const isRunning = status === 'pending' || status === 'active'
     const [expanded, setExpanded] = useState(isRunning)
     const eventsQuery = useQuery({
@@ -231,7 +232,11 @@ export function AssessmentRunLog({ assessmentId, status, artifacts, sourceMode =
                                     artifacts={
                                         step.index ===
                                         (hasAgentTodos
-                                            ? Math.max(1, steps.find(item => item.status === 'running')?.index || 1)
+                                            ? Math.max(
+                                                  1,
+                                                  steps.find(item => item.status === 'running')?.index ||
+                                                      1,
+                                              )
                                             : 2)
                                             ? modalArtifacts
                                             : []
@@ -254,6 +259,10 @@ export function AssessmentRunLog({ assessmentId, status, artifacts, sourceMode =
                         )}
                     </div>
                 )}
+            </Card>
+        </div>
+    )
+}
             </Card>
         </div>
     )

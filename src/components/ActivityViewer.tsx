@@ -149,11 +149,7 @@ export function ActivityViewer({
     }
 
     const getActivityTypeLabel = () => {
-        return activityType === 'scans'
-            ? 'Scans'
-            : activityType === 'audits'
-              ? 'Audits'
-              : 'Assessments'
+        return activityType === 'scans' ? 'Scans' : activityType === 'audits' ? 'Audits' : 'Assessments'
     }
 
     const selectActivityType = (type: ActivityType) => {
@@ -240,7 +236,9 @@ export function ActivityViewer({
                                 size="icon"
                                 className="h-9 w-9 rounded-lg bg-destructive/90 hover:bg-destructive text-white shadow-sm"
                                 onClick={e => handleDeleteActivity(e, activity, isRunning)}
-                                title={activity.type === 'assessment' ? 'Delete assessment' : 'Delete scan'}
+                                title={
+                                    activity.type === 'assessment' ? 'Delete assessment' : 'Delete scan'
+                                }
                             >
                                 <Trash2 className="h-4 w-4" />
                             </Button>

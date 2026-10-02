@@ -223,15 +223,34 @@ const DeviceDetail = () => {
     ) => {
         setIsStartingAssessment(true)
         try {
-            const assessment = await api.riskAssessments.start(deviceId!, templateIds, sourceMode, disclosure)
+            const assessment = await api.riskAssessments.start(
+                deviceId!,
+                templateIds,
+                sourceMode,
+                disclosure,
+            )
             await queryClient.invalidateQueries({ queryKey: ['risk-assessments', deviceId] })
             const startedMessages = {
-                live: ['Live risk assessment started', 'Collecting evidence from the device for review...'],
-                manual: ['Manual assessment ready', 'Complete the checklist without probing the device.'],
-                disclosure_only: ['Disclosure assessment started', 'Mapping manufacturer statements to the checklist...'],
-                disclosure_and_live: ['Disclosure and live assessment started', 'Autofilling from the disclosure before probing the device...'],
+                live: [
+                    'Live risk assessment started',
+                    'Collecting evidence from the device for review...',
+                ],
+                manual: [
+                    'Manual assessment ready',
+                    'Complete the checklist without probing the device.',
+                ],
+                disclosure_only: [
+                    'Disclosure assessment started',
+                    'Mapping manufacturer statements to the checklist...',
+                ],
+                disclosure_and_live: [
+                    'Disclosure and live assessment started',
+                    'Autofilling from the disclosure before probing the device...',
+                ],
             } as const
-            toast.success(startedMessages[sourceMode][0], { description: startedMessages[sourceMode][1] })
+            toast.success(startedMessages[sourceMode][0], {
+                description: startedMessages[sourceMode][1],
+            })
             navigate(`/risk-assessments/${assessment.id}`)
         } catch (error) {
             toast.error('Failed to start risk assessment', {
@@ -612,10 +631,14 @@ const DeviceDetail = () => {
                                             ? 'running'
                                             : assessment.status === 'cancelled'
                                               ? 'cancelled'
-                                            : assessment.status === 'needs_review' ||
-                                                assessment.status === 'approved'
-                                              ? 'completed'
-                                              : 'failed') as 'running' | 'completed' | 'failed' | 'cancelled',
+                                              : assessment.status === 'needs_review' ||
+                                                  assessment.status === 'approved'
+                                                ? 'completed'
+                                                : 'failed') as
+                                            | 'running'
+                                            | 'completed'
+                                            | 'failed'
+                                            | 'cancelled',
                                         startedAt: assessment.created_at,
                                         completedAt: assessment.completed_at || undefined,
                                     }))}

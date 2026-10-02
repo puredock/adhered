@@ -102,7 +102,11 @@ export function ArtifactsFilesTab({
                         {selected.type === 'image' && selected.url ? (
                             <img src={selected.url} alt={selected.name} className="max-w-full border" />
                         ) : selected.type === 'pdf' && pdfUrl ? (
-                            <iframe src={pdfUrl} title={selected.name} className="h-[65vh] w-full border" />
+                            <iframe
+                                src={pdfUrl}
+                                title={selected.name}
+                                className="h-[65vh] w-full border"
+                            />
                         ) : selected.content || content ? (
                             <pre className="whitespace-pre-wrap break-words font-mono text-xs">
                                 {selected.content || content}

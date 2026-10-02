@@ -1094,8 +1094,8 @@ export default function RiskAssessmentDetail() {
                         <div className="space-y-2 px-2 pb-2.5 pt-1.5">
                             <div className="flex items-baseline justify-between tabular-nums">
                                 <span className="text-muted-foreground">
-                                    <span className="font-medium text-foreground">{approved}</span> of {total}{' '}
-                                    confirmed
+                                    <span className="font-medium text-foreground">{approved}</span> of{' '}
+                                    {total} confirmed
                                 </span>
                                 <span className="text-xs text-muted-foreground">
                                     {total ? Math.floor((approved / total) * 100) : 0}%
@@ -1152,7 +1152,8 @@ export default function RiskAssessmentDetail() {
                             <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
                             <div className="min-w-0 space-y-0.5">
                                 <p className="truncate text-sm font-medium">
-                                    Approved{assessment.approved_by ? ` by ${assessment.approved_by}` : ''}
+                                    Approved
+                                    {assessment.approved_by ? ` by ${assessment.approved_by}` : ''}
                                 </p>
                                 {assessment.approved_at && (
                                     <p className="text-xs text-muted-foreground">
